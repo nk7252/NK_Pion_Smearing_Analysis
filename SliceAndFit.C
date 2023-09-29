@@ -163,6 +163,7 @@ void SliceAndFit() {
 		//c1->cd(1);
 		gPad->SetTopMargin(0.12);
 		gPad->SetFillColor(33);
+		gPad->SetLogz();
 		h18->Draw("colz");
 		printf("error test code\n");
 		h18->GetXaxis()->SetLabelSize(0.06);
@@ -219,12 +220,15 @@ void SliceAndFit() {
 
 		// Show fitted mean/variance for each slice
 		rightPad->cd(6);
-		TH2F* h18_4 = (TH2F*)h18_1->Clone("h18_4");//clone mean
+		//TH2F* h18_4 = (TH2F*)h18_1->Clone("h18_4");//clone mean
+		TH2F* h18_4 = (TH2F*)h18_2->Clone("h18_4");//clone sigma instead
 		gPad->SetTopMargin(0.12);
 		gPad->SetLeftMargin(0.15);
 		gPad->SetFillColor(33);
-		h18_4->Divide(h18_2);
+		h18_4->Divide(h18_3);//divide by variance. 2 is sigma
 		h18_4->SetTitle("Value of par[1]/par[2]^2=Mean/Variance;Pion Pt [GeV/c];Mean/Variance");
+		//h18_4->Divide(h18_1);//divide sigma by mean. 
+		//h18_4->SetTitle("Value of par[2]/par[1]=Sigma/Mean;Pion Pt [GeV/c];Sigma/Mean");
 		//h18_4->SetMinimum(0.8);
 		h18_4->Draw();
 
@@ -244,6 +248,8 @@ void SliceAndFit() {
 					c2->cd(1);
 					TH2F* h18_5 = (TH2F*)h18_2->Clone("h18_5");
 					h18_5->SetAxisRange(0., 16.,"x");
+					//h18_5->Scale(1000/135);
+					//h18_5->SetAxisRange(0., 0.2,"y");
 					h18_5->Draw();
 					h18_5->GetYaxis()->SetTitle("Sigma");
 					h18_5->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
@@ -255,29 +261,24 @@ the fit, in order to unfolded beam momentum spread from the
 relative energy resolution. The Gauss function parameter of
 μ and energy resolution from each fit are plotted against the
 nominal beam energy as linearity and resolution."
-
+//*/
 					TH2F* h18_6 = (TH2F*)h18_2->Clone("h18_6");//sigma/mean
-					
-					
+
 					h18_6->Divide(h18_1);//sigma/mean
 					
-					TH2F* h18_7 = (TH2F*)h18_6->Clone("h18_7");// clone (sigma/mean)to get (sigma/mean)^2
-					h18_7->Multiply(h18_6);//(sigma/mean)^2
-					h18_7->Add(-0.0004);
-					
-					
-					TH2F* h18_8 = (TH2F*)h18_7->Clone("h18_8");
-					h18_8->Divide(h18_7);// call this the new sigma/mean
-					h18_8->Multiply(h18_1);//multiply by the mean to find a new Sigma
-					h18_8->Divide(135);//scale it to find sigma_M/M directly 
-					
-					
-					h18_8->SetAxisRange(0., 16.,"x");
-					h18_8->Draw();
-					
-					h18_8->GetYaxis()->SetTitle("Sigma");
-					h18_8->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
-					*/
+					//TH2F* h18_7 = (TH2F*)h18_6->Clone("h18_7");// clone (sigma/mean)to get (sigma/mean)^2
+					//h18_7->Multiply(h18_6);//(sigma/mean)^2
+					//h18_7->Add(-0.0004);//why?
+					//TH2F* h18_8 = (TH2F*)h18_7->Clone("h18_8");
+					//h18_8->Divide(h18_7);// call this the new sigma/mean
+					//h18_8->Multiply(h18_1);//multiply by the mean to find a new Sigma
+					//h18_8->Divide(135);//scale it to find sigma_M/M directly 
+
+					h18_6->SetAxisRange(0., 16.,"x");
+					h18_6->Draw();			
+					h18_6->GetYaxis()->SetTitle("Sigma/Mean");
+					h18_6->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+					//*/
 					c2->SaveAs(Form("pioncode/canvas_pdf/%s_truncatedsigma.pdf", pdfname));
 		}
 		pionfile->Close();
