@@ -31,7 +31,7 @@ int main() {   // Begin main program.
 	//int n_bins=round(1+3.222*log(NPions));
 	int n_bins=PT_Max;
 	std::map <double, std::vector<double>> mass_pt_map;// we want to have keys of a pT range?
-	//--------------------Alternative paramaterization, woods saxon
+	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t=4.5;
 	double w=0.114;
 	double A=229.6;
@@ -45,7 +45,7 @@ int main() {   // Begin main program.
 	float smeared_lower_bin_limit=0.0;
 	float smeared_upper_bin_limit=0.25;
 	float smear_factor_a = 0;
-	float smear_factor_d = 0;//0.02;// test trying to include the beam momentum resolution.. will set to zero for now
+	float smear_factor_d = 0.02;//0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028;// first parameter in test beam parameterization?
 	
 	for (int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++) {
@@ -105,7 +105,7 @@ int main() {   // Begin main program.
 		//std::vector<double> vec_inv_mass;
 		Vec4 gamma_lorentz[3];
 		Vec4 gamma_smeared[3];
-		double m, E, px, py ,pz, pi0_px, pi0_py, pi0_E, scale_factor, smear_factor1, smear_factor2;
+		double m, E, px, py ,pz, pi0_px, pi0_py, pi0_E, scale_factor1, scale_factor2, smear_factor1, smear_factor2;
 		double P0rest= 0.0;
 		double pi0_pz=0.0;
 		double Pi0_M = 0.1349768;//135 MeV
@@ -183,28 +183,30 @@ int main() {   // Begin main program.
 		       		//printf("weight function =%g\n",weight_function);
 		       		
 		       		if(pythia.event[Gamma_daughters[0]].id() == 22 && pythia.event[Gamma_daughters[1]].id() == 22) {// check that the decays are photons
-		       		        //gammadis(gen_gamma(rdgamma()));
+		       		    //gammadis(gen_gamma(rdgamma()));
 
-		       		        //
+		       		    //
 		       			gamma_lorentz[0]=pythia.event[Gamma_daughters[0]].p();
-	       		        	gamma_lorentz[1]=pythia.event[Gamma_daughters[1]].p();
-	       		        	gamma_lorentz[2]=gamma_lorentz[0]+gamma_lorentz[1];
-	       		        	inv_mass=gamma_lorentz[2].mCalc();
+	       		        gamma_lorentz[1]=pythia.event[Gamma_daughters[1]].p();
+	       		        gamma_lorentz[2]=gamma_lorentz[0]+gamma_lorentz[1];
+	       		        inv_mass=gamma_lorentz[2].mCalc();
 	       		        	
-	       		        	//scale_factor=0.04;//need to change to pT dependent scale factor. something of the form rel_error=[a^2/E(gev)+b^2]^1/2
-		       		        //pass parameters to 
-		       		        //scale_factor=[[0]/gamma_lorentz[2].E()+[1]]^1/2
-	       		        	scale_factor=sqrt(pow(smear_factor_a,2)/sqrt(gamma_lorentz[2].e())+pow(smear_factor_b,2)/gamma_lorentz[2].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));// subtracted d now. If I add it instead it looks better, but it doesn't seem to follow their method. I will set the beam spread factor to zero for now.
-	       		        	/* 
-	       		        	they said  "A beam momentum
+						//scale_factor=0.04;//need to change to pT dependent scale factor. something of the form rel_error=[a^2/E(gev)+b^2]^1/2
+						//pass parameters to 
+						//scale_factor=[[0]/gamma_lorentz[2].E()+[1]]^1/2
+						scale_factor1=sqrt(pow(smear_factor_a,2)/sqrt(gamma_lorentz[0].e())+pow(smear_factor_b,2)/gamma_lorentz[0].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));// add d. they just point out that it is a part of their fit data.
+						scale_factor2=sqrt(pow(smear_factor_a,2)/sqrt(gamma_lorentz[1].e())+pow(smear_factor_b,2)/gamma_lorentz[1].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));
+						/* 
+						they said  "A beam momentum
 spread (δp/p ≈ 2%) is quadratically subtracted from σ/μ of
 the fit, in order to unfolded beam momentum spread from the
 relative energy resolution. The Gauss function parameter of
 μ and energy resolution from each fit are plotted against the
 nominal beam energy as linearity and resolution."
 */
-		       		        smear_factor1=scale_factor*gammadis(gen_gamma)+1;
-		       		        smear_factor2=scale_factor*gammadis(gen_gamma)+1;
+							//Smear independently (photon e). I split the smear factors in to two independent cases. remember photons are smeared individually. The pion itself is not smeared. it is detected through the decay photons. If you reconstruct the pion you see the smearing effect.
+		       		        smear_factor1=scale_factor1*gammadis(gen_gamma)+1;
+		       		        smear_factor2=scale_factor2*gammadis(gen_gamma)+1;
 		       		        //std::cout << "gamma gen" << " " <<gammadis(gen_gamma)<<std::endl;
 		       		        //std::cout << "pion E" << " " <<gamma_lorentz[2].e()<< " " << "smear_factor1" << " " <<smear_factor1<< " " << "smear_factor2" << " " <<smear_factor2<< " " <<std::endl;
 	       		        	
