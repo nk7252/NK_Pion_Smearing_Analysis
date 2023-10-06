@@ -67,7 +67,7 @@ int main() {   // Begin main program.
 		TH1* h6 = new TH1F("h6", "inv mass of gamma pair",100, 0, 1);
 		TH1* h7 = new TH1F("h7", "ratio of gamma/pi0 pt",n_bins, PT_Min, PT_Max);
 		TH1* h8 = new TH1F("h8", "inv mass of gamma pair, smeared",100, smeared_lower_bin_limit, smeared_upper_bin_limit);
-		TH2F* h9 = new TH2F("h9", "Pion Pt vs Smeared Inv Mass", n_bins, 0, 64, 100, smeared_lower_bin_limit, smeared_upper_bin_limit);
+		TH2F* h9 = new TH2F("h9", "Pion Pt vs Smeared Inv Mass", n_bins, 0, 64, 100, smeared_lower_bin_limit, 2*smeared_upper_bin_limit);
 		TH1* h10 = new TH1F("h10", "Smeared Pion PT",n_bins, PT_Min, PT_Max);
 		TH1* h11 = new TH1F("h11", "Smeared Pion PT/Pion PT ratio",n_bins, PT_Min, PT_Max);
 		TH1* h12 = new TH1F("h12", "Smeared Pion PT, weighted",n_bins, PT_Min, PT_Max);
@@ -82,7 +82,7 @@ int main() {   // Begin main program.
 		TH1* h24 = new TH1F("h24", "Photon pT ratio, smeared/unsmeared",n_bins, PT_Min, PT_Max);
 		TH1* h26 = new TH1F("h26", "weighted, Photon pT ratio, smeared/unsmeared",n_bins, PT_Min, PT_Max);
 		TH1* h28 = new TH1F("h28", "weighted/unweighted ratio of ratios, photons",n_bins, PT_Min, PT_Max);
-		TH2F* h18 = new TH2F("h18", "Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, 64, 100, smeared_lower_bin_limit, smeared_upper_bin_limit);
+		TH2F* h18 = new TH2F("h18", "Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, 64, 100, smeared_lower_bin_limit, 2*smeared_upper_bin_limit);
 		//--------------------set up random number generation
 		std::random_device rd; // generate a random number to seed random generation
 		std::random_device rdgamma; // generate a random number to seed random generation of daughter gamma for smearing
@@ -105,7 +105,7 @@ int main() {   // Begin main program.
 		//std::vector<double> vec_inv_mass;
 		Vec4 gamma_lorentz[3];
 		Vec4 gamma_smeared[3];
-		double m, E, px, py ,pz, pi0_px, pi0_py, pi0_E, scale_factor1, scale_factor2, smear_factor1, smear_factor2;
+		double m, E, px, py ,pz, pi0_px, pi0_py, pi0_E, scale_factor, smear_factor1, smear_factor2;
 		double P0rest= 0.0;
 		double pi0_pz=0.0;
 		double Pi0_M = 0.1349768;//135 MeV
@@ -194,8 +194,10 @@ int main() {   // Begin main program.
 						//scale_factor=0.04;//need to change to pT dependent scale factor. something of the form rel_error=[a^2/E(gev)+b^2]^1/2
 						//pass parameters to 
 						//scale_factor=[[0]/gamma_lorentz[2].E()+[1]]^1/2
-						scale_factor1=sqrt(pow(smear_factor_a,2)/sqrt(gamma_lorentz[0].e())+pow(smear_factor_b,2)/gamma_lorentz[0].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));// add d. they just point out that it is a part of their fit data.
-						scale_factor2=sqrt(pow(smear_factor_a,2)/sqrt(gamma_lorentz[1].e())+pow(smear_factor_b,2)/gamma_lorentz[1].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));
+						scale_factor=sqrt(pow(smear_factor_b,2)/gamma_lorentz[2].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));
+						//scale_factor1=sqrt(pow(smear_factor_b,2)/pythia.event[Gamma_daughters[0]].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));//pow(smear_factor_a,2)/sqrt(gamma_lorentz[0].e())+
+						// add d. they just point out that it is a part of their fit data. to get only the energy res you remove it.
+						//scale_factor2=sqrt(pow(smear_factor_b,2)/pythia.event[Gamma_daughters[1]].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));//pow(smear_factor_a,2)/sqrt(gamma_lorentz[1].e())+
 						/* 
 						they said  "A beam momentum
 spread (δp/p ≈ 2%) is quadratically subtracted from σ/μ of
@@ -205,8 +207,8 @@ relative energy resolution. The Gauss function parameter of
 nominal beam energy as linearity and resolution."
 */
 							//Smear independently (photon e). I split the smear factors in to two independent cases. remember photons are smeared individually. The pion itself is not smeared. it is detected through the decay photons. If you reconstruct the pion you see the smearing effect.
-		       		        smear_factor1=scale_factor1*gammadis(gen_gamma)+1;
-		       		        smear_factor2=scale_factor2*gammadis(gen_gamma)+1;
+		       		        smear_factor1=scale_factor*gammadis(gen_gamma)+1;
+		       		        smear_factor2=scale_factor*gammadis(gen_gamma)+1;
 		       		        //std::cout << "gamma gen" << " " <<gammadis(gen_gamma)<<std::endl;
 		       		        //std::cout << "pion E" << " " <<gamma_lorentz[2].e()<< " " << "smear_factor1" << " " <<smear_factor1<< " " << "smear_factor2" << " " <<smear_factor2<< " " <<std::endl;
 	       		        	

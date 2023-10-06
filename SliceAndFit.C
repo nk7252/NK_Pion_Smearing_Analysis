@@ -275,6 +275,7 @@ nominal beam energy as linearity and resolution."
 					//h18_8->Divide(135);//scale it to find sigma_M/M directly 
 
 					h18_6->SetAxisRange(0., 16.,"x");
+					h18_6->SetAxisRange(0., 0.2,"y");
 					h18_6->Draw();			
 					h18_6->GetYaxis()->SetTitle("Sigma/Mean");
 					h18_6->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
