@@ -63,6 +63,9 @@ int main(){ // Begin main program.
 	for (int i = 0; i < NPhotons; i++){
 		double azimuthal_ang = adis(gen); // generate a random angle from 0 to 2pi
 		double Pt = PT_Max * pdis(gen);
+		h1->Fill(Pt, weight_function1);
+		h1->Fill(Pt, weight_function1);
+
 		double px = Pt * cos(azimuthal_ang); // remember p=hbar k for photons
 		double py = Pt * sin(azimuthal_ang);
 		// double E=Pt;// + pi0_pz*pi0_pz// for now just use Pt instead of E
