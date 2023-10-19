@@ -75,7 +75,7 @@ void SliceAndFit() {
 
 
 		//const char* canvasname = Form("weighted_unweighted_SliceFit_ErrParam_67_thousandths", Time);//_date_%s,rel_error_param
-		TString canvasname = Form("weighted_unweighted_SliceFit_ErrParam_%d_thousandths_%s", rel_error_param, Time);//_date_%s
+		TString canvasname = Form("weighted_unweighted_SliceFit_ErrParam_%d_thousandths_%s_Powerweight", rel_error_param, Time);//_date_%s
 		const char* pdfname = canvasname;
 		TCanvas* c1 = new TCanvas(canvasname, canvasname, 3000, 1200);
 		//TCanvas* c1 = new TCanvas(Form("c_%d", rel_error_param), "c1", 3000, 1000);

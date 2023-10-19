@@ -87,18 +87,18 @@ void simplephotongen(){ // Begin main program.
 		//------------------------------find energies/ Pt
 		double weight_function1 = exp(-Pt/0.200 );// exponential. scaled it to 200
 		//note hagedorn should be dominant up to ~5 GeV from wf3. we are using an exponential instead
-		double weight_function2 = 1 / (pow(Pt, 7.1)); //power law
+		double weight_function2 = 1 / (pow(Pt, 8.14)); //power law
 		// power law is becomes important around 5 GeV
 		double weight_function3 = ((1 / (1 + exp((Pt - t) / w))) * A / pow(1 + Pt / p0, m_param) + (1 - (1 / (1 + exp((Pt - t) / w)))) * B / (pow(Pt, n)));
-		h2->Fill(Pt, weight_function1);
-		h2->Fill(Pt, weight_function1);
-		h5->Fill(smeared_Pt1, weight_function1);
-		h5->Fill(smeared_Pt2, weight_function1);
+		h2->Fill(Pt, Pt*weight_function1);
+		h2->Fill(Pt, Pt*weight_function1);
+		h5->Fill(smeared_Pt1, Pt*weight_function1);
+		h5->Fill(smeared_Pt2, Pt*weight_function1);
 
-		h3->Fill(Pt, weight_function2);
-		h3->Fill(Pt, weight_function2);
-		h6->Fill(smeared_Pt1, weight_function2);
-		h6->Fill(smeared_Pt2, weight_function2);
+		h3->Fill(Pt, Pt*weight_function2);
+		h3->Fill(Pt, Pt*weight_function2);
+		h6->Fill(smeared_Pt1, Pt*weight_function2);
+		h6->Fill(smeared_Pt2, Pt*weight_function2);
 
 		h4->Fill(Pt, Pt*weight_function3);
 		h4->Fill(Pt, Pt*weight_function3);
