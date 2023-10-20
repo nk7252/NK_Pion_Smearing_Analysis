@@ -149,16 +149,16 @@ int main()
 			double Pt = PT_Max * pdis(gen);
 
 			//----------------------different possible weights
-			// double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
+			double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
 			//  the above is the woods-saxon+hagedorn+power law---------------
 			// printf("weight function =%g\n",weight_function);
 			//
-			//weight_function = weight_function * 1e+14;
+			weight_function = weight_function * 1e+14;
 			// printf("weight function =%g\n",weight_function);
 			// Below is an exponential function. e^-Pt/0.2---------------------
 			//double weight_function=exp(-Pt/0.2);
 			// Below is a power law function
-			double weight_function=pow(Pt,-8.14);
+			//double weight_function=pow(Pt,-8.14);
 			h3->Fill(Pt, Pt * weight_function); // fill pi0 pt, weighted
 			h4->Fill(Pt);						// fill pi0 pt, unweighted
 			pi0_px = Pt * cos(azimuthal_ang);
@@ -191,16 +191,16 @@ int main()
 				int Gamma_daughters[2] = {pythia.event[i].daughter1(), pythia.event[i].daughter2()}; // make array of daughter particles(di gamma) event ids
 				double Pt = pythia.event[i].pT();
 				//----------------------different possible weights
-				// double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
+				double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
 				//  the above is the woods-saxon+hagedorn+power law---------------
 				// printf("weight function =%g\n",weight_function);
 				//
-				//weight_function = weight_function * 1e+14;
+				weight_function = weight_function * 1e+14;
 				// printf("weight function =%g\n",weight_function);
 				// Below is an exponential function. e^-Pt/0.2---------------------
 				//double weight_function=exp(-Pt/0.2);
 				// Below is a power law function
-				double weight_function=pow(Pt,-8.14);
+				//double weight_function=pow(Pt,-8.14);
 
 				if (pythia.event[Gamma_daughters[0]].id() == 22 && pythia.event[Gamma_daughters[1]].id() == 22)
 				{	// check that the decays are photons
@@ -242,7 +242,7 @@ nominal beam energy as linearity and resolution."
 					// std::cout << "inv mass" << " " <<inv_mass<<std::endl;
 					h6->Fill(inv_mass);
 					h8->Fill(inv_mass_smeared);
-					h9->Fill(pythia.event[i].pT(), inv_mass_smeared);
+					h9->Fill(gamma_smeared[2].pT(), inv_mass_smeared);//change  to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
 					h10->Fill(gamma_smeared[2].pT());
 					h12->Fill(gamma_smeared[2].pT(), Pt * weight_function);
 					h16->Fill(gamma_smeared[0].pT());
@@ -253,7 +253,7 @@ nominal beam energy as linearity and resolution."
 					h21->Fill(gamma_lorentz[0].pT(), Pt * weight_function);
 					h20->Fill(gamma_smeared[1].pT(), Pt * weight_function);
 					h21->Fill(gamma_lorentz[1].pT(), Pt * weight_function);
-					h18->Fill(pythia.event[i].pT(), inv_mass_smeared, Pt * weight_function);
+					h18->Fill(gamma_smeared[2].pT(), inv_mass_smeared, Pt * weight_function);//change x to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
 					// mass_pt_map.insert[]
 					///*
 					try
