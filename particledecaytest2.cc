@@ -30,7 +30,7 @@ int main()
 	double PT_ratio = PT_Min / PT_Max;
 	// int n_bins=round((1/4)*PT_Max);
 	// int n_bins=round(1+3.222*log(NPions));
-	int n_bins = PT_Max;
+	int n_bins = 4*PT_Max;
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t = 4.5;
@@ -49,8 +49,9 @@ int main()
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
 
-	for (int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++)
-	{
+	for (int smear_factor_itt = 9; smear_factor_itt < 9 + 1; smear_factor_itt++)
+	{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
+	// only want .155
 		float smear_factor_basevalue = 0.065; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
 		float smear_factor_b = smear_factor_basevalue + 0.01 * smear_factor_itt;
@@ -85,6 +86,8 @@ int main()
 		TH1 *h26 = new TH1F("h26", "weighted, Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
 		TH1 *h28 = new TH1F("h28", "weighted/unweighted ratio of ratios, photons", n_bins, PT_Min, PT_Max);
 		TH2F *h18 = new TH2F("h18", "Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, 64, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+		h18->Sumw2();
+		// things to add probability to add an exponentially scaled (small) energy
 		//--------------------set up random number generation
 		std::random_device rd;		// generate a random number to seed random generation
 		std::random_device rdgamma; // generate a random number to seed random generation of daughter gamma for smearing
@@ -149,17 +152,18 @@ int main()
 			double Pt = PT_Max * pdis(gen);
 
 			//----------------------different possible weights
-			double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
+			//double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
 			//  the above is the woods-saxon+hagedorn+power law---------------
 			// printf("weight function =%g\n",weight_function);
 			//
-			weight_function = weight_function * 1e+14;
+			
 			// printf("weight function =%g\n",weight_function);
 			// Below is an exponential function. e^-Pt/0.2---------------------
-			//double weight_function=exp(-Pt/0.2);
+			//double weight_function=exp(-Pt/0.3);
 			// Below is a power law function
-			//double weight_function=pow(Pt,-8.14);
-			h3->Fill(Pt, Pt * weight_function); // fill pi0 pt, weighted
+			double weight_function=pow(Pt,-8.14);//cannot multiply inv yield by 1e14 for power. try 1e5
+			double inv_yield = 1e+5* Pt * weight_function;//1e14 for wshp
+			h3->Fill(Pt, inv_yield); // fill pi0 pt, weighted
 			h4->Fill(Pt);						// fill pi0 pt, unweighted
 			pi0_px = Pt * cos(azimuthal_ang);
 			pi0_py = Pt * sin(azimuthal_ang);
@@ -182,7 +186,8 @@ int main()
 		// pythia.decay();
 		pythia.moreDecays();
 		std::cout << "I reached here" << std::endl; // debug line
-
+		std::ofstream mycsv2;
+		mycsv2.open(Form("pioncode/csvfiles/pT_IMass_IYield_diag_%f.csv", smear_factor_b));
 		for (int i = 0; i < pythia.event.size(); i++)
 		{ // loop over all events(pions)
 			if (pythia.event[i].id() == 111)
@@ -191,17 +196,18 @@ int main()
 				int Gamma_daughters[2] = {pythia.event[i].daughter1(), pythia.event[i].daughter2()}; // make array of daughter particles(di gamma) event ids
 				double Pt = pythia.event[i].pT();
 				//----------------------different possible weights
-				double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
+				//double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
 				//  the above is the woods-saxon+hagedorn+power law---------------
 				// printf("weight function =%g\n",weight_function);
-				//
-				weight_function = weight_function * 1e+14;
-				// printf("weight function =%g\n",weight_function);
-				// Below is an exponential function. e^-Pt/0.2---------------------
-				//double weight_function=exp(-Pt/0.2);
-				// Below is a power law function
-				//double weight_function=pow(Pt,-8.14);
 
+				// printf("weight function =%g\n",weight_function);
+				// Below is an exponential function. e^-Pt/0.2--------------------
+				//double weight_function=exp(-Pt/0.3);//originally dividing by 0.2
+				// Below is a power law function----------------------------------
+				double weight_function=pow(Pt,-8.14);
+
+
+				double inv_yield = 1e+5* Pt * weight_function;
 				if (pythia.event[Gamma_daughters[0]].id() == 22 && pythia.event[Gamma_daughters[1]].id() == 22)
 				{	// check that the decays are photons
 					// gammadis(gen_gamma(rdgamma()));
@@ -253,8 +259,23 @@ nominal beam energy as linearity and resolution."
 					h21->Fill(gamma_lorentz[0].pT(), Pt * weight_function);
 					h20->Fill(gamma_smeared[1].pT(), Pt * weight_function);
 					h21->Fill(gamma_lorentz[1].pT(), Pt * weight_function);
-					h18->Fill(gamma_smeared[2].pT(), inv_mass_smeared, Pt * weight_function);//change x to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
+					h18->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield);//change x to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
 					// mass_pt_map.insert[]
+					//std::cout << "event number" << " " << i << " " << "smeared pT" << " " << std::scientific << gamma_smeared[2].pT() << " " << "Smeared Mass" << " " << inv_mass_smeared << " " << "inv yield" << " " << std::scientific << inv_yield << std::endl;
+					
+					
+					if(i==0){
+						mycsv2 << "event number" << "," <<  "smeared pT" <<  "," << "Smeared Mass" << "," << "inv yield" << "\n";
+						mycsv2 << i << "," << std::scientific << gamma_smeared[2].pT() << "," << inv_mass_smeared << "," << std::scientific << inv_yield << "\n";
+						//mycsv2 << "\n";
+					}
+					else{
+						//std::cout << "I reached here" <<" "<< i <<std::endl;// debug line
+						//mycsv2 << "event number" << "," <<  "smeared pT" <<  "," << "Smeared Mass" << "," << "inv yield" << "\n";
+						mycsv2 << i << "," << std::scientific << gamma_smeared[2].pT() << "," << inv_mass_smeared << "," << std::scientific << inv_yield << "\n";
+					}
+
+					
 					///*
 					try
 					{
@@ -297,6 +318,7 @@ nominal beam energy as linearity and resolution."
 		// int nbins_array[n];
 		float Smeared_Mean_array[n_bins], Smeared_Variance_array[n_bins], nbins_array[n_bins]; //
 		// const char* canvasname = form("",)
+		mycsv2.close();
 		std::ofstream mycsv;
 
 		mycsv.open(Form("pioncode/csvfiles/Inv_Mass_mean_variance%f.csv", smear_factor_b));
@@ -375,3 +397,4 @@ nominal beam energy as linearity and resolution."
 	// std::cout << "elapsed (sec) = " << elapsed.count() << std::endl;
 	return 0;
 } // End main program with error-free return.
+
