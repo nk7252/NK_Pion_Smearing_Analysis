@@ -16,7 +16,7 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
     gStyle->SetOptStat(0);
 
     // Create a legend
-    TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
+    //TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
 
     // Loop over each file
     for (size_t i = 0; i < fileNames.size(); ++i) {
@@ -41,9 +41,10 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
             continue;
         }
 
-        // Set different line colors for each version
-        int lineColor = i + 1; // Line color: 1, 2, 3, ...
-        h18->SetLineColor(lineColor);
+        // Create a histogram for means
+        TH1F* meanHistogram = new TH1F(Form("MeanHistogram_%zu", i), Form("Version %zu", i), h18D->GetNbinsX(), 0.5, h18->GetNbinsX() + 0.5);
+
+
 
         // Loop over each bin in the X direction
         for (int binX = 1; binX <= h18->GetNbinsX(); ++binX) {
@@ -58,27 +59,39 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
 
             // Check if the fit function is valid
             if (fitFunc) {
-                // Overlay the mean on the same canvas
-                if (i == 0 && binX == 1) {
-                    yProjection->Draw("HIST"); // Draw histogram for the first version and binX
-                } else {
-                    yProjection->Draw("HIST SAME"); // Draw subsequent histograms on the same canvas
-                }
-
-                // Add an entry to the legend
-                legend1->AddEntry(yProjection, Form("Version %zu, BinX %d", i, binX), "L");
+                // Fill the mean histogram with the mean value
+                meanHistogram->SetBinContent(binX, fitFunc->GetParameter(1));
+                meanHistogram->SetBinError(binX, fitFunc->GetParError(1));
             }
+                // Add an entry to the legend
+                //legend1->AddEntry(yProjection, Form("Version %zu, BinX %d", i, binX), "L");
+            
             std::cout << "I reached here, pre delete proj" << std::endl; // debug line
             // Clean up Y projection
             delete yProjection;
         }
+        // Set different line colors for each version
+        int lineColor = i + 1; // Line color: 1, 2, 3, ...
+        meanHistogram->SetLineColor(lineColor);
         std::cout << "I reached here, done with loop over bins" << std::endl; // debug line
+
+        // Overlay the mean histogram on the same canvas
+        if (i == 0) {
+            meanHistogram->Draw("E"); // Draw histogram for the first version
+        } else {
+            meanHistogram->Draw("E SAME"); // Draw subsequent histograms on the same canvas
+        }
+
+        // Add an entry to the legend
+        //legend->AddEntry(meanHistogram, Form("Version %zu", i), "L");
+
         // Close the file
         pionfile->Close();
         delete pionfile;
 
         std::cout << "I reached here, close+delete file" << std::endl; // debug line
     }
+
     std::cout << "I reached here, done with all files" << std::endl; // debug line
     // Draw the legend
     //legend1->Draw();
@@ -86,7 +99,7 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
     // Show the canvas
     canvas1->Update();
     canvas1->Modified();
-    //canvas1->Print("OverlayMeansPlot.pdf");
+    //canvas1->Print("OverlayMeanHistograms.pdf");
 
     // Clean up
     //delete canvas1;
