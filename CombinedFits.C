@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <TFile.h>
 #include <TH2F.h>
 #include <TCanvas.h>
@@ -10,12 +11,12 @@
 
 void OverlayMeans(const std::vector<std::string>& fileNames) {
     // Create a TCanvas
-    TCanvas* canvas = new TCanvas("canvas", "Overlay Means", 800, 600);
-    canvas->SetGrid();
+    TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
+    //canvas1->SetGrid();
     gStyle->SetOptStat(0);
 
     // Create a legend
-    TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.9);
+    TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
 
     // Loop over each file
     for (size_t i = 0; i < fileNames.size(); ++i) {
@@ -34,20 +35,20 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
         //file->GetObject("h18", hist2D);
 
         // Check if the histogram exists
-        if (!hist2D) {
+        if (!h18) {
             std::cerr << "Error: Histogram 'myHist2D' not found in file " << fileNames[i] << std::endl;
-            file->Close();
+            pionfile->Close();
             continue;
         }
 
         // Set different line colors for each version
         int lineColor = i + 1; // Line color: 1, 2, 3, ...
-        hist2D->SetLineColor(lineColor);
+        h18->SetLineColor(lineColor);
 
         // Loop over each bin in the X direction
-        for (int binX = 1; binX <= hist2D->GetNbinsX(); ++binX) {
+        for (int binX = 1; binX <= h18->GetNbinsX(); ++binX) {
             // Project along Y for each binX
-            TH1D* yProjection = hist2D->ProjectionY(Form("YProjection_%d_%d", i, binX), binX, binX, "");
+            TH1D* yProjection = h18->ProjectionY(Form("YProjection_%zu_%d", i, binX), binX, binX, "");
 
             // Fit the Y projection with a Gaussian
             yProjection->Fit("gaus", "Q");
@@ -65,36 +66,39 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
                 }
 
                 // Add an entry to the legend
-                legend->AddEntry(yProjection, Form("Version %zu, BinX %d", i, binX), "L");
+                legend1->AddEntry(yProjection, Form("Version %zu, BinX %d", i, binX), "L");
             }
-
+            std::cout << "I reached here, pre delete proj" << std::endl; // debug line
             // Clean up Y projection
             delete yProjection;
         }
-
+        std::cout << "I reached here, done with loop over bins" << std::endl; // debug line
         // Close the file
         pionfile->Close();
-    }
+        delete pionfile;
 
+        std::cout << "I reached here, close+delete file" << std::endl; // debug line
+    }
+    std::cout << "I reached here, done with all files" << std::endl; // debug line
     // Draw the legend
-    legend->Draw();
+    //legend1->Draw();
 
     // Show the canvas
-    canvas->Update();
-    canvas->Modified();
-    canvas->Print("OverlayMeansPlot.pdf");
+    canvas1->Update();
+    canvas1->Modified();
+    //canvas1->Print("OverlayMeansPlot.pdf");
 
     // Clean up
-    delete canvas;
-    delete legend;
+    //delete canvas1;
+    //delete legend1;
 }
 
-int CombinedFits() {
+void CombinedFits() {
     // List of root file names
-    std::vector<std::string> fileNames = {"pioncode/Pi0FastMC_0.155000EXP.root", "pioncode/Pi0FastMC_0.155000POWER.root", "pioncode/Pi0FastMC_0.155000WSHP.root"};
-
+    std::vector<std::string> fileNames = {"pioncode/Pi0FastMC_0.155000WSHP.root"};
+    // {"pioncode/Pi0FastMC_0.155000EXP.root", "pioncode/Pi0FastMC_0.155000POWER.root", "pioncode/Pi0FastMC_0.15500WSHP.root"};
     // Overlay the means for each bin
     OverlayMeans(fileNames);
 
-    return 0;
+    //return 0;
 }
