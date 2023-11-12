@@ -8,16 +8,18 @@
 #include <TFitResult.h>
 #include <TFitResultPtr.h>
 #include <TF1.h>
+#include <TGraphMultiErrors.h>
 
 void OverlayMeans(const std::vector<std::string>& fileNames) {
     // Create a TCanvas
     TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
-    //canvas1->SetGrid();
+    canvas1->SetGrid();
     gStyle->SetOptStat(0);
 
+    int binres=1;//number of divisions per GeV
     // Create a legend
-    //TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
-
+    TLegend* legend1 = new TLegend(0.7, 0.4, 0.9, 0.6);
+    TMultiGraph *MultiGraphs = new TMultiGraph();//h18->GetNbinsX()
     // Loop over each file
     for (size_t i = 0; i < fileNames.size(); ++i) {
         // Open the root file
@@ -30,9 +32,9 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
         }
 
         // Retrieve the 2D histogram
-        TH2F *h18 =(TH2F *)pionfile->Get("h18");
-        //TH2F* hist2D = nullptr;
-        //file->GetObject("h18", hist2D);
+        //TH2F *h18 =(TH2F *)pionfile->Get("h18");
+        TH2F* h18 = nullptr;
+        pionfile->GetObject("h18", h18);
 
         // Check if the histogram exists
         if (!h18) {
@@ -42,7 +44,8 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
         }
 
         // Create a histogram for means
-        TH1F* meanHistogram = new TH1F(Form("MeanHistogram_%zu", i), Form("Version %zu", i), h18D->GetNbinsX(), 0.5, h18->GetNbinsX() + 0.5);
+        TGraphErrors *meanGraph = new TGraphErrors(h18->GetNbinsX());
+        //TH1F* meanHistogram = new TH1F(Form("MeanHistogram_%zu", i), Form("Version %zu", i), h18->GetNbinsX(), 0.5, h18->GetNbinsX() + 0.5);
 
 
 
@@ -60,8 +63,22 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
             // Check if the fit function is valid
             if (fitFunc) {
                 // Fill the mean histogram with the mean value
-                meanHistogram->SetBinContent(binX, fitFunc->GetParameter(1));
-                meanHistogram->SetBinError(binX, fitFunc->GetParError(1));
+                //meanHistogram->SetBinContent(binX, fitFunc->GetParameter(1));
+                if (i==0 && binX < 6*binres){//exp
+                    meanGraph->SetPoint(binX, binX,fitFunc->GetParameter(1));
+                    meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
+                }
+                else if (i==1 && 1*binres < binX){//power 
+                    meanGraph->SetPoint(binX, binX,fitFunc->GetParameter(1));
+                    meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
+                }
+                else if (i==2) {//woods saxon
+                    meanGraph->SetPoint(binX, binX,fitFunc->GetParameter(1));
+                    meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
+                }
+                
+                //meanHistogram->SetBinError(binX, fitFunc->GetParError(1));
+                std::cout << "bin number" << " " << binX << " " << "Mean" << " " <<  fitFunc->GetParameter(1) << " " << "Mean error" << " " << fitFunc->GetParError(1) << std::endl;
             }
                 // Add an entry to the legend
                 //legend1->AddEntry(yProjection, Form("Version %zu, BinX %d", i, binX), "L");
@@ -71,19 +88,28 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
             delete yProjection;
         }
         // Set different line colors for each version
-        int lineColor = i + 1; // Line color: 1, 2, 3, ...
-        meanHistogram->SetLineColor(lineColor);
+        int MarkerStyle = i + 24; // 
+        //meanGraph->SetLineColor(lineColor);
+        meanGraph->SetMarkerStyle(MarkerStyle);
         std::cout << "I reached here, done with loop over bins" << std::endl; // debug line
 
         // Overlay the mean histogram on the same canvas
         if (i == 0) {
-            meanHistogram->Draw("E"); // Draw histogram for the first version
+            //meanGraph->Draw("AP"); // Draw histogram for the first version
+            //canvas1->Print("OverlayMeanHistograms.pdf");
+            MultiGraphs->Add(meanGraph,"PE");
+            std::cout << "draw for the first file" << std::endl; // debug line
         } else {
-            meanHistogram->Draw("E SAME"); // Draw subsequent histograms on the same canvas
-        }
+            MultiGraphs->Add(meanGraph,"PE");
+            //meanGraph->Draw("P SAME"); // Draw subsequent histograms on the same canvas
+            std::cout << "draw for subsequent" << std::endl; // debug line
+        }   
 
+        
+        MultiGraphs->Draw("APE");
         // Add an entry to the legend
-        //legend->AddEntry(meanHistogram, Form("Version %zu", i), "L");
+        std::vector<std::string> legendstring = {"EXP","POWER","WSHP"};
+        legend1->AddEntry(meanGraph, legendstring[i].c_str(), "P");
 
         // Close the file
         pionfile->Close();
@@ -94,11 +120,12 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
 
     std::cout << "I reached here, done with all files" << std::endl; // debug line
     // Draw the legend
-    //legend1->Draw();
+    legend1->Draw();
 
     // Show the canvas
-    canvas1->Update();
-    canvas1->Modified();
+    
+   //canvas1->Update();
+    //canvas1->Modified();
     //canvas1->Print("OverlayMeanHistograms.pdf");
 
     // Clean up
@@ -108,7 +135,7 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
 
 void CombinedFits() {
     // List of root file names
-    std::vector<std::string> fileNames = {"pioncode/Pi0FastMC_0.155000WSHP.root"};
+    std::vector<std::string> fileNames = {"pioncode/Pi0FastMC_0.155000EXP.root", "pioncode/Pi0FastMC_0.155000POWER.root", "pioncode/Pi0FastMC_0.155000WSHP.root"};//{"pioncode/Pi0FastMC_0.155000WSHP.root"};
     // {"pioncode/Pi0FastMC_0.155000EXP.root", "pioncode/Pi0FastMC_0.155000POWER.root", "pioncode/Pi0FastMC_0.15500WSHP.root"};
     // Overlay the means for each bin
     OverlayMeans(fileNames);
