@@ -126,7 +126,7 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
     
    //canvas1->Update();
     canvas1->Modified();
-    canvas1->Print("OverlayMeanHistograms.pdf");
+    canvas1->Print("pioncode/canvas_pdf/OverlayMeanHistograms.pdf");
 
     // Clean up
     delete canvas1;
@@ -255,7 +255,7 @@ void OverlaySigmaOverMean(const std::vector<std::string>& fileNames) {
     
    //canvas1->Update();
     canvas1->Modified();
-    canvas1->Print("OverlayMeanHistograms.pdf");
+    canvas1->SaveAs("pioncode/canvas_pdf/OverlayMeanHistograms.pdf");//Print-> works too
 
     // Clean up
     delete canvas1;
