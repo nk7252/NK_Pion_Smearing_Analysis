@@ -16,7 +16,7 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
     canvas1->SetGrid();
     gStyle->SetOptStat(0);
 
-    int binres=2;//number of divisions per GeV
+    int binres=1;//number of divisions per GeV
     // Create a legend
     TLegend* legend1 = new TLegend(0.7, 0.4, 0.9, 0.6);
     TMultiGraph *MultiGraphs = new TMultiGraph();//h18->GetNbinsX()
