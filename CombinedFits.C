@@ -16,7 +16,7 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
     canvas1->SetGrid();
     gStyle->SetOptStat(0);
 
-    int binres=1;//number of divisions per GeV
+    int binres=2;//number of divisions per GeV
     // Create a legend
     TLegend* legend1 = new TLegend(0.7, 0.4, 0.9, 0.6);
     TMultiGraph *MultiGraphs = new TMultiGraph();//h18->GetNbinsX()
@@ -50,9 +50,9 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
 
 
         // Loop over each bin in the X direction
-        for (int binX = 1; binX <= h18->GetNbinsX(); ++binX) {
+        for (double binX = 1; binX <= h18->GetNbinsX(); ++binX) {
             // Project along Y for each binX
-            TH1D* yProjection = h18->ProjectionY(Form("YProjection_%zu_%d", i, binX), binX, binX, "");
+            TH1D* yProjection = h18->ProjectionY(Form("YProjection_%zu_%f", i, binX), binX, binX, "");
 
             // Fit the Y projection with a Gaussian
             yProjection->Fit("gaus", "Q");
@@ -65,15 +65,15 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
                 // Fill the mean histogram with the mean value
                 //meanHistogram->SetBinContent(binX, fitFunc->GetParameter(1));
                 if (i==0 && binX < 6*binres){//exp
-                    meanGraph->SetPoint(binX, binX,fitFunc->GetParameter(1));
+                    meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                     meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
                 }
                 else if (i==1 && 1*binres < binX){//power 
-                    meanGraph->SetPoint(binX, binX,fitFunc->GetParameter(1));
+                    meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                     meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
                 }
                 else if (i==2) {//woods saxon
-                    meanGraph->SetPoint(binX, binX,fitFunc->GetParameter(1));
+                    meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                     meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
                 }
                 
@@ -125,12 +125,12 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
     // Show the canvas
     
    //canvas1->Update();
-    //canvas1->Modified();
-    //canvas1->Print("OverlayMeanHistograms.pdf");
+    canvas1->Modified();
+    canvas1->Print("OverlayMeanHistograms.pdf");
 
     // Clean up
-    //delete canvas1;
-    //delete legend1;
+    delete canvas1;
+    delete legend1;
 }
 
 void OverlaySigmaOverMean(const std::vector<std::string>& fileNames) {

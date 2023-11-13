@@ -30,7 +30,7 @@ int main()
 	double PT_ratio = PT_Min / PT_Max;
 	// int n_bins=round((1/4)*PT_Max);
 	// int n_bins=round(1+3.222*log(NPions));
-	int n_bins = 4*PT_Max;//multiple by bin res.
+	int n_bins = 2*PT_Max;//multiple by bin res.
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
 
 	//-----------------------------------set weighting method
