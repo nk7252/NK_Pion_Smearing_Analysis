@@ -17,7 +17,7 @@
 //-------------------------------
 //function declarations;
 //-------------------------------
-void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname);
+void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname, int binres, int weightmethod);
 
 void SliceAndFit()
 {
@@ -45,6 +45,12 @@ void SliceAndFit()
 	strftime(Time, 80, "%Y-%m-%d-%H:%M:%S", timeinfo);
 	puts(Time);				   // print Time to root
 	int rel_error_param = 155; // 65 for full set. I will do 145 now// switched from 67(old) to 65(new)
+
+
+	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
+	int weightmethod=0;//0=exp,1=power,2=wshp
+	int binres=2;
+
 	for (int i = 0; i < 1; i++)
 	{ // 3 if doing 14.5-16.5//26 for full set(old)
 		////////////////////////////////////
@@ -58,11 +64,11 @@ void SliceAndFit()
 		const char *pionfilename;
 		if (rel_error_param < 100)
 		{
-			pionfilename = Form("Pi0FastMC_0.0%d000.root", rel_error_param);
+			pionfilename = Form("Pi0FastMC_0.0%d000_%s.root", rel_error_param,WeightNames[weightmethod].c_str());
 		}
 		else
 		{
-			pionfilename = Form("Pi0FastMC_0.%d000.root", rel_error_param);
+			pionfilename = Form("Pi0FastMC_0.%d000_%s.root", rel_error_param,WeightNames[weightmethod].c_str());
 		}
 		// const char* pionfilename = Form("Pi0FastMC_%d000.root", rel_error_param);
 		cout << pionfilename << "\n";
@@ -84,7 +90,7 @@ void SliceAndFit()
 		// delete pionfilename;
 
 		// const char* canvasname = Form("weighted_unweighted_SliceFit_ErrParam_67_thousandths", Time);//_date_%s,rel_error_param
-		TString canvasname = Form("weighted_unweighted_SliceFit_ErrParam_%d_thousandths_%s_POWERweight", rel_error_param, Time); //_date_%s
+		TString canvasname = Form("%s_Sliced_%d_thousandths_%s",WeightNames[weightmethod].c_str(), rel_error_param, Time); //_date_%s
 		const char *pdfname = canvasname;
 		TCanvas *c1 = new TCanvas(canvasname, canvasname, 3000, 1200);
 		// TCanvas* c1 = new TCanvas(Form("c_%d", rel_error_param), "c1", 3000, 1000);
@@ -283,23 +289,26 @@ void SliceAndFit()
 			h18_6->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
 			//*/
 			c2->SaveAs(Form("pioncode/canvas_pdf/%s_truncatedsigma.pdf", pdfname));
+			delete c2;
 		}
 
 		
 		TCanvas *c3 = new TCanvas("c3", "c3", 3000, 3000);
 		
-		FitYProjectionsAndGraph(c3, h18, pdfname);
+		FitYProjectionsAndGraph(c3, h18, pdfname, binres, weightmethod);
 		c3->SaveAs(Form("pioncode/canvas_pdf/Alt_Projection_%s.pdf", pdfname));
 		
 		pionfile->Close();
 
 		rel_error_param = rel_error_param + 10;
 		cout << rel_error_param << "\n";
+		delete c3;
 	}
 	//return 0;
+	
 }
 
-void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname)
+void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname, int binres, int weightmethod)
 {	
 	std::ofstream mycsv;
 	//const int numXBins = 64; // Number of X bins
@@ -313,7 +322,20 @@ void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname)
     TGraphErrors *meanGraph = new TGraphErrors(numXBins);
     TGraphErrors *sigmaGraph = new TGraphErrors(numXBins);
 	// Loop over X bins
-	for (int i = 4*3+1; i < numXBins+1; ++i)// originally until numXBins// for exp use i < 4*6+1// for power go from 4*3+1 to numXBins+1
+	int upper_limit, lower_limit;
+	if (weightmethod==0){//exp
+		lower_limit=1;
+		upper_limit=binres*6;
+	}
+	else if (weightmethod==1){//power 
+		lower_limit=binres*2;
+		upper_limit=numXBins;
+	}
+	else if (weightmethod==2 ){//woods saxon
+		lower_limit=1;
+		upper_limit=numXBins;
+	}
+	for (int i = lower_limit; i <= upper_limit; ++i)// originally until numXBins// for exp use i < 4*6+1// for power go from 4*3+1 to numXBins+1
 	{
 		// Create a Y projection for the current X bin
 		TH1D *yProjection = hist2D->ProjectionY(Form("YProjection_%d", i), i , i ,"");

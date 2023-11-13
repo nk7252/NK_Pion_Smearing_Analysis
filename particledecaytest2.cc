@@ -160,7 +160,7 @@ int main()
 			if(weightmethod==0){
 				//std::cout << "EXP Weight" <<std::endl;
 				double weight_function=exp(-Pt/0.3);//originally dividing by 0.2
-				int WeightScale=1e+14;
+				int WeightScale=1e+20;
 			}
 			else if(weightmethod==1){
 				//std::cout << "Power Weight" <<std::endl;

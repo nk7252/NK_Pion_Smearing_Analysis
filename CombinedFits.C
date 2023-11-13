@@ -214,31 +214,27 @@ void OverlaySigmaOverMean(const std::vector<std::string>& fileNames) {
             if (fitFunc) {
                 // Fill the mean histogram with the mean value
                 //meanHistogram->SetBinContent(binX, fitFunc->GetParameter(1));
-                if (i==0 && binX < 6*binres){//exp
+                if (i==0 && binX <= 6*binres){//exp
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
-
-                    meanGraph->SetPoint(binX, binX/binres,meanoversigma);
-
                     double meanoversigmaerr = meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//m/s*(serr/s+merr/m)
 
+                    meanGraph->SetPoint(binX, binX/binres,meanoversigma);
                     meanGraph->SetPointError(binX, 0,meanoversigmaerr);
                 }
                 else if (i==1){//power 
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
-
-                    meanGraph->SetPoint(binX, binX/binres,meanoversigma);
-
                     double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//m/s*(serr/s+merr/m)
 
+                    meanGraph->SetPoint(binX, binX/binres,meanoversigma);
                     meanGraph->SetPointError(binX, 0,meanoversigmaerr);
-
                     std::cout << binX <<" "<<meanoversigma << std::endl; // debug line
 
                 }
                 else if (i==2) {//woods saxon
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
+                    double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//(m/s)_err=m/s*(serr/s+merr/m)
+
                     meanGraph->SetPoint(binX, binX/binres,meanoversigma);
-                    double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//m/s*(serr/s+merr/m)
                     meanGraph->SetPointError(binX, 0,meanoversigmaerr);
                 }
                 
@@ -273,7 +269,7 @@ void OverlaySigmaOverMean(const std::vector<std::string>& fileNames) {
             std::cout << "draw for subsequent" << std::endl; // debug line
         }   
 
-        
+        MultiGraphs->SetTitle(" Sigma/Mean (Smeared Inv. Mass) for various weight methods;pT (GeV);sigma/mean)");
         MultiGraphs->Draw("APE");
         // Add an entry to the legend
         std::vector<std::string> legendstring = {"EXP","POWER","WSHP"};
@@ -290,9 +286,9 @@ void OverlaySigmaOverMean(const std::vector<std::string>& fileNames) {
     // Draw the legend
     legend1->Draw();
     
-    MultiGraphs->GetXaxis()->SetLimits(0.1,6.4);
-    MultiGraphs->SetMinimum(0.001);
-    //MultiGraphs->SetMaximum(0.3);
+    MultiGraphs->GetXaxis()->SetLimits(0.9,6.4);
+    MultiGraphs->SetMinimum(0.08);
+    MultiGraphs->SetMaximum(0.25);
     canvas1->SetMargin(0.2,0.1,0.1,0.1);
     gPad->Modified();
     gPad->Update();
