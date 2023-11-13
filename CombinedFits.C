@@ -10,6 +10,18 @@
 #include <TF1.h>
 #include <TGraphMultiErrors.h>
 
+// Woods Saxon
+Double_t WoodsSaxonHagedornPower(Double_t *pT) {//, Double_t *par
+    double t = 4.5;
+	double w = 0.114;
+	double A = 229.6;
+	double B = 14.43;
+	double n = 8.1028;
+	double m_param = 10.654;
+	double p0 = 1.466;
+    return ((1/(1+exp((pT-t)/w)))*A/pow(1+pT/p0,m_param)+(1-(1/(1+exp((pT-t)/w))))*B/(pow(pT,n)));
+}
+
 void OverlayMeans(const std::vector<std::string>& fileNames) {
     // Create a TCanvas
     TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
@@ -91,6 +103,26 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
         int MarkerStyle = i + 24; // 
         //meanGraph->SetLineColor(lineColor);
         meanGraph->SetMarkerStyle(MarkerStyle);
+
+        // Fit the graphs
+        if (i==0 ){//exp
+            TF1 *fit1 = new TF1("EXPfit`", "expo", 0, 6*binres);
+            meanGraph->Fit(fit1);
+        }
+        else if (i==1 ){//power 
+            TF1 *fit2 = new TF1("POWERfit", "pol2", 1*binres, h18->GetNbinsX());
+            meanGraph->Fit(fit2);
+        }
+        else if (i==2) {//woods saxon
+            WoodsSaxonHagedornPower
+            TF1 *fit3 = new TF1("WSHPfit", WoodsSaxonHagedornPower, 0, h18->GetNbinsX());
+            meanGraph->Fit(fit3);
+        }
+        
+        
+        
+        
+        
         std::cout << "I reached here, done with loop over bins" << std::endl; // debug line
 
         // Overlay the mean histogram on the same canvas
