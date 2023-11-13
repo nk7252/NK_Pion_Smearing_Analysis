@@ -30,12 +30,12 @@ int main()
 	double PT_ratio = PT_Min / PT_Max;
 	// int n_bins=round((1/4)*PT_Max);
 	// int n_bins=round(1+3.222*log(NPions));
-	int binres=1;//number of divisions per GeV
+	int binres=2;//number of divisions per GeV
 	int n_bins = binres*PT_Max;//multiple by bin res.
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
 
 	//-----------------------------------set weighting method
-	int weightmethod = 2;//0=exp,1=power,2=wshp
+	int weightmethod = 0;//0=exp,1=power,2=wshp
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
 	//-----------------------------------
 
@@ -345,8 +345,7 @@ int main()
 			Smeared_Variance_array[i] = pow(htemp1->GetStdDev(), 2);
 
 			mycsv << i << "," << Smeared_Mean_array[i] << "," << Smeared_Variance_array[i] << "," << Smeared_Variance_array[i] / Smeared_Mean_array[i] << "\n";
-			std::cout << "Smeared Mean = " << Smeared_Mean_array[i] << " , "
-					  << "Smeared Variance = " << Smeared_Variance_array[i] << std::endl;
+			//std::cout << "Smeared Mean = " << Smeared_Mean_array[i] << " , " << "Smeared Variance = " << Smeared_Variance_array[i] << std::endl;
 			// std::cout << "Smeared Mean = " << Smeared_Mean_array[i] << " , " << "Smeared Variance = " << "blank" <<std::endl;
 			delete htemp1;
 		}
