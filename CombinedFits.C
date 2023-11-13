@@ -135,7 +135,7 @@ void OverlayMeans(const std::vector<std::string>& fileNames) {
 
 void CombinedFits() {
     // List of root file names
-    std::vector<std::string> fileNames = {"pioncode/Pi0FastMC_0.155000EXP.root", "pioncode/Pi0FastMC_0.155000POWER.root", "pioncode/Pi0FastMC_0.155000WSHP.root"};//{"pioncode/Pi0FastMC_0.155000WSHP.root"};
+    std::vector<std::string> fileNames = {"pioncode/rootfiles/Pi0FastMC_0.155000_EXP.root", "pioncode/rootfiles/Pi0FastMC_0.155000_POWER.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP.root"};//{"pioncode/Pi0FastMC_0.155000WSHP.root"};
     // {"pioncode/Pi0FastMC_0.155000EXP.root", "pioncode/Pi0FastMC_0.155000POWER.root", "pioncode/Pi0FastMC_0.15500WSHP.root"};
     // Overlay the means for each bin
     OverlayMeans(fileNames);

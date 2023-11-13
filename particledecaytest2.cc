@@ -30,8 +30,15 @@ int main()
 	double PT_ratio = PT_Min / PT_Max;
 	// int n_bins=round((1/4)*PT_Max);
 	// int n_bins=round(1+3.222*log(NPions));
-	int n_bins = 4*PT_Max;
+	int n_bins = 4*PT_Max;//multiple by bin res.
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
+
+	//-----------------------------------set weighting method
+	int weightmethod = 2;//0=exp,1=power,2=wshp
+	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
+	//-----------------------------------
+
+
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t = 4.5;
 	double w = 0.114;
@@ -58,7 +65,7 @@ int main()
 		//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 		//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
 
-		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f.root", smear_factor_b), "recreate");
+		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s.root", smear_factor_b, WeightNames[weightmethod].c_str()), "recreate");
 		TTree *tree = new TTree("tree", "tree");
 		tree->SetMaxTreeSize(500 * 1024 * 1024); // set max tree size to 500 mb
 
@@ -102,7 +109,7 @@ int main()
 		//--------------------generate random: angle
 		// double tpi=2*std::numbers::pi;
 		std::uniform_real_distribution<> adis(0.0, 2 * M_PI);
-		int id, size, no;
+		int id, size, no, WeightScale;
 		// std::vector<int> vec_id;
 		// std::vector<double> vec_E;
 		// std::vector<double> vec_Pi0_Pt;
@@ -114,10 +121,9 @@ int main()
 		double P0rest = 0.0;
 		double pi0_pz = 0.0;
 		double Pi0_M = 0.1349768; // 135 MeV
-		double inv_mass, inv_mass_smeared;
+		double inv_mass, inv_mass_smeared,weight_function;
+
 		// std::cout << Pi0_M <<std::endl;
-		// int idnone=0;
-		// int idg2=0;
 		tree->Branch("id", &id, "id/I");
 		// tree->Branch("size",&size, "size/I");
 		// tree->Branch("no",&no, "no/I");
@@ -145,24 +151,31 @@ int main()
 		pythia.event.clear();
 		// bool readytoappend = true;
 
-		for (int i = 0; i < NPions; i++)
-		{
+		for (int i = 0; i < NPions; i++){
 			// std::cout << "I reached here" <<" "<< i <<std::endl;// debug line
 			double azimuthal_ang = adis(gen); // generate a random angle from 0 to 2pi
 			double Pt = PT_Max * pdis(gen);
-
 			//----------------------different possible weights
-			//double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
-			//  the above is the woods-saxon+hagedorn+power law---------------
-			// printf("weight function =%g\n",weight_function);
-			//
-			
-			// printf("weight function =%g\n",weight_function);
-			// Below is an exponential function. e^-Pt/0.2---------------------
-			//double weight_function=exp(-Pt/0.3);
-			// Below is a power law function
-			double weight_function=pow(Pt,-8.14);//cannot multiply inv yield by 1e14 for power. try 1e5
-			double inv_yield = 1e+5* Pt * weight_function;//1e14 for wshp
+			if(weightmethod==0){
+				//std::cout << "EXP Weight" <<std::endl;
+				double weight_function=exp(-Pt/0.3);//originally dividing by 0.2
+				int WeightScale=1e+14;
+			}
+			else if(weightmethod==1){
+				//std::cout << "Power Weight" <<std::endl;
+				double weight_function=pow(Pt,-8.14);
+				int WeightScale=1e+5;
+			}
+			else if(weightmethod==2){
+				//std::cout << "WSHP Weight" <<std::endl;
+				double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));
+				int WeightScale=1e+14;
+			}
+			else{
+				std::cout << "Error:No Weight method found" <<std::endl;
+			}
+			double inv_yield = WeightScale* Pt * weight_function;
+
 			h3->Fill(Pt, inv_yield); // fill pi0 pt, weighted
 			h4->Fill(Pt);						// fill pi0 pt, unweighted
 			pi0_px = Pt * cos(azimuthal_ang);
@@ -196,47 +209,45 @@ int main()
 				int Gamma_daughters[2] = {pythia.event[i].daughter1(), pythia.event[i].daughter2()}; // make array of daughter particles(di gamma) event ids
 				double Pt = pythia.event[i].pT();
 				//----------------------different possible weights
-				//double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));//*1.0e+13;//new weight method, need to multiply by Pt too
-				//  the above is the woods-saxon+hagedorn+power law---------------
-				// printf("weight function =%g\n",weight_function);
+				if(weightmethod==0){
+					//std::cout << "EXP Weight" <<std::endl;
+					weight_function=exp(-Pt/0.3);//originally dividing by 0.2
+					WeightScale=1e+14;
+				}
+				else if(weightmethod==1){
+					//std::cout << "Power Weight" <<std::endl;
+					weight_function=pow(Pt,-8.14);
+					WeightScale=1e+5;
+				}
+				else if(weightmethod==2){
+					//std::cout << "WSHP Weight" <<std::endl;
+					weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));
+					WeightScale=1e+14;
+				}
+				else{
+					std::cout << "Error:No Weight method found" <<std::endl;
+				}
 
-				// printf("weight function =%g\n",weight_function);
-				// Below is an exponential function. e^-Pt/0.2--------------------
-				//double weight_function=exp(-Pt/0.3);//originally dividing by 0.2
-				// Below is a power law function----------------------------------
-				double weight_function=pow(Pt,-8.14);
+				double inv_yield = WeightScale* Pt * weight_function;
 
-
-				double inv_yield = 1e+5* Pt * weight_function;
-				if (pythia.event[Gamma_daughters[0]].id() == 22 && pythia.event[Gamma_daughters[1]].id() == 22)
-				{	// check that the decays are photons
+				if (pythia.event[Gamma_daughters[0]].id() == 22 && pythia.event[Gamma_daughters[1]].id() == 22){// check that the decays are photons
 					// gammadis(gen_gamma(rdgamma()));
 
-					//
 					gamma_lorentz[0] = pythia.event[Gamma_daughters[0]].p();
 					gamma_lorentz[1] = pythia.event[Gamma_daughters[1]].p();
 					gamma_lorentz[2] = gamma_lorentz[0] + gamma_lorentz[1];
 					inv_mass = gamma_lorentz[2].mCalc();
 
-					// scale_factor=0.04;//need to change to pT dependent scale factor. something of the form rel_error=[a^2/E(gev)+b^2]^1/2
-					// pass parameters to
-					// scale_factor=[[0]/gamma_lorentz[2].E()+[1]]^1/2
-					// scale_factor1=sqrt(pow(smear_factor_b,2)/gamma_lorentz[2].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));
-					scale_factor1 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[0].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2)); // pow(smear_factor_a,2)/sqrt(gamma_lorentz[0].e())+
-					// scale_factor1=sqrt(pow(smear_factor_b,2)/pythia.event[Gamma_daughters[0]].e()+pow(smear_factor_c,2)+pow(smear_factor_d,2));
-					//  add d. they just point out that it is a part of their fit data. to get only the energy res you remove it.
-					scale_factor2 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[1].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2)); // pow(smear_factor_a,2)/sqrt(gamma_lorentz[1].e())+
-					/*
-					they said  "A beam momentum
-spread (δp/p ≈ 2%) is quadratically subtracted from σ/μ of
-the fit, in order to unfolded beam momentum spread from the
-relative energy resolution. The Gauss function parameter of
-μ and energy resolution from each fit are plotted against the
-nominal beam energy as linearity and resolution."
-*/
-					// Smear independently (photon e). I split the smear factors in to two independent cases. remember photons are smeared individually. The pion itself is not smeared. it is detected through the decay photons. If you reconstruct the pion you see the smearing effect.
+					scale_factor1 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[0].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
+					scale_factor2 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[1].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
+
+					/* 
+					they said  "A beam momentum spread (δp/p ≈ 2%) is quadratically subtracted from σ/μ of the fit, in order to unfolded beam momentum spread from the relative energy resolution. The Gauss function parameter of μ and energy resolution from each fit are plotted against the nominal beam energy as linearity and resolution." 
+					*/
+
 					smear_factor1 = scale_factor1 * gammadis(gen_gamma) + 1;
 					smear_factor2 = scale_factor2 * gammadis(gen_gamma) + 1;
+
 					// std::cout << "gamma gen" << " " <<gammadis(gen_gamma)<<std::endl;
 					// std::cout << "pion E" << " " <<gamma_lorentz[2].e()<< " " << "smear_factor1" << " " <<smear_factor1<< " " << "smear_factor2" << " " <<smear_factor2<< " " <<std::endl;
 
@@ -311,13 +322,8 @@ nominal beam energy as linearity and resolution."
 				}
 			}
 		}
-		// std::vector<double> Smeared_Mean, Smeared_Variance;// save mean and variance of masses asociated with each pt bin
-		// float Smeared_Mean;
-		// double_t Smeared_Mean_array[];
-		// const Int_t n=64;
-		// int nbins_array[n];
-		float Smeared_Mean_array[n_bins], Smeared_Variance_array[n_bins], nbins_array[n_bins]; //
-		// const char* canvasname = form("",)
+		
+		float Smeared_Mean_array[n_bins], Smeared_Variance_array[n_bins], nbins_array[n_bins]; 
 		mycsv2.close();
 		std::ofstream mycsv;
 
@@ -325,21 +331,18 @@ nominal beam energy as linearity and resolution."
 		for (int i = 1; i < n_bins + 1; i++)
 		{
 			TH1 *htemp1 = new TH1D("htemp1", "temp1", n_bins, PT_Min, PT_Max); // unweighted
-			// TH1* htemp2 = new TH1D("htemp2", "temp2",n_bins, PT_Min, PT_Max);//weighted
-			//  hist for each pT bin
+
 			for (int j = 0; j < mass_pt_map[i].size(); j++)
 			{
 				htemp1->Fill(mass_pt_map[i][j]);
 			}
 
-			// Smeared_Mean.push_back(htemp1->GetMean());
-			// Smeared_Mean=htemp1->GetMean();
+
 			Smeared_Mean_array[i] = htemp1->GetMean();
 			nbins_array[i] = i;
-			// h10->Fill(i,Smeared_Mean.back());
-			// Smeared_Variance.push_back(pow(htemp1->GetStdDev(),2));
+
 			Smeared_Variance_array[i] = pow(htemp1->GetStdDev(), 2);
-			// h11->Fill(i,Smeared_Variance.back());
+
 			mycsv << i << "," << Smeared_Mean_array[i] << "," << Smeared_Variance_array[i] << "," << Smeared_Variance_array[i] / Smeared_Mean_array[i] << "\n";
 			std::cout << "Smeared Mean = " << Smeared_Mean_array[i] << " , "
 					  << "Smeared Variance = " << Smeared_Variance_array[i] << std::endl;
@@ -392,9 +395,6 @@ nominal beam energy as linearity and resolution."
 		output->Write();
 		output->Close();
 	}
-	// auto end =std::chrono::steady_clock::now();
-	// auto elapsed = end - start;
-	// std::cout << "elapsed (sec) = " << elapsed.count() << std::endl;
 	return 0;
-} // End main program with error-free return.
+}
 
