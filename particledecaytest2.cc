@@ -35,10 +35,11 @@ int main()
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
 
 	//-----------------------------------set weighting method
-	int weightmethod = 0;//0=exp,1=power,2=wshp
+	int weightmethod = 2;//0=exp,1=power,2=wshp
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
 	//-----------------------------------
-
+	int asymcut=0;//apply asymm cut.
+	int clusteroverlay = 0;//overlayed cluster check
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t = 4.5;
@@ -78,7 +79,7 @@ int main()
 		TH1 *h6 = new TH1F("h6", "inv mass of gamma pair", 100, 0, 1);
 		TH1 *h7 = new TH1F("h7", "ratio of gamma/pi0 pt", n_bins, PT_Min, PT_Max);
 		TH1 *h8 = new TH1F("h8", "inv mass of gamma pair, smeared", 100, smeared_lower_bin_limit, smeared_upper_bin_limit);
-		TH2F *h9 = new TH2F("h9", "Pion Pt vs Smeared Inv Mass", n_bins, 0, 64, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+		TH2F *h9 = new TH2F("h9", "Smeared Pion Pt vs Smeared Inv Mass", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 		TH1 *h10 = new TH1F("h10", "Smeared Pion PT", n_bins, PT_Min, PT_Max);
 		TH1 *h11 = new TH1F("h11", "Smeared Pion PT/Pion PT ratio", n_bins, PT_Min, PT_Max);
 		TH1 *h12 = new TH1F("h12", "Smeared Pion PT, weighted", n_bins, PT_Min, PT_Max);
@@ -93,19 +94,22 @@ int main()
 		TH1 *h24 = new TH1F("h24", "Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
 		TH1 *h26 = new TH1F("h26", "weighted, Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
 		TH1 *h28 = new TH1F("h28", "weighted/unweighted ratio of ratios, photons", n_bins, PT_Min, PT_Max);
-		TH2F *h18 = new TH2F("h18", "Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, 64, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+		TH2F *h18 = new TH2F("h18", "Smeared Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 		h18->Sumw2();
 		// things to add probability to add an exponentially scaled (small) energy
 		//--------------------set up random number generation
 		std::random_device rd;		// generate a random number to seed random generation
 		std::random_device rdgamma; // generate a random number to seed random generation of daughter gamma for smearing
+		std::random_device rdgammacluster;// random number to test clustering
 		// std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd
 		std::mt19937_64 gen(rd());			  // mersenne_twister_engine 64 bit seeded with rd
 		std::mt19937_64 gen_gamma(rdgamma()); // mersenne_twister_engine 64 bit seeded with rdgamma for gamma smearing
+		std::mt19937_64 gen_gammacluster(rdgammacluster());//generate random number to test clustering 
 		// std::ranlux48 gen(rd()); // ranlux48 seeded with rd
 		//--------------------generate random: momentum
 		// std::uniform_real_distribution<> pdis(0.0,PT_Max);
 		std::normal_distribution<double> gammadis(0.0, 1.0);  // generate normal distribution for gamma smearing, mean zero, variance 1
+		std::uniform_real_distribution<> gammacluster(0, 1.0); // random probability to have photons clustered together. if above certain value, add a random photon from the smeared+weighted photon spectrum. cutoff will be tuned.
 		std::uniform_real_distribution<> pdis(PT_ratio, 1.0); // alternative scheme with min PT to avoid power law complications.
 		//--------------------generate random: angle
 		// double tpi=2*std::numbers::pi;
@@ -255,6 +259,13 @@ int main()
 					gamma_smeared[0] = smear_factor1 * pythia.event[Gamma_daughters[0]].p();
 					// std::cout << "E" << " " <<gamma_lorentz[0].e()<< " " << "smeared E" << " " <<gamma_smeared[0].e()<< " " <<std::endl; // debug, is the factor being applied?
 					gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
+
+
+					if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())>0.8 &&asymcut==1){//asymmetry cut
+					//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
+					continue;
+					}
+
 					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
 					inv_mass_smeared = gamma_smeared[2].mCalc();
 					// std::cout << "inv mass" << " " <<inv_mass<<std::endl;
@@ -263,10 +274,21 @@ int main()
 					h9->Fill(gamma_smeared[2].pT(), inv_mass_smeared);//change  to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
 					h10->Fill(gamma_smeared[2].pT());
 					h12->Fill(gamma_smeared[2].pT(), Pt * weight_function);
-					h16->Fill(gamma_smeared[0].pT());
-					h17->Fill(gamma_lorentz[0].pT());
-					h16->Fill(gamma_smeared[1].pT());
+					h17->Fill(gamma_lorentz[0].pT());//unsmeared energy spectrum
 					h17->Fill(gamma_lorentz[1].pT());
+					h16->Fill(gamma_smeared[0].pT());//smeared photn energy spectrum
+					h16->Fill(gamma_smeared[1].pT());
+					///*
+					if (gammacluster(gen_gammacluster)>0.8 && clusteroverlay==1){//overlay with photon cluster 2
+					std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
+					gamma_smeared[0].e(gamma_smeared[0].e() + h16->GetRandom());
+					std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
+					}
+					if (gammacluster(gen_gammacluster)>0.8 && clusteroverlay==1){//overlay with photon cluster 2
+					std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
+					gamma_smeared[1].e(gamma_smeared[1].e() +h16->GetRandom());
+					std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
+					}//*/
 					h20->Fill(gamma_smeared[0].pT(), Pt * weight_function);
 					h21->Fill(gamma_lorentz[0].pT(), Pt * weight_function);
 					h20->Fill(gamma_smeared[1].pT(), Pt * weight_function);

@@ -17,7 +17,7 @@
 //-------------------------------
 //function declarations;
 //-------------------------------
-void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname, int binres, int weightmethod);
+void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname, double binres, int weightmethod);
 
 void SliceAndFit()
 {
@@ -48,8 +48,8 @@ void SliceAndFit()
 
 
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
-	int weightmethod=0;//0=exp,1=power,2=wshp
-	int binres=2;
+	int weightmethod=2;//0=exp,1=power,2=wshp
+	double binres=2;
 
 	for (int i = 0; i < 1; i++)
 	{ // 3 if doing 14.5-16.5//26 for full set(old)
@@ -308,7 +308,7 @@ void SliceAndFit()
 	
 }
 
-void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname, int binres, int weightmethod)
+void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname, double binres, int weightmethod)
 {	
 	std::ofstream mycsv;
 	//const int numXBins = 64; // Number of X bins
@@ -354,9 +354,9 @@ void FitYProjectionsAndGraph(TCanvas *canvas, TH2F *hist2D, const char *pdfname,
 			double sigmaError = fitFunc->GetParError(2);
 
 			// Store the parameters in the TGraphs
-			ampGraph->SetPoint(i, i, amplitude);
-			meanGraph->SetPoint(i, i, mean);
-			sigmaGraph->SetPoint(i, i, sigma);
+			ampGraph->SetPoint(i, i/binres, amplitude);
+			meanGraph->SetPoint(i, i/binres, mean);
+			sigmaGraph->SetPoint(i, i/binres, sigma);
 			ampGraph->SetPointError(i, 0, amplitudeError);// No error in X
 			meanGraph->SetPointError(i, 0, meanError); // No error in X
 			sigmaGraph->SetPointError(i, 0, sigmaError); // No error in 
