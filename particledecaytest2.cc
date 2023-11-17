@@ -34,12 +34,22 @@ int main()
 	int n_bins = binres*PT_Max;//multiple by bin res.
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
 
+	// Clone photon spectrum histogram.
+	TFile* pspectfile = new TFile("pioncode/rootfiles/Photon_spectrum_hist.root", "READ");
+	TH1F* oldHist = dynamic_cast<TH1F*>(pspectfile->Get("h16"));
+	TH1F* H_pspectrum = new TH1F("Photon_Spectrum_WSHP_Hist", oldHist->GetTitle(), oldHist->GetNbinsX(), oldHist->GetXaxis()->GetXmin(), oldHist->GetXaxis()->GetXmax());
+	H_pspectrum->Add(oldHist);
+    //TH1F* clonedHist = dynamic_cast<TH1F*>(originalHist->Clone());
+    //clonedHist->SetName(newHistName);
+	delete oldHist;
+	pspectfile->Close(); 
+
 	//-----------------------------------set weighting method
 	int weightmethod = 2;//0=exp,1=power,2=wshp
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
 	//-----------------------------------
 	int asymcut=0;//apply asymm cut.
-	int clusteroverlay = 0;//overlayed cluster check
+	int clusteroverlay = 1;//overlayed cluster check
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t = 4.5;
@@ -67,7 +77,7 @@ int main()
 		//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 		//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
 
-		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s.root", smear_factor_b, WeightNames[weightmethod].c_str()), "recreate");
+		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s_ac%i_co%i.root", smear_factor_b, WeightNames[weightmethod].c_str(), asymcut, clusteroverlay), "recreate");
 		TTree *tree = new TTree("tree", "tree");
 		tree->SetMaxTreeSize(500 * 1024 * 1024); // set max tree size to 500 mb
 
@@ -276,17 +286,17 @@ int main()
 					h12->Fill(gamma_smeared[2].pT(), Pt * weight_function);
 					h17->Fill(gamma_lorentz[0].pT());//unsmeared energy spectrum
 					h17->Fill(gamma_lorentz[1].pT());
-					h16->Fill(gamma_smeared[0].pT());//smeared photn energy spectrum
+					h16->Fill(gamma_smeared[0].pT());//smeared photon energy spectrum
 					h16->Fill(gamma_smeared[1].pT());
 					///*
 					if (gammacluster(gen_gammacluster)>0.8 && clusteroverlay==1){//overlay with photon cluster 2
 					std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
-					gamma_smeared[0].e(gamma_smeared[0].e() + h16->GetRandom());
+					gamma_smeared[0].e(gamma_smeared[0].e() + H_pspectrum->GetRandom());
 					std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
 					}
 					if (gammacluster(gen_gammacluster)>0.8 && clusteroverlay==1){//overlay with photon cluster 2
 					std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
-					gamma_smeared[1].e(gamma_smeared[1].e() +h16->GetRandom());
+					gamma_smeared[1].e(gamma_smeared[1].e() +H_pspectrum->GetRandom());
 					std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
 					}//*/
 					h20->Fill(gamma_smeared[0].pT(), Pt * weight_function);
