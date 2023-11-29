@@ -1,6 +1,10 @@
 #include <iostream>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <stdexcept>
 #include <TFile.h>
+#include <TH1D.h>
 #include <TH2F.h>
 #include <TCanvas.h>
 #include <TStyle.h>
@@ -8,6 +12,8 @@
 #include <TFitResult.h>
 #include <TFitResultPtr.h>
 #include <TF1.h>
+#include <TGraphErrors.h>
+#include <TMultiGraph.h>
 #include <TGraphMultiErrors.h>
 
 class filename_object {//object to hold my file names and related strings. things like settings for the files are contained here.
@@ -19,9 +25,46 @@ class filename_object {//object to hold my file names and related strings. thing
     std::vector<float> plotxlims;
     std::vector<float> plotylims;
     int pTcutoff;
-    //float minplotpT;
+    std::vector<float> sqrtEsmearing;
 
 };
+
+float extractNumber(const std::string& filePath);
+filename_object choosecomparisontype(int choosetype);
+void OverlayMeans(filename_object filenameobj);
+void OverlaySigmaOverMean(filename_object filenameobj);
+void InvMassprojections(filename_object filenameobj, const char* histname);
+TH1D* getYProjectionof2DHist(const char* fileName, const char* histName);
+
+void CombinedFits() {
+    filename_object choosenfilenameobj = choosecomparisontype(4);// 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
+    //OverlayMeans(choosenfilenameobj);
+    //OverlaySigmaOverMean(choosenfilenameobj);
+    ///*
+    if (choosenfilenameobj.fileNames.size()==2){// for subtraction of inv mass profile
+        InvMassprojections(choosenfilenameobj, "h18");//const char* histname
+    }
+    //*/
+}    
+
+float extractNumber(const std::string& filePath) {
+    // Find the first underscore in the filepath
+    size_t firstUnderscorePos = filePath.find('_');
+
+    // Find the second underscore in the filepath
+    size_t secondUnderscorePos = filePath.find('_', firstUnderscorePos + 1);
+    float testnumber;
+    // Check if both underscores are found and there is a number between them
+    if (firstUnderscorePos != std::string::npos && secondUnderscorePos != std::string::npos && secondUnderscorePos > firstUnderscorePos + 1) {
+        //std::cout<< "I reached here" << std::endl;
+        // Extract the substring between the two underscores
+        std::string numberStr = filePath.substr(firstUnderscorePos + 1, secondUnderscorePos - firstUnderscorePos - 1);
+        //std::cout<< "substring" <<" "<< numberStr << std::endl;
+        testnumber =std::stof(numberStr);
+        //std::cout<< "float" <<" "<< testnumber << std::endl;
+    } 
+    return testnumber;
+} 
 
 filename_object choosecomparisontype(int choosetype){
     filename_object filename_object1;// 0=weight type, 1=ac on/off, 2=co on/off, 3=ac&co on/off
@@ -62,6 +105,19 @@ filename_object choosecomparisontype(int choosetype){
         filename_object1.plotylims={0.125,0.15,0.01,0.4}; //mean_min, mean_max,sm_min,sm_max  
         filename_object1.pTcutoff=16; 
     }
+    else if(choosetype==4){//co for 3% smearing
+        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.030000_WSHP_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.030000_WSHP_ac0_co1.root"};
+        filename_object1.legendnames={"Cluster Overlay off","Cluster Overlay on"};
+        filename_object1.filenamemod="ClusterOverlayTest";
+        filename_object1.canvasnamemod=", Cluster Overlap: on vs off";
+        filename_object1.plotxlims={0.1,16.4};//min, max
+        filename_object1.plotylims={0.1,0.137,0.0,0.085}; //mean_min, mean_max,sm_min,sm_max 
+        filename_object1.pTcutoff=16; 
+    }
+
+    for(size_t i=0; i < filename_object1.fileNames.size(); i++){
+        filename_object1.sqrtEsmearing.push_back(extractNumber(filename_object1.fileNames[i]));
+    }
 
 return filename_object1;
 }
@@ -78,7 +134,7 @@ void OverlayMeans(filename_object filenameobj) {
     //gStyle->SetStatX ( . 8 9 ); 
     //gStyle->SetStatY ( . 8 9 );
     //gStyle->SetStatBorderSize ( 0 );
-
+    float errparam=filenameobj.sqrtEsmearing[0];
     double binres=2;//number of divisions per GeV
     // Create a legend
     TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);//0.7, 0.4, 0.9, 0.6
@@ -207,7 +263,7 @@ void OverlayMeans(filename_object filenameobj) {
     gPad->Update();
     //canvas1->Modified();
     canvas1->Update();
-    canvas1->Print(Form("pioncode/canvas_pdf/%s_OverlayMeanHistograms.pdf",filenameobj.filenamemod.c_str()));
+    canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayMeanHistograms.pdf",filenameobj.filenamemod.c_str(),errparam));
 
     // Clean up
     delete canvas1;
@@ -226,7 +282,7 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
     //gStyle->SetStatY ( . 8 9 );
     //gStyle->SetStatBorderSize ( 0 );
 
-
+    float errparam=filenameobj.sqrtEsmearing[0];
     double binres=2;//number of divisions per GeV
     // Create a legend
     TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
@@ -364,26 +420,75 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
 
    //canvas1->Update();
     canvas1->Modified();
-    canvas1->SaveAs(Form("pioncode/canvas_pdf/%s_OverlaySigma_Over_Mean.pdf",filenameobj.filenamemod.c_str()));//Print-> works too
+    canvas1->SaveAs(Form("pioncode/canvas_pdf/%s_%f_OverlaySigma_Over_Mean.pdf",filenameobj.filenamemod.c_str(),errparam));//Print-> works too
     
     // Clean up
     delete canvas1;
     delete legend1;
 }
 
-void CombinedFits() {
-    filename_object choosenfilenameobj = choosecomparisontype(3);// 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
-    OverlayMeans(choosenfilenameobj);
-    OverlaySigmaOverMean(choosenfilenameobj);
-}    
+void InvMassprojections(filename_object filenameobj, const char* histname){//only works if filenames.size()=2 !!
+    TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
+    std::cout << "I reached here, 1" << std::endl; // debug line
+    //TH1D* yProjection[2];
+    //TH1D* yProjection = new TH1D("yProjection", "Y Projection", numXBins, 0, numXBins);
+
+    TH1D* yProjection1 = getYProjectionof2DHist(filenameobj.fileNames[0].c_str(), histname);
+    std::cout << "I reached here, project1" << std::endl; // debug line
+    //yProjection1->Draw("SAME");
+    TH1D* yProjection2 = getYProjectionof2DHist(filenameobj.fileNames[1].c_str(), histname);
+    //yProjection2->Draw("SAME");
+    // hardcode cluster off first, then do clustering on.
+    std::cout << "I reached here, projecting done" << std::endl; // debug line
+    TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
+    //TH2F *h9_3 = (TH2F *)h9_2->Clone("h9_3"); // clone sigma
+    std::cout << "I reached here, clones" << std::endl; // debug line
+    histClone->Add(yProjection1, -1);
+    std::cout << "I reached here, subtracted" << std::endl; // debug line
+    //ysubtract
 
 
-//return 0;
-// List of root file names
-    //std::vector<std::string> fileNames = {"pioncode/rootfiles/Pi0FastMC_0.155000_EXP.root", "pioncode/rootfiles/Pi0FastMC_0.155000_POWER.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP.root"};//{"pioncode/Pi0FastMC_0.155000WSHP.root"};
-    // {"pioncode/Pi0FastMC_0.155000EXP.root", "pioncode/Pi0FastMC_0.155000POWER.root", "pioncode/Pi0FastMC_0.15500WSHP.root"};
-    //std::string filenamemod = "weightmethod";
-    //std::string filenamemod = "weightmethod";
-    // Overlay the means for each bin
-    //OverlayMeans(fileNames,filenamemod);
-    //OverlaySigmaOverMean(fileNames,filenamemod);
+    canvas1->Divide(1,2);
+    canvas1->cd(1);
+    float errparam=filenameobj.sqrtEsmearing[0];
+    yProjection1->Draw();
+    yProjection1->SetLineColor(kRed);
+    yProjection2->Draw("SAME");
+    yProjection2->SetLineColor(kBlue);
+    gPad->Modified();
+    gPad->Update();
+    canvas1->cd(2);
+    histClone->Draw();
+    canvas1->Modified();
+    canvas1->SaveAs(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf",filenameobj.filenamemod.c_str(), errparam));//Print-> works too
+    
+    // Clean up
+    delete canvas1;
+    //delete legend1;
+}
+
+TH1D* getYProjectionof2DHist(const char* fileName, const char* histName) {
+    // Open the root file
+    TFile* file = new TFile(fileName, "READ");
+    if (!file || file->IsZombie()) {
+        std::cerr << "Error: Could not open file " << fileName << std::endl;
+        return nullptr;
+    }
+
+    // Get the 2D histogram from the file
+    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get(histName));
+    if (!hist2D) {
+        std::cerr << "Error: Could not retrieve 2D histogram " << histName << " from file" << std::endl;
+        file->Close();
+        return nullptr;
+    }
+    int NX= hist2D->GetNbinsX();
+    // Create a 1D histogram for the y projection
+    TH1D* hist1D = hist2D->ProjectionY("_py", 1, NX,"");
+    //TH1D* hist1D = hist2D->ProjectionY("_py",1, 20,"");
+    hist1D->SetDirectory(0);
+    // Close the file
+    file->Close();
+
+    return hist1D;
+}

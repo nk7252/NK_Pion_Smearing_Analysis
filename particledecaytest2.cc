@@ -33,7 +33,7 @@ int main()
 	int binres=2;//number of divisions per GeV
 	int n_bins = binres*PT_Max;//multiple by bin res.
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
-
+	float coprob=0.0;//random numbers(0-1) greater than this value will have some smearing added.
 	// Clone photon spectrum histogram.
 	TFile* pspectfile = new TFile("pioncode/rootfiles/Photon_spectrum_hist.root", "READ");
 	TH1F* oldHist = dynamic_cast<TH1F*>(pspectfile->Get("h16"));
@@ -49,7 +49,7 @@ int main()
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
 	//-----------------------------------
 	int asymcut=0;//apply asymm cut.
-	int clusteroverlay = 1;//overlayed cluster check
+	int clusteroverlay = 0;//overlayed cluster check
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t = 4.5;
@@ -74,6 +74,7 @@ int main()
 		float smear_factor_basevalue = 0.065; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
 		float smear_factor_b = smear_factor_basevalue + 0.01 * smear_factor_itt;
+		//float smear_factor_b = 0.03;
 		//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 		//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
 
@@ -289,12 +290,12 @@ int main()
 					h16->Fill(gamma_smeared[0].pT());//smeared photon energy spectrum
 					h16->Fill(gamma_smeared[1].pT());
 					///*
-					if (gammacluster(gen_gammacluster)>0.8 && clusteroverlay==1){//overlay with photon cluster 2
+					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
 					std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
 					gamma_smeared[0].e(gamma_smeared[0].e() + H_pspectrum->GetRandom());
 					std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
 					}
-					if (gammacluster(gen_gammacluster)>0.8 && clusteroverlay==1){//overlay with photon cluster 2
+					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 2
 					std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
 					gamma_smeared[1].e(gamma_smeared[1].e() +H_pspectrum->GetRandom());
 					std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
