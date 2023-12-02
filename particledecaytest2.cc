@@ -109,11 +109,11 @@ int main()
 		h18->Sumw2();
 		// things to add probability to add an exponentially scaled (small) energy
 		//--------------------set up random number generation
-		std::random_device rd;		// generate a random number to seed random generation
-		std::random_device rdgamma; // generate a random number to seed random generation of daughter gamma for smearing
+		std::random_device rd;// generate a random number to seed random generation
+		std::random_device rdgamma;// generate a random number to seed random generation of daughter gamma for smearing
 		std::random_device rdgammacluster;// random number to test clustering
-		// std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd
-		std::mt19937_64 gen(rd());			  // mersenne_twister_engine 64 bit seeded with rd
+		// std::mt19937 gen(rd());          // mersenne_twister_engine seeded with rd
+		std::mt19937_64 gen(rd());            // mersenne_twister_engine 64 bit seeded with rd
 		std::mt19937_64 gen_gamma(rdgamma()); // mersenne_twister_engine 64 bit seeded with rdgamma for gamma smearing
 		std::mt19937_64 gen_gammacluster(rdgammacluster());//generate random number to test clustering 
 		// std::ranlux48 gen(rd()); // ranlux48 seeded with rd
@@ -270,7 +270,18 @@ int main()
 					gamma_smeared[0] = smear_factor1 * pythia.event[Gamma_daughters[0]].p();
 					// std::cout << "E" << " " <<gamma_lorentz[0].e()<< " " << "smeared E" << " " <<gamma_smeared[0].e()<< " " <<std::endl; // debug, is the factor being applied?
 					gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
-
+					
+					///*
+					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
+					std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
+					gamma_smeared[0].e(gamma_smeared[0].e() + H_pspectrum->GetRandom());
+					std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
+					}
+					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 2
+					std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
+					gamma_smeared[1].e(gamma_smeared[1].e() +H_pspectrum->GetRandom());
+					std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
+					}//*/
 
 					if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())>0.8 &&asymcut==1){//asymmetry cut
 					//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
@@ -289,17 +300,7 @@ int main()
 					h17->Fill(gamma_lorentz[1].pT());
 					h16->Fill(gamma_smeared[0].pT());//smeared photon energy spectrum
 					h16->Fill(gamma_smeared[1].pT());
-					///*
-					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
-					std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
-					gamma_smeared[0].e(gamma_smeared[0].e() + H_pspectrum->GetRandom());
-					std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
-					}
-					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 2
-					std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
-					gamma_smeared[1].e(gamma_smeared[1].e() +H_pspectrum->GetRandom());
-					std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
-					}//*/
+
 					h20->Fill(gamma_smeared[0].pT(), Pt * weight_function);
 					h21->Fill(gamma_lorentz[0].pT(), Pt * weight_function);
 					h20->Fill(gamma_smeared[1].pT(), Pt * weight_function);
