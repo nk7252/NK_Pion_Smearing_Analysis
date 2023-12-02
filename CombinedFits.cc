@@ -34,7 +34,7 @@ filename_object choosecomparisontype(int choosetype);
 void OverlayMeans(filename_object filenameobj);
 void OverlaySigmaOverMean(filename_object filenameobj);
 void InvMassprojections(filename_object filenameobj, const char* histname);
-TH1D* getYProjectionof2DHist(const char* fileName, const char* histName);
+TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
 
 void CombinedFits() {
     filename_object choosenfilenameobj = choosecomparisontype(4);// 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
@@ -429,45 +429,81 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
 
 void InvMassprojections(filename_object filenameobj, const char* histname){//only works if filenames.size()=2 !!
     TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
-    std::cout << "I reached here, 1" << std::endl; // debug line
-    //TH1D* yProjection[2];
-    //TH1D* yProjection = new TH1D("yProjection", "Y Projection", numXBins, 0, numXBins);
-
-    TH1D* yProjection1 = getYProjectionof2DHist(filenameobj.fileNames[0].c_str(), histname);
-    std::cout << "I reached here, project1" << std::endl; // debug line
-    //yProjection1->Draw("SAME");
-    TH1D* yProjection2 = getYProjectionof2DHist(filenameobj.fileNames[1].c_str(), histname);
-    //yProjection2->Draw("SAME");
-    // hardcode cluster off first, then do clustering on.
-    std::cout << "I reached here, projecting done" << std::endl; // debug line
-    TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
-    //TH2F *h9_3 = (TH2F *)h9_2->Clone("h9_3"); // clone sigma
-    std::cout << "I reached here, clones" << std::endl; // debug line
-    histClone->Add(yProjection1, -1);
-    std::cout << "I reached here, subtracted" << std::endl; // debug line
-    //ysubtract
-
-
+    TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
     canvas1->Divide(1,2);
-    canvas1->cd(1);
     float errparam=filenameobj.sqrtEsmearing[0];
+
+
+    //need number of lines in hist. temp until I setup the object to hold that info?
+    TFile* file = new TFile(fileName, "READ");
+    if (!file || file->IsZombie()) {
+        std::cerr << "Error: Could not open file " << fileName << std::endl;
+        return nullptr;
+    }
+
+    // Get the 2D histogram from the file
+    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get(histName));
+    if (!hist2D) {
+        std::cerr << "Error: Could not retrieve 2D histogram " << histName << " from file" << std::endl;
+        file->Close();
+        return nullptr;
+    }
+    hist1D->SetDirectory(0);
+    int NX= hist2D->GetNbinsX();
+    file->Close();
+    //open the pdf?
+    canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf[",filenameobj.filenamemod.c_str(), errparam));
+
+    for (int i=0;i<NX+1;i++){
+        TH1D* yProjection1 = getYProjectionof2DHist(filenameobj.fileNames[0].c_str(), histname,i,i);
+        TH1D* yProjection2 = getYProjectionof2DHist(filenameobj.fileNames[1].c_str(), histname,i,i);
+        TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
+        histClone->Add(yProjection1, -1);
+        canvas1->cd(1);   
+        yProjection1->Draw();
+        yProjection1->SetLineColor(kRed);
+        yProjection2->Draw("SAME");
+        yProjection2->SetLineColor(kBlue);
+        yProjection1->SetTitle("Cluster Overlay on vs off;Invariant Mass (GeV); Counts");
+        gPad->Modified();
+        gPad->Update();
+        canvas1->cd(2);
+        histClone->Draw();
+        histClone->SetTitle("Cluster Overlay on - off;Invariant Mass (GeV); Counts");
+        canvas1->Modified();
+        legend1->AddEntry(yProjection1, filenameobj.legendnames[0].c_str(), "P");
+        legend1->AddEntry(yProjection2, filenameobj.legendnames[1].c_str(), "P");
+        canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf",filenameobj.filenamemod.c_str(), errparam));//Print-> works too
+        canvas1->Clear();
+        legend1->Clear();
+    }
+    TH1D* yProjection1 = getYProjectionof2DHist(filenameobj.fileNames[0].c_str(), histname,1,NX);
+    TH1D* yProjection2 = getYProjectionof2DHist(filenameobj.fileNames[1].c_str(), histname,1,NX);
+    TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
+    histClone->Add(yProjection1, -1);
+    canvas1->cd(1);   
     yProjection1->Draw();
     yProjection1->SetLineColor(kRed);
     yProjection2->Draw("SAME");
     yProjection2->SetLineColor(kBlue);
+    yProjection1->SetTitle("Cluster Overlay on vs off;Invariant Mass (GeV); Counts");
+    legend1->AddEntry(yProjection1, filenameobj.legendnames[0].c_str(), "P");
+    legend1->AddEntry(yProjection2, filenameobj.legendnames[1].c_str(), "P");
     gPad->Modified();
     gPad->Update();
     canvas1->cd(2);
     histClone->Draw();
+    histClone->SetTitle("Cluster Overlay on - off;Invariant Mass (GeV); Counts");
     canvas1->Modified();
-    canvas1->SaveAs(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf",filenameobj.filenamemod.c_str(), errparam));//Print-> works too
-    
+    canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf",filenameobj.filenamemod.c_str(), errparam));//Print-> works too
+    //close the pdf?
+    canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf]",filenameobj.filenamemod.c_str(), errparam));
     // Clean up
     delete canvas1;
     //delete legend1;
 }
 
-TH1D* getYProjectionof2DHist(const char* fileName, const char* histName) {
+TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin) {
     // Open the root file
     TFile* file = new TFile(fileName, "READ");
     if (!file || file->IsZombie()) {
@@ -482,9 +518,9 @@ TH1D* getYProjectionof2DHist(const char* fileName, const char* histName) {
         file->Close();
         return nullptr;
     }
-    int NX= hist2D->GetNbinsX();
+    //int NX = hist2D->GetNbinsX();
     // Create a 1D histogram for the y projection
-    TH1D* hist1D = hist2D->ProjectionY("_py", 1, NX,"");
+    TH1D* hist1D = hist2D->ProjectionY("_py", firstxbin, lastxbin,"");
     //TH1D* hist1D = hist2D->ProjectionY("_py",1, 20,"");
     hist1D->SetDirectory(0);
     // Close the file
