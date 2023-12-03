@@ -35,11 +35,14 @@ void OverlayMeans(filename_object filenameobj);
 void OverlaySigmaOverMean(filename_object filenameobj);
 void ClusterOverlayTestFunc(filename_object filenameobj, const char* histname);
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
+void plotOverlayedHistograms(filename_object filenameobj, const char* histName);
+
 
 void CombinedFits() {
-    filename_object choosenfilenameobj = choosecomparisontype(2);// 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
+    filename_object choosenfilenameobj = choosecomparisontype(0);// 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
     OverlayMeans(choosenfilenameobj);
     OverlaySigmaOverMean(choosenfilenameobj);
+    plotOverlayedHistograms(choosenfilenameobj, "h3");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
     ///*
     if (choosenfilenameobj.fileNames.size()==2){// for subtraction of inv mass profile
         ClusterOverlayTestFunc(choosenfilenameobj, "h18");//const char* histname
@@ -75,7 +78,7 @@ filename_object choosecomparisontype(int choosetype){
         filename_object1.filenamemod="weightmethod";
         filename_object1.canvasnamemod=" for various weighting methods";  
         filename_object1.plotxlims={0.9,6.4};//min, max
-        filename_object1.plotylims={0.13,0.17,0.08,0.25}; //mean_min, mean_max,sm_min, sm_max
+        filename_object1.plotylims={0.13,0.17,0.08,0.25,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff=6;
     }
     else if(choosetype==1){
@@ -397,7 +400,7 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
         MultiGraphs->SetTitle(Form(" Sigma/Mean (Smeared Inv. Mass)%s;pT (GeV);sigma/mean)",filenameobj.canvasnamemod.c_str()));
         MultiGraphs->Draw("APE");
         // Add an entry to the legend
-        std::vector<std::string> legendstring = {"EXP","POWER","WSHP"};
+        //std::vector<std::string> legendstring = {"EXP","POWER","WSHP"};
         legend1->AddEntry(meanGraph, filenameobj.legendnames[i].c_str(), "P");
 
         // Close the file
@@ -542,3 +545,76 @@ TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int fir
 
     return hist1D;
 }
+
+void plotOverlayedHistograms(filename_object filenameobj, const char* histName) {
+
+    // Create a canvas
+    TCanvas* canvas = new TCanvas("canvas", "Overlayed Histograms", 800, 600);
+    gStyle->SetOptStat ( 0 );
+    // create a legend
+    TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.9);
+
+    // Loop over each file
+    for (size_t i = 0; i < filenameobj.fileNames.size(); ++i) {
+        // Open the root file
+        TFile* pionfile = new TFile(filenameobj.fileNames[i].c_str(), "READ");
+
+        // Check if the file is open
+        if (!pionfile || pionfile->IsZombie()) {
+            std::cerr << "Error: Unable to open file " << filenameobj.fileNames[i] << std::endl;
+            continue;
+        }
+
+        // Retrieve the histogram
+        TH1F* hist1 = dynamic_cast<TH1F*>(pionfile->Get(histName));
+
+        // Check if histogram was retrieved successfully
+        if (!hist1) {
+            std::cerr << "Error: Could not retrieve histogram" << std::endl;
+            pionfile->Close();
+            return;
+        }
+        // Draw The current Histogram
+        if(i==0){
+            hist1->Draw("HIST");
+        }
+        else{
+            hist1->Draw("SAME HIST");
+        }
+        //set marker options
+        //int MarkerStyle = i + 24; // 
+        //int MarkerColor = i + 1;
+        //int LineStyle = i ; // 
+        int LineColor = i + 1;
+        //hist1->SetLineStyle(LineStyle);
+        hist1->SetLineColor(LineColor);
+        //hist1->GetXaxis()->SetLimits(0,0.1);
+        hist1->SetMinimum(1e-6);
+        hist1->SetMaximum(1e10); 
+        //hist1->SetAxisRange(0., 10000,"Y");
+        hist1->SetAxisRange(0., 6.4,"X");
+        hist1->GetXaxis()->SetTitle("Pion pT (GeV)");// to properly do this I would need to save one for each histogram somewhere
+        hist1->GetYaxis()->SetTitle("Counts");
+        // add an entry to the legend  
+        legend->AddEntry(hist1, filenameobj.legendnames[i].c_str());//, "P"
+
+        //detach histogram from file
+        hist1->SetDirectory(0);
+
+        // Close the file and delete from memory
+        pionfile->Close();
+        delete pionfile;
+    }
+    // Save or display the canvas
+    gPad->SetLogy(); 
+    legend->Draw();
+    canvas->Update();
+    canvas->SaveAs(Form("pioncode/canvas_pdf/overlayed_histogram_%s.pdf",histName));
+    // canvas->Print("overlayed_histograms.pdf"); // Uncomment to save as PDF
+
+    // clean up
+    delete legend; 
+    delete canvas;
+}
+
+

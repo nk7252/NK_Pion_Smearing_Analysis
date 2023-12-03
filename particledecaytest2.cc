@@ -10,14 +10,19 @@
 #include "TTree.h"
 #include "TH1.h"
 #include "TH2.h"
+#include <TF1.h>
+#include <TMath.h>
 #include "TStopwatch.h"
 #include "TGraph.h"
 #include "TCanvas.h"
 #include "Pythia8/Pythia.h" // Include Pythia headers.
 using namespace Pythia8;	// Let Pythia8:: be implicit.
 
-int main()
-{ // Begin main program.
+//forward declarators
+TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
+//int main()
+//void particledecaytest2()
+int main(){ // Begin main program.
 	// auto start = std::chrono::steady_clock::now();
 	// std::cout << "Start Time (sec) = " << start.count() << std::endl;
 	// int prefactor =3 ;
@@ -33,7 +38,8 @@ int main()
 	int binres=2;//number of divisions per GeV
 	int n_bins = binres*PT_Max;//multiple by bin res.
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
-	
+
+	/*
 	// Clone photon spectrum histogram.
 	TFile* pspectfile = new TFile("pioncode/rootfiles/Photon_spectrum_hist.root", "READ");
 	TH1F* oldHist = dynamic_cast<TH1F*>(pspectfile->Get("h16"));
@@ -42,15 +48,24 @@ int main()
     //TH1F* clonedHist = dynamic_cast<TH1F*>(originalHist->Clone());
     //clonedHist->SetName(newHistName);
 	delete oldHist;
-	pspectfile->Close(); 
+	pspectfile->Close(); */
 
 	//-----------------------------------set weighting method
-	int weightmethod = 2;//0=exp,1=power,2=wshp
+	int weightmethod = 2;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
 	//-----------------------------------
 	int asymcut=0;//apply asymm cut.
 	int clusteroverlay = 0;//overlayed cluster check
 	float coprob=0.8;//random numbers(0-1) greater than this value will have some smearing added.
+	//----------------------pion spectrum function for clusteroverlay
+	// reserve a TF1 for the chosen function just in case
+	TF1 *myFunc;
+	if(clusteroverlay==1){
+		myFunc=ChooseSpectrumFunction(weightmethod, PT_Min, PT_Max);
+	}
+	else{
+		delete myFunc;//delete it if we aren't using it.
+	}
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t = 4.5;
@@ -84,13 +99,13 @@ int main()
 		tree->SetMaxTreeSize(500 * 1024 * 1024); // set max tree size to 500 mb
 
 		// TH1* h1 = new TH1F("h1", "pi0 E",128, 0, PT_Max);
-		TH1 *h2 = new TH1D("h2", "gamma Pt", n_bins, PT_Min, PT_Max); // will be weighted
-		TH1 *h3 = new TH1D("h3", "pi0 Pt", n_bins, PT_Min, PT_Max);
-		TH1 *h4 = new TH1F("h4", "pi0 Pt, unweighted", n_bins, PT_Min, PT_Max);
-		TH1 *h5 = new TH1F("h5", "gamma Pt, unweighted", n_bins, PT_Min, PT_Max);
+		TH1 *h2 = new TH1D("h2", "Photon Pt", n_bins, PT_Min, PT_Max); // will be weighted
+		TH1 *h3 = new TH1D("h3", "Pion PT, weighted", n_bins, PT_Min, PT_Max);
+		TH1 *h4 = new TH1F("h4", "Pion PT, unweighted", n_bins, PT_Min, PT_Max);
+		TH1 *h5 = new TH1F("h5", "Photon Pt, unweighted", n_bins, PT_Min, PT_Max);
 		TH1 *h6 = new TH1F("h6", "inv mass of gamma pair", 100, 0, 1);
-		TH1 *h7 = new TH1F("h7", "ratio of gamma/pi0 pt", n_bins, PT_Min, PT_Max);
-		TH1 *h8 = new TH1F("h8", "inv mass of gamma pair, smeared", 100, smeared_lower_bin_limit, smeared_upper_bin_limit);
+		TH1 *h7 = new TH1F("h7", "ratio of Photon/Pion pt", n_bins, PT_Min, PT_Max);
+		TH1 *h8 = new TH1F("h8", "inv mass of Photon pair, smeared", 100, smeared_lower_bin_limit, smeared_upper_bin_limit);
 		TH2F *h9 = new TH2F("h9", "Smeared Pion Pt vs Smeared Inv Mass", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 		TH1 *h10 = new TH1F("h10", "Smeared Pion PT", n_bins, PT_Min, PT_Max);
 		TH1 *h11 = new TH1F("h11", "Smeared Pion PT/Pion PT ratio", n_bins, PT_Min, PT_Max);
@@ -192,9 +207,9 @@ int main()
 				std::cout << "Error:No Weight method found" <<std::endl;
 			}
 			double inv_yield = WeightScale* Pt * weight_function;
-
-			h3->Fill(Pt, inv_yield); // fill pi0 pt, weighted
-			h4->Fill(Pt);						// fill pi0 pt, unweighted
+			//std::cout << inv_yield <<std::endl;
+			//h3->Fill(Pt, inv_yield); // fill pi0 pt, weighted
+			//h4->Fill(Pt);						// fill pi0 pt, unweighted
 			pi0_px = Pt * cos(azimuthal_ang);
 			pi0_py = Pt * sin(azimuthal_ang);
 			pi0_E = sqrt(Pi0_M * Pi0_M + Pt * Pt + pi0_pz * pi0_pz);
@@ -225,6 +240,7 @@ int main()
 
 				int Gamma_daughters[2] = {pythia.event[i].daughter1(), pythia.event[i].daughter2()}; // make array of daughter particles(di gamma) event ids
 				double Pt = pythia.event[i].pT();
+
 				//----------------------different possible weights
 				if(weightmethod==0){
 					//std::cout << "EXP Weight" <<std::endl;
@@ -275,12 +291,12 @@ int main()
 					///*
 					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
 					std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
-					gamma_smeared[0].e(gamma_smeared[0].e() + H_pspectrum->GetRandom());
+					gamma_smeared[0].e(gamma_smeared[0].e() + myFunc->GetRandom());
 					std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
 					}
 					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 2
 					std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
-					gamma_smeared[1].e(gamma_smeared[1].e() +H_pspectrum->GetRandom());
+					gamma_smeared[1].e(gamma_smeared[1].e() +myFunc->GetRandom());
 					std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
 					}//*/
 
@@ -292,6 +308,8 @@ int main()
 					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
 					inv_mass_smeared = gamma_smeared[2].mCalc();
 					// std::cout << "inv mass" << " " <<inv_mass<<std::endl;
+					h3->Fill(Pt, inv_yield); // fill pion pt, weighted
+					h4->Fill(Pt);			// fill pion pt, unweighted
 					h6->Fill(inv_mass);
 					h8->Fill(inv_mass_smeared);
 					h9->Fill(gamma_smeared[2].pT(), inv_mass_smeared);//change  to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
@@ -431,5 +449,35 @@ int main()
 		output->Close();
 	}
 	return 0;
+}
+
+TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max){
+	TF1 *myFunc = nullptr;
+	if(weightmethod==0){
+		myFunc = new TF1("myFunc", [](double *x, double *par){
+			return par[0] * TMath::Exp(-x[0]/0.3);
+		}, PT_Min, PT_Max, 1);
+		Double_t initialParameters[1] = {1.0};
+    	myFunc->SetParameters(initialParameters);
+
+	}
+	else if(weightmethod==1){
+		myFunc = new TF1("myFunc", [](double *x, double *par){
+			return par[0] * pow(x[0],-8.14);
+			}, PT_Min, PT_Max, 1);
+		Double_t initialParameters[1] = {1.0};
+    	myFunc->SetParameters(initialParameters);
+	}
+	else if(weightmethod==2){
+		myFunc = new TF1("myFunc", [](double *x, double *par){
+			return ((1/(1+exp((x[0]-par[0])/par[1])))*par[2]/pow(1+x[0]/par[3],par[4])+(1-(1/(1+exp((x[0]-par[0])/par[1]))))*par[5]/(pow(x[0],par[6])));
+			}, PT_Min, PT_Max, 7);
+		myFunc->SetParameters(4.5,  0.114, 229.6, 1.466, 10.654, 14.43, 8.1028);
+		//t,w,A,p0,m_param,B,n
+	}
+	else{
+		std::cout << "Error:No Weight function found" <<std::endl;
+	}
+	return myFunc;
 }
 
