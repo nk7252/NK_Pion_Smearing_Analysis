@@ -33,16 +33,16 @@ float extractNumber(const std::string& filePath);
 filename_object choosecomparisontype(int choosetype);
 void OverlayMeans(filename_object filenameobj);
 void OverlaySigmaOverMean(filename_object filenameobj);
-void InvMassprojections(filename_object filenameobj, const char* histname);
+void ClusterOverlayTestFunc(filename_object filenameobj, const char* histname);
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
 
 void CombinedFits() {
-    filename_object choosenfilenameobj = choosecomparisontype(4);// 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
-    //OverlayMeans(choosenfilenameobj);
-    //OverlaySigmaOverMean(choosenfilenameobj);
+    filename_object choosenfilenameobj = choosecomparisontype(2);// 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
+    OverlayMeans(choosenfilenameobj);
+    OverlaySigmaOverMean(choosenfilenameobj);
     ///*
     if (choosenfilenameobj.fileNames.size()==2){// for subtraction of inv mass profile
-        InvMassprojections(choosenfilenameobj, "h18");//const char* histname
+        ClusterOverlayTestFunc(choosenfilenameobj, "h18");//const char* histname
     }
     //*/
 }    
@@ -427,49 +427,56 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
     delete legend1;
 }
 
-void InvMassprojections(filename_object filenameobj, const char* histname){//only works if filenames.size()=2 !!
+void ClusterOverlayTestFunc(filename_object filenameobj, const char* histname){//only works if filenames.size()=2 !!
     TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
     TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
-    canvas1->Divide(1,2);
+    
     float errparam=filenameobj.sqrtEsmearing[0];
 
-
+    ///*
     //need number of lines in hist. temp until I setup the object to hold that info?
-    TFile* file = new TFile(fileName, "READ");
+    TFile* file = new TFile(filenameobj.fileNames[0].c_str(), "READ");
     if (!file || file->IsZombie()) {
-        std::cerr << "Error: Could not open file " << fileName << std::endl;
+        std::cerr << "Error: Could not open file " << filenameobj.fileNames[0].c_str() << std::endl;
         return nullptr;
     }
 
     // Get the 2D histogram from the file
-    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get(histName));
+    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get(histname));
     if (!hist2D) {
-        std::cerr << "Error: Could not retrieve 2D histogram " << histName << " from file" << std::endl;
+        std::cerr << "Error: Could not retrieve 2D histogram " << file->Get(histname) << " from file" << std::endl;
         file->Close();
         return nullptr;
     }
-    hist1D->SetDirectory(0);
     int NX= hist2D->GetNbinsX();
-    file->Close();
+    file->Close();//*/
     //open the pdf?
+    //int NX=128;
     canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf[",filenameobj.filenamemod.c_str(), errparam));
 
-    for (int i=0;i<NX+1;i++){
+    for (int i=1;i<NX+1;i++){
         TH1D* yProjection1 = getYProjectionof2DHist(filenameobj.fileNames[0].c_str(), histname,i,i);
         TH1D* yProjection2 = getYProjectionof2DHist(filenameobj.fileNames[1].c_str(), histname,i,i);
         TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
+        TH1D *ratioClone = (TH1D *)yProjection2->Clone("ratioClone");
         histClone->Add(yProjection1, -1);
+        canvas1->Divide(1,3);
         canvas1->cd(1);   
         yProjection1->Draw();
         yProjection1->SetLineColor(kRed);
         yProjection2->Draw("SAME");
         yProjection2->SetLineColor(kBlue);
-        yProjection1->SetTitle("Cluster Overlay on vs off;Invariant Mass (GeV); Counts");
+        yProjection1->SetTitle(Form("Cluster Overlay on vs off. Bin %i;Invariant Mass (GeV); Counts",i));
         gPad->Modified();
         gPad->Update();
         canvas1->cd(2);
         histClone->Draw();
-        histClone->SetTitle("Cluster Overlay on - off;Invariant Mass (GeV); Counts");
+        histClone->SetTitle(Form("Cluster Overlay on - off. Bin %i;Invariant Mass (GeV); Counts",i));
+        canvas1->cd(3);
+        ratioClone->Divide(yProjection1);
+        ratioClone->Draw();
+        ratioClone->SetMaximum(5);
+        ratioClone->SetTitle(Form("Cluster Overlay on/off. Bin %i;Invariant Mass (GeV); Counts",i));
         canvas1->Modified();
         legend1->AddEntry(yProjection1, filenameobj.legendnames[0].c_str(), "P");
         legend1->AddEntry(yProjection2, filenameobj.legendnames[1].c_str(), "P");
@@ -480,20 +487,27 @@ void InvMassprojections(filename_object filenameobj, const char* histname){//onl
     TH1D* yProjection1 = getYProjectionof2DHist(filenameobj.fileNames[0].c_str(), histname,1,NX);
     TH1D* yProjection2 = getYProjectionof2DHist(filenameobj.fileNames[1].c_str(), histname,1,NX);
     TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
+    TH1D *ratioClone = (TH1D *)yProjection2->Clone("ratioClone");
     histClone->Add(yProjection1, -1);
+    canvas1->Divide(1,3);
     canvas1->cd(1);   
     yProjection1->Draw();
     yProjection1->SetLineColor(kRed);
     yProjection2->Draw("SAME");
     yProjection2->SetLineColor(kBlue);
-    yProjection1->SetTitle("Cluster Overlay on vs off;Invariant Mass (GeV); Counts");
+    yProjection1->SetTitle("Cluster Overlay on vs off. All Bins;Invariant Mass (GeV); Counts");
     legend1->AddEntry(yProjection1, filenameobj.legendnames[0].c_str(), "P");
     legend1->AddEntry(yProjection2, filenameobj.legendnames[1].c_str(), "P");
     gPad->Modified();
     gPad->Update();
     canvas1->cd(2);
     histClone->Draw();
-    histClone->SetTitle("Cluster Overlay on - off;Invariant Mass (GeV); Counts");
+    histClone->SetTitle("Cluster Overlay on - off. All Bins;Invariant Mass (GeV); Counts");
+    canvas1->cd(3);
+    ratioClone->Divide(yProjection1);
+    ratioClone->Draw();
+    ratioClone->SetMaximum(5);
+    ratioClone->SetTitle("Cluster Overlay on/off. All Bins;Invariant Mass (GeV); Counts");
     canvas1->Modified();
     canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf",filenameobj.filenamemod.c_str(), errparam));//Print-> works too
     //close the pdf?

@@ -33,7 +33,7 @@ int main()
 	int binres=2;//number of divisions per GeV
 	int n_bins = binres*PT_Max;//multiple by bin res.
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
-	float coprob=0.0;//random numbers(0-1) greater than this value will have some smearing added.
+	
 	// Clone photon spectrum histogram.
 	TFile* pspectfile = new TFile("pioncode/rootfiles/Photon_spectrum_hist.root", "READ");
 	TH1F* oldHist = dynamic_cast<TH1F*>(pspectfile->Get("h16"));
@@ -50,6 +50,7 @@ int main()
 	//-----------------------------------
 	int asymcut=0;//apply asymm cut.
 	int clusteroverlay = 0;//overlayed cluster check
+	float coprob=0.8;//random numbers(0-1) greater than this value will have some smearing added.
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t = 4.5;
