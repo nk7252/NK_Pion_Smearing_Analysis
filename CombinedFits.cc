@@ -39,7 +39,9 @@ void plotOverlayedHistograms(filename_object filenameobj, const char* histName);
 
 
 void CombinedFits() {
-    filename_object choosenfilenameobj = choosecomparisontype(0);// 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
+    filename_object choosenfilenameobj = choosecomparisontype(5);
+    // 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
+    //5=weight type, new files
     OverlayMeans(choosenfilenameobj);
     OverlaySigmaOverMean(choosenfilenameobj);
     plotOverlayedHistograms(choosenfilenameobj, "h3");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
@@ -116,6 +118,16 @@ filename_object choosecomparisontype(int choosetype){
         filename_object1.plotxlims={0.1,16.4};//min, max
         filename_object1.plotylims={0.1,0.137,0.0,0.085}; //mean_min, mean_max,sm_min,sm_max 
         filename_object1.pTcutoff=16; 
+    }
+    else if(choosetype==5){
+        //filename_object weightfilenameobj;
+        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000_EXP_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_POWER_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP_ac0_co0.root"};
+        filename_object1.legendnames={"EXP","POWER","WSHP"};
+        filename_object1.filenamemod="weightmethod";
+        filename_object1.canvasnamemod=" for various weighting methods";  
+        filename_object1.plotxlims={0.9,6.4};//min, max
+        filename_object1.plotylims={0.13,0.17,0.08,0.25,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
+        filename_object1.pTcutoff=6;
     }
 
     for(size_t i=0; i < filename_object1.fileNames.size(); i++){
@@ -570,7 +582,7 @@ void plotOverlayedHistograms(filename_object filenameobj, const char* histName) 
 
         // Check if histogram was retrieved successfully
         if (!hist1) {
-            std::cerr << "Error: Could not retrieve histogram" << std::endl;
+            std::cerr << "Error: Could not retrieve histogram" << " .file" << filenameobj.fileNames[i].c_str() << std::endl;
             pionfile->Close();
             return;
         }
