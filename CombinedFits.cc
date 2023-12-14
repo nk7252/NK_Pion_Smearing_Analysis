@@ -20,6 +20,7 @@ class filename_object {//object to hold my file names and related strings. thing
     public:
     std::vector<std::string> fileNames;
     std::vector<std::string> legendnames;
+    std::vector<std::string> weightnames;
     string filenamemod;
     string canvasnamemod;
     std::vector<float> plotxlims;
@@ -27,6 +28,7 @@ class filename_object {//object to hold my file names and related strings. thing
     int pTcutoff;
     std::vector<float> sqrtEsmearing;
     int binres;
+
 
 };
 
@@ -42,12 +44,13 @@ void SliceAndFit(filename_object filenameobj);
 
 
 void CombinedFits() {
-    filename_object choosenfilenameobj = choosecomparisontype(5);
+    filename_object choosenfilenameobj = choosecomparisontype(1);
     // 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
-    //5=weight type, new files
-    //OverlayMeans(choosenfilenameobj);
-    //OverlaySigmaOverMean(choosenfilenameobj);
-    plotOverlayedHistograms(choosenfilenameobj, "h3");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
+    //5=weight type, new files+ hagedorn
+    // want to do sets 1 and 5 today.
+    OverlayMeans(choosenfilenameobj);
+    OverlaySigmaOverMean(choosenfilenameobj);
+    plotOverlayedHistograms(choosenfilenameobj, "h12");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
     //SliceAndFit(choosenfilenameobj);
     /*
     if (choosenfilenameobj.fileNames.size()==2){// for subtraction of inv mass profile
@@ -90,12 +93,13 @@ filename_object choosecomparisontype(int choosetype){
         filename_object1.binres=2;
     }
     else if(choosetype==1){
-        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000_WSHP_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP_ac1_co0.root"};
-        filename_object1.legendnames={"Asym. cut off","Asym. cut on"};
+        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000_WSHP_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP_ac1_co0.root","pioncode/rootfiles/Pi0FastMC_0.155000_EXP_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_EXP_ac1_co0.root","pioncode/rootfiles/Pi0FastMC_0.155000_POWER_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_POWER_ac1_co0.root","pioncode/rootfiles/Pi0FastMC_0.155000_HAGEDORN_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_HAGEDORN_ac1_co0.root"};
+        filename_object1.legendnames={"Asym. cut off, WSHP","Asym. cut on, WSHP","Asym. cut off, EXP","Asym. cut on, EXP","Asym. cut off, POWER","Asym. cut on, POWER","Asym. cut off, HAGEDORN","Asym. cut on, HAGEDORN"};
+        filename_object1.weightnames={"WSHP","WSHP","EXP","EXP","POWER","POWER","HAGEDORN","HAGEDORN"};
         filename_object1.filenamemod="AsymCutTest";
         filename_object1.canvasnamemod=", Asymmetry Cut: on vs off";
         filename_object1.plotxlims={0.1,16.4};//min, max
-        filename_object1.plotylims={0.125,0.15,0.01,0.4}; //mean_min, mean_max,sm_min,sm_max  
+        filename_object1.plotylims={0.12,0.17,0.0,0.4,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff=16;
         filename_object1.binres=2;
     }
@@ -131,8 +135,9 @@ filename_object choosecomparisontype(int choosetype){
     }
     else if(choosetype==5){
         //filename_object weightfilenameobj;
-        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000_EXP_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_POWER_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP_ac0_co0.root"};
-        filename_object1.legendnames={"EXP","POWER","WSHP"};
+        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000_EXP_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_POWER_ac0_co0.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP_ac0_co0.root","pioncode/rootfiles/Pi0FastMC_0.155000_HAGEDORN_ac0_co0.root"};
+        filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
+        filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.filenamemod="weightmethod";
         filename_object1.canvasnamemod=" for various weighting methods";  
         filename_object1.plotxlims={0.9,6.4};//min, max
@@ -207,14 +212,14 @@ void OverlayMeans(filename_object filenameobj) {
             if (fitFunc) {
                 // Fill the mean histogram with the mean value
                 //meanHistogram->SetBinContent(binX, fitFunc->GetParameter(1));
-                if (i==0 &&  binX <= filenameobj.pTcutoff*binres){//exp
+                if (filenameobj.weightnames[i]=="EXP"){//exp &&  binX <= filenameobj.pTcutoff*binres
                     meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                     meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
                     if(binX/binres==3){
                         std::cout << binX <<" "<<fitFunc->GetParameter(1) << std::endl; // debug line
                     }
                 }
-                else if (i==1){//power &&  3*binres < binX
+                else if (filenameobj.weightnames[i]=="POWER"){//power &&  3*binres < binX
                     meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                     meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
                     if(binX/binres==3){
@@ -222,11 +227,11 @@ void OverlayMeans(filename_object filenameobj) {
                     }
                     //std::cout << binX <<" "<<fitFunc->GetParameter(1) << std::endl; // debug line
                 }
-                else if (i==2){//woods saxon
+                else if (filenameobj.weightnames[i]=="WSHP"){//woods saxon
                     meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                     meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
                 }
-                else if (i==3){//woods saxon
+                else if (filenameobj.weightnames[i]=="HAGEDORN"){//HAGEDORN
                     meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                     meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
                 }
@@ -357,14 +362,14 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
             if (fitFunc) {
                 // Fill the mean histogram with the mean value
                 //meanHistogram->SetBinContent(binX, fitFunc->GetParameter(1));
-                if (i==0 && binX <= filenameobj.pTcutoff*binres){//exp
+                if (filenameobj.weightnames[i]=="EXP"){//exp && binX <= filenameobj.pTcutoff*binres
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
                     double meanoversigmaerr = meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//m/s*(serr/s+merr/m)
 
                     meanGraph->SetPoint(binX, binX/binres,meanoversigma);
                     meanGraph->SetPointError(binX, 0,meanoversigmaerr);
                 }
-                else if (i==1){//power 
+                else if (filenameobj.weightnames[i]=="POWER"){//power 
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
                     double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//m/s*(serr/s+merr/m)
 
@@ -373,14 +378,14 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
                     std::cout << binX <<" "<<meanoversigma << std::endl; // debug line
 
                 }
-                else if (i==2) {//woods saxon
+                else if (filenameobj.weightnames[i]=="WSHP") {//woods saxon
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
                     double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//(m/s)_err=m/s*(serr/s+merr/m)
 
                     meanGraph->SetPoint(binX, binX/binres,meanoversigma);
                     meanGraph->SetPointError(binX, 0,meanoversigmaerr);
                 }
-                else if (i==3) {//woods saxon
+                else if (filenameobj.weightnames[i]=="HAGEDORN") {//HAGEDORN
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
                     double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//(m/s)_err=m/s*(serr/s+merr/m)
 

@@ -20,12 +20,8 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 
 //forward declarators
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
-//int main()
-//void particledecaytest2()
-int main(){ // Begin main program.
-	// auto start = std::chrono::steady_clock::now();
-	// std::cout << "Start Time (sec) = " << start.count() << std::endl;
-	// int prefactor =3 ;
+
+int main(){ 
 	TStopwatch timer;
 	timer.Start();
 	int NPions = 1 * 1000000;
@@ -51,8 +47,8 @@ int main(){ // Begin main program.
 	pspectfile->Close(); */
 
 	//-----------------------------------set weighting method
-	int weightmethod = 2;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
-	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP"};
+	int weightmethod = 3;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
+	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP","HAGEDORN"};
 	//-----------------------------------
 	int asymcut=0;//apply asymm cut.
 	int clusteroverlay = 0;//overlayed cluster check
@@ -97,7 +93,7 @@ int main(){ // Begin main program.
 		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s_ac%i_co%i.root", smear_factor_b, WeightNames[weightmethod].c_str(), asymcut, clusteroverlay), "recreate");
 		TTree *tree = new TTree("tree", "tree");
 		tree->SetMaxTreeSize(500 * 1024 * 1024); // set max tree size to 500 mb
-
+		//------------------------------ book histograms. Need to cull this list. some are useless/redundant
 		// TH1* h1 = new TH1F("h1", "pi0 E",128, 0, PT_Max);
 		TH1 *h2 = new TH1D("h2", "Photon Pt", n_bins, PT_Min, PT_Max); // will be weighted
 		TH1 *h3 = new TH1D("h3", "Pion PT, weighted", n_bins, PT_Min, PT_Max);
@@ -142,18 +138,13 @@ int main(){ // Begin main program.
 		// double tpi=2*std::numbers::pi;
 		std::uniform_real_distribution<> adis(0.0, 2 * M_PI);
 		int id, size, no, WeightScale;
-		// std::vector<int> vec_id;
-		// std::vector<double> vec_E;
-		// std::vector<double> vec_Pi0_Pt;
-		// std::vector<double> vec_P;
-		// std::vector<double> vec_inv_mass;
 		Vec4 gamma_lorentz[3];
 		Vec4 gamma_smeared[3];
 		double m, E, px, py, pz, pi0_px, pi0_py, pi0_E, scale_factor1, scale_factor2, smear_factor1, smear_factor2;
 		double P0rest = 0.0;
 		double pi0_pz = 0.0;
 		double Pi0_M = 0.1349768; // 135 MeV
-		double inv_mass, inv_mass_smeared,weight_function;
+		double inv_mass, inv_mass_smeared, weight_function;
 
 		// std::cout << Pi0_M <<std::endl;
 		tree->Branch("id", &id, "id/I");
@@ -173,15 +164,8 @@ int main(){ // Begin main program.
 		// pythia.readString("SoftQCD:all = on"); // Switch on process.
 		// pythia.readString("Beams:eCM = 14.e3"); // 14 TeV CM energy.
 		pythia.readString("111:all = pi0 -> gamma gamma");
-		pythia.init(); // Initialize; incoming pp beams is default.
-		// pythia.particleData.mayDecay(111,true);
-		// pythia.particleData.mayDecay(22,false);
-		// pythia.particleData.mayDecay(11,false);
-		// pythia.particleData.mayDecay(-11,false);
-		//  Generate event(s).
-		// pythia.next(); // Generate an(other) event. Fill event record.
+		pythia.init(); 
 		pythia.event.clear();
-		// bool readytoappend = true;
 
 		for (int i = 0; i < NPions; i++){
 			// std::cout << "I reached here" <<" "<< i <<std::endl;// debug line
@@ -190,18 +174,23 @@ int main(){ // Begin main program.
 			//----------------------different possible weights
 			if(weightmethod==0){
 				//std::cout << "EXP Weight" <<std::endl;
-				double weight_function=exp(-Pt/0.3);//originally dividing by 0.2
-				int WeightScale=1e+20;
+				weight_function=exp(-Pt/0.3);//originally dividing by 0.2
+				WeightScale=1e+20;
 			}
 			else if(weightmethod==1){
 				//std::cout << "Power Weight" <<std::endl;
-				double weight_function=pow(Pt,-8.14);
-				int WeightScale=1e+5;
+				weight_function=pow(Pt,-8.14);
+				WeightScale=1e+5;
 			}
 			else if(weightmethod==2){
 				//std::cout << "WSHP Weight" <<std::endl;
-				double weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));
-				int WeightScale=1e+14;
+				weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));
+				WeightScale=1e+14;
+			}
+			else if(weightmethod==3){
+				//std::cout << "Hagedorn Weight" <<std::endl;
+				weight_function=A/pow(1+Pt/p0,m_param);
+				WeightScale=1e+14;
 			}
 			else{
 				std::cout << "Error:No Weight method found" <<std::endl;
@@ -224,11 +213,7 @@ int main(){ // Begin main program.
 			// std::cout << i <<" "<<id<< " " << m << " " << " E " << " " << E <<" " << " P " << " " << px<<" "<<py<<" "<<pz<<std::endl;
 			tree->Fill();
 		}
-		// pythia.forceHadronLevel();
-		// Event& event = pythia.event;
-		//  force decays
-		// pythia.resetDecays();
-		// pythia.decay();
+
 		pythia.moreDecays();
 		std::cout << "I reached here" << std::endl; // debug line
 		std::ofstream mycsv2;
@@ -242,6 +227,9 @@ int main(){ // Begin main program.
 				double Pt = pythia.event[i].pT();
 
 				//----------------------different possible weights
+				// I may not need this line. The variables at play are defined above the first loop where the pions are created.
+				//I do this weight check in that loop. the values I assign should remain up to this point from that intial loop.
+				// this version is a waste of time. It would also be good to offload this part of the code to a function. It would be a lot cleaner.
 				if(weightmethod==0){
 					//std::cout << "EXP Weight" <<std::endl;
 					weight_function=exp(-Pt/0.3);//originally dividing by 0.2
@@ -255,6 +243,11 @@ int main(){ // Begin main program.
 				else if(weightmethod==2){
 					//std::cout << "WSHP Weight" <<std::endl;
 					weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));
+					WeightScale=1e+14;
+				}
+				else if(weightmethod==3){
+				//std::cout << "Hagedorn Weight" <<std::endl;
+				  	weight_function=A/pow(1+Pt/p0,m_param);
 					WeightScale=1e+14;
 				}
 				else{
@@ -284,7 +277,12 @@ int main(){ // Begin main program.
 					// std::cout << "gamma gen" << " " <<gammadis(gen_gamma)<<std::endl;
 					// std::cout << "pion E" << " " <<gamma_lorentz[2].e()<< " " << "smear_factor1" << " " <<smear_factor1<< " " << "smear_factor2" << " " <<smear_factor2<< " " <<std::endl;
 
-					gamma_smeared[0] = smear_factor1 * pythia.event[Gamma_daughters[0]].p();
+					//position smearing. smear z phi
+					// generate random numbers and move endpoint of the vector by smearing in z and phi so ~1 tower size in z and rphi.
+					// if spread over 2 towers you can fit a better position. to ~0.5 tower size.
+
+
+					gamma_smeared[0] = smear_factor1 * pythia.event[Gamma_daughters[0]].p();//is px py pz recalculated? I assume so
 					// std::cout << "E" << " " <<gamma_lorentz[0].e()<< " " << "smeared E" << " " <<gamma_smeared[0].e()<< " " <<std::endl; // debug, is the factor being applied?
 					gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
 					
@@ -403,42 +401,16 @@ int main(){ // Begin main program.
 			delete htemp1;
 		}
 		mycsv.close();
-		// TCanvas* c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
-		// TGraph* g1 = new TGraph(n_bins, nbins_array, Smeared_Mean_array);
-		// auto g2 = new TGraph(64, nbins_array,Smeared_Variance_array);
-		// g1->SetTitle("Mean;X title;Y title");
-		// g1->Draw("AC*");
-		// g2->SetTitle("Var;X title;Y title");
-		// g2->Draw("AC*");
-		// g1->Write("MyGraph1");
-		// g2->Write("MyGraph2");
-		// delete g1;
-		// delete g2;
-		// h10->Fit("gaus","Q"); // Q quiet mode, https://root.cern.ch/root/htmldoc/guides/users-guide/FittingHistograms.html
 
-		// h11->Fit("gaus","Q");
-
-		// for(int i=0; i<n_bins;i++){
-		// auto mean_graph (n_bins, Smeared_Mean);
-		// auto variance_graph (n_bins, Smeared_Variance);
-		// };
-
-		/*
-		std::cout << i <<" "<<id<< " " << m << " " << " E " << " " << E <<" " << " P " << " " << px<<" "<<py<<" "<<pz<<std::endl;
-		*/
 		h7->Divide(h2, h3);
 		h11->Divide(h10, h4);
 		h13->Divide(h12, h3);
 		h14->Divide(h13, h11);
 		h15->Divide(h11, h13);
-		//
 		h24->Divide(h16, h17);
-		// h25->Divide(h18,h19);
 		h26->Divide(h20, h21);
-		// h27->Divide(h22,h23);
 		h28->Divide(h26, h24);
-		// h29->Divide(h27,h25);
-		// h8->Divide(h3,h2);
+
 		double_t realtime = timer.RealTime();
 		double_t cputime = timer.CpuTime();
 
