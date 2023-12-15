@@ -86,7 +86,9 @@ int main(){
 			//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 			//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
 
-			TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s_ac%i_co%i.root", smear_factor_b, WeightNames[weightmethod].c_str(), asymcut, clusteroverlay), "recreate");//
+			TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s.root", smear_factor_b, WeightNames[weightmethod].c_str()), "recreate");//
+
+			//TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s_ac%i_co%i.root", smear_factor_b, WeightNames[weightmethod].c_str(), asymcut, clusteroverlay), "recreate");//
 			TTree *tree = new TTree("tree", "tree");
 			tree->SetMaxTreeSize(500 * 1024 * 1024); // set max tree size to 500 mb
 			//------------------------------ book histograms. Need to cull this list. some are useless/redundant
