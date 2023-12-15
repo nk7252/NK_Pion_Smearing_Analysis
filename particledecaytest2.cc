@@ -54,9 +54,7 @@ int main(){
 	int asymcut=0;//apply asymm cut.
 	int clusteroverlay = 0;//overlayed cluster check
 	float coprob=0.8;//random numbers(0-1) greater than this value will have some smearing added.
-	//----------------------pion spectrum function for clusteroverlay
-	// reserve a TF1 for the chosen function just in case
-	TF1 *myFunc;
+
 
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
@@ -77,13 +75,16 @@ int main(){
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
 	for (const std::string& currentString : WeightNames) {
 		std::cout << "Processing: " << currentString << std::endl;
+		//----------------------pion spectrum function for clusteroverlay
+		// reserve a TF1 for the chosen function just in case
+		TF1 *myFunc;
 		if(clusteroverlay==1){
 			myFunc=ChooseSpectrumFunction(weightmethod, PT_Min, PT_Max);
 		}
 		else{
 			delete myFunc;//delete it if we aren't using it.
 		}
-		
+
 		for (int smear_factor_itt = 9; smear_factor_itt < 9 + 1; smear_factor_itt++)
 		{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 		// only want .155
