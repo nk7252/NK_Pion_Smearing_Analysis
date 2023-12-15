@@ -6,6 +6,7 @@
 // #include <numbers> //std::numbers
 #include <cmath>
 #include <random>
+#include <memory>
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1.h"
@@ -20,12 +21,12 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 
 //forward declarators
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
-Pythia8::Vec4 clusterPhoton(const Pythia8::Vec4& originalVector, int method, double randomE);
+Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE);
 
 int main(){ 
 	TStopwatch timer;
 	timer.Start();
-	int NPions = 1 * 1000000;
+	int NPions = 1 * 1000000;//
 	// int n_bins=1+ceil(log2(Nevents));
 	int PT_Max = 64; // 65
 	int PT_Min = 0;	 // cross check to elimate power law problems
@@ -48,11 +49,11 @@ int main(){
 	pspectfile->Close(); */
 
 	//-----------------------------------set weighting method
-	int weightmethod = 3;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
+	//int weightmethod = 3;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP","HAGEDORN"};
 	//-----------------------------------
-	int asymcut=0;//apply asymm cut.
-	int clusteroverlay = 0;//overlayed cluster check
+	int asymcut=1;//apply asymm cut.
+	int clusteroverlay = 1;//overlayed cluster check
 	float coprob=0.8;//random numbers(0-1) greater than this value will have some smearing added.
 
 
@@ -73,8 +74,8 @@ int main(){
 	float smear_factor_a = 0;
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
-	for (const std::string& currentString : WeightNames) {
-		std::cout << "Processing: " << currentString << std::endl;
+	for (int weightmethod=0; weightmethod<4; weightmethod++) {
+		std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 		//----------------------pion spectrum function for clusteroverlay
 		// reserve a TF1 for the chosen function just in case
 		TF1 *myFunc;
@@ -95,7 +96,7 @@ int main(){
 			//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 			//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
 
-			TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s_ac%i_co%i.root", smear_factor_b, WeightNames[weightmethod].c_str(), asymcut, clusteroverlay), "recreate");
+			TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s_ac%i_co%i.root", smear_factor_b, WeightNames[weightmethod].c_str(), asymcut, clusteroverlay), "recreate");//
 			TTree *tree = new TTree("tree", "tree");
 			tree->SetMaxTreeSize(500 * 1024 * 1024); // set max tree size to 500 mb
 			//------------------------------ book histograms. Need to cull this list. some are useless/redundant
@@ -112,9 +113,6 @@ int main(){
 			TH1 *h11 = new TH1F("h11", "Smeared Pion PT/Pion PT ratio", n_bins, PT_Min, PT_Max);
 			TH1 *h12 = new TH1F("h12", "Smeared Pion PT, weighted", n_bins, PT_Min, PT_Max);
 			TH1 *h13 = new TH1F("h13", "ratio of weighted  Smeared-Pion-PT/ weighted Pion PT ", n_bins, PT_Min, PT_Max);
-			//TH1 *h14 = new TH1F("h14", "ratio of weighted and unweighted ratio ", n_bins, PT_Min, PT_Max);
-			//TH1 *h15 = new TH1F("h15", "ratio of unweighted and weighted ratio ", n_bins, PT_Min, PT_Max);
-			//
 			//------------------------photon pT
 			TH1 *h16 = new TH1F("h16", "Smeared Photon pT", n_bins, PT_Min, PT_Max);
 			TH1 *h17 = new TH1F("h17", "Photon pT", n_bins, PT_Min, PT_Max);
@@ -123,15 +121,15 @@ int main(){
 			TH1 *h24 = new TH1F("h24", "Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
 			TH1 *h26 = new TH1F("h26", "weighted, Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
 			
-			//TH1 *h28 = new TH1F("h28", "weighted/unweighted ratio of ratios, photons", n_bins, PT_Min, PT_Max);
+			
 			TH2F *h18 = new TH2F("h18", "Smeared Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h18->Sumw2();
+			//h18->Sumw2();
 			TH2F *h27 = new TH2F("h27", "Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h18->Sumw2();
+
 			TH2F *h28 = new TH2F("h28", "Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster and asym cut", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h18->Sumw2();
+
 			TH2F *h29 = new TH2F("h29", "Smeared Pion Pt vs Smeared Inv Mass, weighted. asym cut", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h18->Sumw2();
+
 			// things to add probability to add an exponentially scaled (small) energy
 			//--------------------set up random number generation
 			std::random_device rd;// generate a random number to seed random generation
@@ -233,10 +231,8 @@ int main(){
 			std::cout << "I reached here" << std::endl; // debug line
 			std::ofstream mycsv2;
 			mycsv2.open(Form("pioncode/csvfiles/pT_IMass_IYield_diag_%f.csv", smear_factor_b));
-			for (int i = 0; i < pythia.event.size(); i++)
-			{ // loop over all events(pions)
-				if (pythia.event[i].id() == 111)
-				{ // if the ith event is a pion
+			for (int i = 0; i < pythia.event.size(); i++){ // loop over all events(pions)
+				if (pythia.event[i].id() == 111){ // if the ith event is a pion
 
 					int Gamma_daughters[2] = {pythia.event[i].daughter1(), pythia.event[i].daughter2()}; // make array of daughter particles(di gamma) event ids
 					double Pt = pythia.event[i].pT();
@@ -273,7 +269,7 @@ int main(){
 
 					if (pythia.event[Gamma_daughters[0]].id() == 22 && pythia.event[Gamma_daughters[1]].id() == 22){// check that the decays are photons
 						// gammadis(gen_gamma(rdgamma()));
-
+						
 						gamma_lorentz[0] = pythia.event[Gamma_daughters[0]].p();
 						gamma_lorentz[1] = pythia.event[Gamma_daughters[1]].p();
 						gamma_lorentz[2] = gamma_lorentz[0] + gamma_lorentz[1];
@@ -303,7 +299,7 @@ int main(){
 						
 						///*
 						if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
-							std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
+							//std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
 
 							// Randomly choose an entry from the branch
 							//TBranch* branch = tree->GetBranch("pz");
@@ -316,18 +312,19 @@ int main(){
 							//gamma_smeared[0] = clusterPhoton(gamma_smeared[0], 2, myFunc->GetRandom())
 
 							gamma_cluster[0] = clusterPhoton(gamma_smeared[0], 2, myFunc->GetRandom());
-							gamma_cluster_asymm[0]=gamma_cluster[0];
 
-							gamma_smeared[0].e(gamma_smeared[0].e() + myFunc->GetRandom());
-							std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
+							gamma_cluster_asymm[0]=gamma_cluster[0];
+							//gamma_smeared[0].e(gamma_smeared[0].e() + myFunc->GetRandom());
+							//std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
 						}
 						if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 2
-							std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
+							//std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
 
 							gamma_cluster[1] = clusterPhoton(gamma_smeared[1], 2, myFunc->GetRandom());
+
 							gamma_cluster_asymm[1]=gamma_cluster[1];
-							gamma_smeared[1].e(gamma_smeared[1].e() +myFunc->GetRandom());
-							std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
+							//gamma_smeared[1].e(gamma_smeared[1].e() +myFunc->GetRandom());
+							//std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
 						}//*/
 
 						gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
@@ -349,10 +346,8 @@ int main(){
 						if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<0.8 &&asymcut==1){//asymmetry cut
 						//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
 						// if I am to save both, maybe filling here would be appropriate.
-						//gamma_asymm=;
-						//gamma_cluster_asymm;
 						h29->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield);// asymm
-						h28->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield);//cluster+asymm
+						h28->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield);//
 						//continue;
 						}
 
@@ -375,6 +370,9 @@ int main(){
 						h20->Fill(gamma_smeared[1].pT(), Pt * weight_function);
 						h21->Fill(gamma_lorentz[1].pT(), Pt * weight_function);
 						h18->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield);//change x to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
+
+						//h27->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield);
+
 						// mass_pt_map.insert[]
 						//std::cout << "event number" << " " << i << " " << "smeared pT" << " " << std::scientific << gamma_smeared[2].pT() << " " << "Smeared Mass" << " " << inv_mass_smeared << " " << "inv yield" << " " << std::scientific << inv_yield << std::endl;
 						
@@ -424,13 +422,12 @@ int main(){
 						// printf("daughter1 ID=%g\n",pythia.event[Gamma_daughters[0]].id());
 						// printf("daughter2 ID=%g\n",pythia.event[Gamma_daughters[1]].id());
 					}
-				}
+				}			
 			}
 			
 			float Smeared_Mean_array[n_bins], Smeared_Variance_array[n_bins], nbins_array[n_bins]; 
 			mycsv2.close();
 			std::ofstream mycsv;
-
 			mycsv.open(Form("pioncode/csvfiles/Inv_Mass_mean_variance%f.csv", smear_factor_b));
 			for (int i = 1; i < n_bins + 1; i++)
 			{
@@ -453,16 +450,11 @@ int main(){
 				delete htemp1;
 			}
 			mycsv.close();
-
 			h7->Divide(h2, h3);
 			h11->Divide(h10, h4);
 			h13->Divide(h12, h3);
-			h14->Divide(h13, h11);
-			h15->Divide(h11, h13);
 			h24->Divide(h16, h17);
 			h26->Divide(h20, h21);
-			h28->Divide(h26, h24);
-
 			double_t realtime = timer.RealTime();
 			double_t cputime = timer.CpuTime();
 
@@ -471,6 +463,12 @@ int main(){
 
 			output->Write();
 			output->Close();
+			//clean up
+			//delete tree; 
+			//delete h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12,h13,h16,h17,h18,h20,h21,h24,h26,h27,h28,h29;
+			delete output;
+			
+			
 		}
 	
 	}
@@ -501,13 +499,22 @@ TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max){
 		myFunc->SetParameters(4.5,  0.114, 229.6, 1.466, 10.654, 14.43, 8.1028);
 		//t,w,A,p0,m_param,B,n
 	}
+	else if(weightmethod==3){
+		//std::cout << "Hagedorn Weight" <<std::endl;
+		myFunc = new TF1("myFunc", [](double *x, double *par){
+			return (par[0]/pow(1+x[0]/par[1],par[2]) );
+			}, PT_Min, PT_Max, 3);
+		myFunc->SetParameters( 229.6, 1.466, 10.654);
+		//weight_function=A/pow(1+Pt/p0,m_param);
+		//WeightScale=1e+14;
+	}
 	else{
 		std::cout << "Error:No Weight function found" <<std::endl;
 	}
 	return myFunc;
 }
 
-Pythia8::Vec4 clusterPhoton(const Pythia8::Vec4& originalPhoton, int method, double randomE) {
+Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE) {
 	// I see two methods to do this. 
 	// 1) draw a random energy, pz and phi then construct px and py
 	// 2) draw a random energy, copy the momentum from the original 4 vector and scale them down appropriately
@@ -515,7 +522,7 @@ Pythia8::Vec4 clusterPhoton(const Pythia8::Vec4& originalPhoton, int method, dou
 	// 3) do a proper analysis for each energy. this would be tricky.
     // Create a Pythia8 random number generator
 	//Pythia8::Vec4 photongen;
-
+	Pythia8::Vec4 newPhoton;
 	if (method==1){
 		// Generate a random energy for the photon
 		//double photonEnergy = rndm.exp(50.0);  // Exponential distribution for energy, you can adjust the parameter
@@ -535,13 +542,11 @@ Pythia8::Vec4 clusterPhoton(const Pythia8::Vec4& originalPhoton, int method, dou
 		//Pythia8::Vec4 photon(photonPx, photonPy, photonPz, photonEnergy);
 	}
 	else if(method==2){
-		//Pythia8::Vec4 photon(photonPx, photonPy, photonPz, photonEnergy);
-		Pythia8::Vec4 newPhoton = originalPhoton * (randomE / originalPhoton.e());	
+		newPhoton = originalPhoton * (randomE / originalPhoton.e());	
 	}
 	else if(method==3){
 		
 	}
-
     //Pythia8::Rndm rndm;
 
 
