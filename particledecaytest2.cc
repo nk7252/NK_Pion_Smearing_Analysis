@@ -20,6 +20,7 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 
 //forward declarators
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
+Pythia8::Vec4 clusterPhoton(const Pythia8::Vec4& originalVector, int method, double randomE);
 
 int main(){ 
 	TStopwatch timer;
@@ -95,7 +96,7 @@ int main(){
 		tree->SetMaxTreeSize(500 * 1024 * 1024); // set max tree size to 500 mb
 		//------------------------------ book histograms. Need to cull this list. some are useless/redundant
 		// TH1* h1 = new TH1F("h1", "pi0 E",128, 0, PT_Max);
-		TH1 *h2 = new TH1D("h2", "Photon Pt", n_bins, PT_Min, PT_Max); // will be weighted
+		TH1 *h2 = new TH1D("h2", "Photon Pt", n_bins, PT_Min, PT_Max); // will be weighted, is this redundant?
 		TH1 *h3 = new TH1D("h3", "Pion PT, weighted", n_bins, PT_Min, PT_Max);
 		TH1 *h4 = new TH1F("h4", "Pion PT, unweighted", n_bins, PT_Min, PT_Max);
 		TH1 *h5 = new TH1F("h5", "Photon Pt, unweighted", n_bins, PT_Min, PT_Max);
@@ -107,17 +108,25 @@ int main(){
 		TH1 *h11 = new TH1F("h11", "Smeared Pion PT/Pion PT ratio", n_bins, PT_Min, PT_Max);
 		TH1 *h12 = new TH1F("h12", "Smeared Pion PT, weighted", n_bins, PT_Min, PT_Max);
 		TH1 *h13 = new TH1F("h13", "ratio of weighted  Smeared-Pion-PT/ weighted Pion PT ", n_bins, PT_Min, PT_Max);
-		TH1 *h14 = new TH1F("h14", "ratio of weighted and unweighted ratio ", n_bins, PT_Min, PT_Max);
-		TH1 *h15 = new TH1F("h15", "ratio of unweighted and weighted ratio ", n_bins, PT_Min, PT_Max);
+		//TH1 *h14 = new TH1F("h14", "ratio of weighted and unweighted ratio ", n_bins, PT_Min, PT_Max);
+		//TH1 *h15 = new TH1F("h15", "ratio of unweighted and weighted ratio ", n_bins, PT_Min, PT_Max);
 		//
+		//------------------------photon pT
 		TH1 *h16 = new TH1F("h16", "Smeared Photon pT", n_bins, PT_Min, PT_Max);
 		TH1 *h17 = new TH1F("h17", "Photon pT", n_bins, PT_Min, PT_Max);
 		TH1 *h20 = new TH1F("h20", "Smeared Photon pT, weighted", n_bins, PT_Min, PT_Max);
 		TH1 *h21 = new TH1F("h21", "Photon pT, weighted", n_bins, PT_Min, PT_Max);
 		TH1 *h24 = new TH1F("h24", "Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
 		TH1 *h26 = new TH1F("h26", "weighted, Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
-		TH1 *h28 = new TH1F("h28", "weighted/unweighted ratio of ratios, photons", n_bins, PT_Min, PT_Max);
+		
+		//TH1 *h28 = new TH1F("h28", "weighted/unweighted ratio of ratios, photons", n_bins, PT_Min, PT_Max);
 		TH2F *h18 = new TH2F("h18", "Smeared Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+		h18->Sumw2();
+		TH2F *h27 = new TH2F("h27", "Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+		h18->Sumw2();
+		TH2F *h28 = new TH2F("h28", "Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster and asym cut", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+		h18->Sumw2();
+		TH2F *h29 = new TH2F("h29", "Smeared Pion Pt vs Smeared Inv Mass, weighted. asym cut", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 		h18->Sumw2();
 		// things to add probability to add an exponentially scaled (small) energy
 		//--------------------set up random number generation
@@ -140,6 +149,8 @@ int main(){
 		int id, size, no, WeightScale;
 		Vec4 gamma_lorentz[3];
 		Vec4 gamma_smeared[3];
+		Vec4 gamma_cluster[3];
+		Vec4 gamma_cluster_asymm[3];
 		double m, E, px, py, pz, pi0_px, pi0_py, pi0_E, scale_factor1, scale_factor2, smear_factor1, smear_factor2;
 		double P0rest = 0.0;
 		double pi0_pz = 0.0;
@@ -288,23 +299,60 @@ int main(){
 					
 					///*
 					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
-					std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
-					gamma_smeared[0].e(gamma_smeared[0].e() + myFunc->GetRandom());
-					std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
+						std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
+
+						// Randomly choose an entry from the branch
+						//TBranch* branch = tree->GetBranch("pz");
+						//Long64_t nEntries = branch->GetEntries();
+						//Long64_t entry = static_cast<Long64_t>(gRandom->Uniform(nEntries));
+						// Get the value from the chosen entry
+						//branch->GetEntry(entry);
+						// Print or use the z_momentum value
+						//std::cout << "Random z_momentum: " << z_momentum << std::endl;
+						//gamma_smeared[0] = clusterPhoton(gamma_smeared[0], 2, myFunc->GetRandom())
+
+						gamma_cluster[0] = clusterPhoton(gamma_smeared[0], 2, myFunc->GetRandom());
+						gamma_cluster_asymm[0]=gamma_cluster[0];
+
+						gamma_smeared[0].e(gamma_smeared[0].e() + myFunc->GetRandom());
+						std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
 					}
 					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 2
-					std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
-					gamma_smeared[1].e(gamma_smeared[1].e() +myFunc->GetRandom());
-					std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
+						std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
+
+						gamma_cluster[1] = clusterPhoton(gamma_smeared[1], 2, myFunc->GetRandom());
+						gamma_cluster_asymm[1]=gamma_cluster[1];
+						gamma_smeared[1].e(gamma_smeared[1].e() +myFunc->GetRandom());
+						std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
 					}//*/
 
+					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
+					gamma_cluster[2] = gamma_cluster[0] + gamma_cluster[1];
+					gamma_cluster_asymm[2] = gamma_cluster_asymm[0] + gamma_cluster_asymm[1];
+					inv_mass_smeared = gamma_smeared[2].mCalc();
+
+					/*
 					if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())>0.8 &&asymcut==1){//asymmetry cut
 					//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
-					continue;
+					// if I am to save both, maybe filling here would be appropriate.
+					//gamma_asymm=;
+					//gamma_cluster_asymm;
+					//h28->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield);
+					//h29->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield);
+					//continue;
+					}*/
+
+					if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<0.8 &&asymcut==1){//asymmetry cut
+					//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
+					// if I am to save both, maybe filling here would be appropriate.
+					//gamma_asymm=;
+					//gamma_cluster_asymm;
+					h29->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield);// asymm
+					h28->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield);//cluster+asymm
+					//continue;
 					}
 
-					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
-					inv_mass_smeared = gamma_smeared[2].mCalc();
+
 					// std::cout << "inv mass" << " " <<inv_mass<<std::endl;
 					h3->Fill(Pt, inv_yield); // fill pion pt, weighted
 					h4->Fill(Pt);			// fill pion pt, unweighted
@@ -452,4 +500,49 @@ TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max){
 	}
 	return myFunc;
 }
+
+Pythia8::Vec4 clusterPhoton(const Pythia8::Vec4& originalPhoton, int method, double randomE) {
+	// I see two methods to do this. 
+	// 1) draw a random energy, pz and phi then construct px and py
+	// 2) draw a random energy, copy the momentum from the original 4 vector and scale them down appropriately
+	// 2.1) add some randomization
+	// 3) do a proper analysis for each energy. this would be tricky.
+    // Create a Pythia8 random number generator
+	//Pythia8::Vec4 photongen;
+
+	if (method==1){
+		// Generate a random energy for the photon
+		//double photonEnergy = rndm.exp(50.0);  // Exponential distribution for energy, you can adjust the parameter
+		//double photonPz = rndm.exp(50.0);
+		//double photonEnergy = rndm.flat(1.0, 10.0);
+		// Generate random angles for the photon momentum direction
+		//double theta = rndm.flat(0.0, M_PI);
+		//double theta = acos(photonPz/photonEnergy);// theta should be related to the energy
+		//double phi = rndm.flat(0.0, 2.0 * M_PI);
+
+		// Calculate the momentum components based on the angles and energy
+		//double photonPx = photonEnergy * sin(theta) * cos(phi);
+		//double photonPy = photonEnergy * sin(theta) * sin(phi);
+		//double photonPz = photonEnergy * cos(theta);
+
+		// Create a 4-vector for the new photon
+		//Pythia8::Vec4 photon(photonPx, photonPy, photonPz, photonEnergy);
+	}
+	else if(method==2){
+		//Pythia8::Vec4 photon(photonPx, photonPy, photonPz, photonEnergy);
+		Pythia8::Vec4 newPhoton = originalPhoton * (randomE / originalPhoton.e());	
+	}
+	else if(method==3){
+		
+	}
+
+    //Pythia8::Rndm rndm;
+
+
+
+    // Return the sum of the original 4-vector and the new photon 4-vector
+    //return originalVector + photon;
+	return newPhoton;
+}
+
 
