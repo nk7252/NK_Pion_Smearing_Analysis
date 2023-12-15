@@ -37,16 +37,6 @@ int main(){
 	int n_bins = binres*PT_Max;//multiple by bin res.
 	std::map<double, std::vector<double>> mass_pt_map; // we want to have keys of a pT range?
 
-	/*
-	// Clone photon spectrum histogram.
-	TFile* pspectfile = new TFile("pioncode/rootfiles/Photon_spectrum_hist.root", "READ");
-	TH1F* oldHist = dynamic_cast<TH1F*>(pspectfile->Get("h16"));
-	TH1F* H_pspectrum = new TH1F("Photon_Spectrum_WSHP_Hist", oldHist->GetTitle(), oldHist->GetNbinsX(), oldHist->GetXaxis()->GetXmin(), oldHist->GetXaxis()->GetXmax());
-	H_pspectrum->Add(oldHist);
-    //TH1F* clonedHist = dynamic_cast<TH1F*>(originalHist->Clone());
-    //clonedHist->SetName(newHistName);
-	delete oldHist;
-	pspectfile->Close(); */
 
 	//-----------------------------------set weighting method
 	//int weightmethod = 3;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
@@ -288,7 +278,7 @@ int main(){
 						// std::cout << "gamma gen" << " " <<gammadis(gen_gamma)<<std::endl;
 						// std::cout << "pion E" << " " <<gamma_lorentz[2].e()<< " " << "smear_factor1" << " " <<smear_factor1<< " " << "smear_factor2" << " " <<smear_factor2<< " " <<std::endl;
 
-						//position smearing. smear z phi
+						// position smearing. smear z phi
 						// generate random numbers and move endpoint of the vector by smearing in z and phi so ~1 tower size in z and rphi.
 						// if spread over 2 towers you can fit a better position. to ~0.5 tower size.
 
@@ -298,8 +288,9 @@ int main(){
 						gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
 						
 						///*
+						
 						if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
-							//std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
+							std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
 
 							// Randomly choose an entry from the branch
 							//TBranch* branch = tree->GetBranch("pz");
@@ -315,16 +306,24 @@ int main(){
 
 							gamma_cluster_asymm[0]=gamma_cluster[0];
 							//gamma_smeared[0].e(gamma_smeared[0].e() + myFunc->GetRandom());
-							//std::cout << "after cluster" << " " << gamma_smeared[0].e() <<std::endl;
+							std::cout << "after cluster" << " " << gamma_cluster[0].e() <<std::endl;
+						}
+						else{
+							gamma_cluster[0]=gamma_smeared[0];
+							gamma_cluster_asymm[0]=gamma_cluster[0];
 						}
 						if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 2
-							//std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
+							std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
 
 							gamma_cluster[1] = clusterPhoton(gamma_smeared[1], 2, myFunc->GetRandom());
 
 							gamma_cluster_asymm[1]=gamma_cluster[1];
 							//gamma_smeared[1].e(gamma_smeared[1].e() +myFunc->GetRandom());
-							//std::cout << "after cluster" << " " << gamma_smeared[1].e() <<std::endl;
+							std::cout << "after cluster" << " " << gamma_cluster[1].e() <<std::endl;
+						}
+						else{
+							gamma_cluster[1]=gamma_smeared[1];
+							gamma_cluster_asymm[1]=gamma_cluster[1];
 						}//*/
 
 						gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
@@ -371,7 +370,7 @@ int main(){
 						h21->Fill(gamma_lorentz[1].pT(), Pt * weight_function);
 						h18->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield);//change x to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
 
-						//h27->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield);
+						h27->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield);
 
 						// mass_pt_map.insert[]
 						//std::cout << "event number" << " " << i << " " << "smeared pT" << " " << std::scientific << gamma_smeared[2].pT() << " " << "Smeared Mass" << " " << inv_mass_smeared << " " << "inv yield" << " " << std::scientific << inv_yield << std::endl;
@@ -429,8 +428,7 @@ int main(){
 			mycsv2.close();
 			std::ofstream mycsv;
 			mycsv.open(Form("pioncode/csvfiles/Inv_Mass_mean_variance%f.csv", smear_factor_b));
-			for (int i = 1; i < n_bins + 1; i++)
-			{
+			for (int i = 1; i < n_bins + 1; i++){
 				TH1 *htemp1 = new TH1D("htemp1", "temp1", n_bins, PT_Min, PT_Max); // unweighted
 
 				for (int j = 0; j < mass_pt_map[i].size(); j++)
@@ -465,7 +463,7 @@ int main(){
 			output->Close();
 			//clean up
 			//delete tree; 
-			//delete h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12,h13,h16,h17,h18,h20,h21,h24,h26,h27,h28,h29;
+			//delete h2;//,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12,h13,h16,h17,h18,h20,h21,h24,h26,h27,h28,h29;
 			delete output;
 			
 			
@@ -517,43 +515,48 @@ TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max){
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE) {
 	// I see two methods to do this. 
 	// 1) draw a random energy, pz and phi then construct px and py
+	// this is not really realistic because photons with certain momenta could never reach certain towers
 	// 2) draw a random energy, copy the momentum from the original 4 vector and scale them down appropriately
 	// 2.1) add some randomization
-	// 3) do a proper analysis for each energy. this would be tricky.
+	// also non realistic. I am not sure what level of realism is needed for this though
+	// 3) do a proper analysis for each energy. I would have to think it through.
     // Create a Pythia8 random number generator
 	//Pythia8::Vec4 photongen;
 	Pythia8::Vec4 newPhoton;
+	Pythia8::Rndm rndm;
 	if (method==1){
-		// Generate a random energy for the photon
-		//double photonEnergy = rndm.exp(50.0);  // Exponential distribution for energy, you can adjust the parameter
-		//double photonPz = rndm.exp(50.0);
-		//double photonEnergy = rndm.flat(1.0, 10.0);
-		// Generate random angles for the photon momentum direction
+		
 		//double theta = rndm.flat(0.0, M_PI);
-		//double theta = acos(photonPz/photonEnergy);// theta should be related to the energy
 		//double phi = rndm.flat(0.0, 2.0 * M_PI);
+		//double theta = acos(photonPz/photonEnergy);// theta should be related to the energy
+		
 
 		// Calculate the momentum components based on the angles and energy
-		//double photonPx = photonEnergy * sin(theta) * cos(phi);
-		//double photonPy = photonEnergy * sin(theta) * sin(phi);
-		//double photonPz = photonEnergy * cos(theta);
+		//double photonPx = randomE * sin(theta) * cos(phi);
+		//double photonPy = randomE * sin(theta) * sin(phi);
+		//double photonPz = randomE * cos(theta);
 
 		// Create a 4-vector for the new photon
-		//Pythia8::Vec4 photon(photonPx, photonPy, photonPz, photonEnergy);
+		//Pythia8::Vec4 photon(photonPx, photonPy, photonPz, randomE);
+		//newPhoton = photon;
 	}
 	else if(method==2){
-		newPhoton = originalPhoton * (randomE / originalPhoton.e());	
+		newPhoton.e(randomE);
+		
+		newPhoton.px(originalPhoton.px() * (randomE / originalPhoton.e()));
+		newPhoton.py(originalPhoton.py() * (randomE / originalPhoton.e()));	
+		newPhoton.pz(originalPhoton.pz() * (randomE / originalPhoton.e()));		
 	}
 	else if(method==3){
 		
 	}
-    //Pythia8::Rndm rndm;
+    
 
 
 
     // Return the sum of the original 4-vector and the new photon 4-vector
     //return originalVector + photon;
-	return newPhoton;
+	return newPhoton+originalPhoton;
 }
 
 
