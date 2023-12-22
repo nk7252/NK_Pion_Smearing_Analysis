@@ -66,7 +66,10 @@ void CombinedFits() {
 
     if (fileset>5){// all in one file
         //tbd
-        OverlayMeansAIO(choosenfilenameobj);
+        //OverlayMeansAIO(choosenfilenameobj);
+        //OverlaySigmaOverMean(choosenfilenameobj);
+        //plotOverlayedHistograms(choosenfilenameobj, "h12");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
+        //SliceAndFit(choosenfilenameobj);
     }
 }    
 
@@ -154,7 +157,7 @@ filename_object choosecomparisontype(int choosetype){
         filename_object1.plotylims={0.13,0.17,0.08,0.25,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff=6;
         filename_object1.binres=2;
-    }
+    }// AOI sets following
     else if(choosetype==6){
         //filename_object weightfilenameobj;
         filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000_EXP.root", "pioncode/rootfiles/Pi0FastMC_0.155000_POWER.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP.root","pioncode/rootfiles/Pi0FastMC_0.155000_HAGEDORN.root"};
