@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <functional>
 #include <TFile.h>
 #include <TH1D.h>
 #include <TH2F.h>
@@ -17,7 +18,6 @@
 #include <TGraphMultiErrors.h>
 #include <TPad.h>
 #include <TImage.h>
-
 
 class filename_object {//object to hold my file names and related strings. things like settings for the files are contained here.
     public:
@@ -36,16 +36,14 @@ class filename_object {//object to hold my file names and related strings. thing
 
 float extractNumber(const std::string& filePath);
 filename_object choosecomparisontype(int choosetype);
-void OverlayMeans(filename_object filenameobj);
-void OverlaySigmaOverMean(filename_object filenameobj);
-
+Canvas* PlotAndFit(filename_object filenameobj,const std::string& fileName, const std::string& histName1, const std::string& histName2);
+void GraphAndSaveToPDF(filename_object filenameobj, const std::string& histName1, const std::string& histName2);
 
 int main () {
     // 0=weight type
-    int fileset = 6 ;
+    int fileset = 0 ;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
     
-
     OverlayMeans(choosenfilenameobj);
     OverlaySigmaOverMean(choosenfilenameobj);
     plotOverlayedHistograms(choosenfilenameobj, "h12");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
@@ -55,7 +53,6 @@ int main () {
     if (choosenfilenameobj.fileNames.size()==2){// for subtraction of inv mass profile
         ClusterOverlayTestFunc(choosenfilenameobj, "h18");//const char* histname
     }//*/
-
 }    
 
 float extractNumber(const std::string& filePath) {
@@ -97,7 +94,7 @@ filename_object choosecomparisontype(int choosetype){
 return filename_object1;
 }
 
-void GraphAndSaveToPDF(const std::vector<std::string>& fileNames, const std::string& histName1, const std::string& histName2) {
+void GraphAndSaveToPDF(filename_object filenameobj, const std::string& histName1, const std::string& histName2) {
     // create canvas and open the output pdf
     TCanvas* canvas;    
     canvas->Print("output.pdf[");
@@ -114,7 +111,7 @@ void GraphAndSaveToPDF(const std::vector<std::string>& fileNames, const std::str
     delete canvas;
 }
 
-Canvas* PlotAndFit(const std::string& fileName, const std::string& histName1, const std::string& histName2) {
+Canvas* PlotAndFit(filename_object filenameobj,const std::string& fileName, const std::string& histName1, const std::string& histName2) {
     TCanvas *canvas = new TCanvas("canvas", "Canvas", 800, 600);
 
     TFile *file = new TFile(fileName.c_str(), "READ");
@@ -134,12 +131,118 @@ Canvas* PlotAndFit(const std::string& fileName, const std::string& histName1, co
         delete canvas;
         return nullptr;
     }
+    //plotting operations.
+    float errparam=filenameobj.sqrtEsmearing[0];
+    double binres=2;//number of divisions per GeV
+    // Create a legend
+    TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);//0.7, 0.4, 0.9, 0.6
+    TMultiGraph *MultiGraphs = new TMultiGraph();//h18->GetNbinsX()
+    // Create a histogram for means
+    TGraphErrors *meanGraph = new TGraphErrors(h18->GetNbinsX());//
 
-    // Plot histograms on the same canvas
-    hist1->Draw();
-    hist2->Draw("SAME");
+    // Loop over each bin in the X direction
+    for (int binX = 1; binX <= h18->GetNbinsX(); ++binX) {
+        //std::cout << "Nbin" << " " << binX << std::endl;
+        // Project along Y for each sbinX
+        TH1D* yProjection = h18->ProjectionY(Form("YProjection_%zu_%d", i, binX), binX, binX, "");
 
-    // Optionally, add fitting or other operations
+        // Fit the Y projection with a Gaussian
+        yProjection->Fit("gaus", "Q");
+
+        // Access the fit parameters
+        TF1* fitFunc = yProjection->GetFunction("gaus");
+
+        // Check if the fit function is valid
+        if (fitFunc) {
+            // Fill the mean histogram with the mean value
+            //meanHistogram->SetBinContent(binX, fitFunc->GetParameter(1));
+            if (filenameobj.weightnames[i]=="EXP"){//exp &&  binX <= filenameobj.pTcutoff*binres
+                meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
+                meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
+                if(binX/binres==3){
+                    std::cout << binX <<" "<<fitFunc->GetParameter(1) << std::endl; // debug line
+                }
+            }
+            else if (filenameobj.weightnames[i]=="POWER"){//power &&  3*binres < binX
+                meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
+                meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
+                if(binX/binres==3){
+                    std::cout << binX <<" "<<fitFunc->GetParameter(1) << std::endl; // debug line
+                }
+                //std::cout << binX <<" "<<fitFunc->GetParameter(1) << std::endl; // debug line
+            }
+            else if (filenameobj.weightnames[i]=="WSHP"){//woods saxon
+                meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
+                meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
+            }
+            else if (filenameobj.weightnames[i]=="HAGEDORN"){//HAGEDORN
+                meanGraph->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
+                meanGraph->SetPointError(binX, 0,fitFunc->GetParError(1));
+            }
+            
+            //meanHistogram->SetBinError(binX, fitFunc->GetParError(1));
+            //std::cout << "bin number" << " " << binX << " " << "Mean" << " " <<  fitFunc->GetParameter(1) << " " << "Mean error" << " " << fitFunc->GetParError(1) << std::endl;
+        }
+            // Add an entry to the legend
+            //legend1->AddEntry(yProjection, Form("Version %zu, BinX %d", i, binX), "L");
+        
+        //std::cout << "I reached here, pre delete proj" << std::endl; // debug line
+        // Clean up Y projection
+        delete yProjection;
+    }
+    // Set different line colors for each version
+    int MarkerStyle = i + 24; // 
+    int MarkerColor = i + 1;
+    //meanGraph->SetLineColor(lineColor);
+    meanGraph->SetMarkerStyle(MarkerStyle);
+    meanGraph->SetMarkerColor(MarkerColor);
+    
+
+    
+    // Overlay the mean histogram on the same canvas
+    if (i == 0) {
+        //meanGraph->Draw("AP"); // Draw histogram for the first version
+        //canvas1->Print("OverlayMeanHistograms.pdf");
+        MultiGraphs->Add(meanGraph,"PE");
+        std::cout << "draw for the first file" << std::endl; // debug line
+    } else {
+        MultiGraphs->Add(meanGraph,"PE");
+        //meanGraph->Draw("P SAME"); // Draw subsequent histograms on the same canvas
+        std::cout << "draw for subsequent" << std::endl; // debug line
+    }   
+    
+    MultiGraphs->SetTitle(Form("Smeared Inv. Mass%s;pT (GeV);Inv. Mass (GeV)",filenameobj.canvasnamemod.c_str()));
+    MultiGraphs->Draw("APE");
+
+    // Add an entry to the legend
+    //std::vector<std::string> legendstring = {"EXP","POWER","WSHP"};
+    legend1->AddEntry(meanGraph, filenameobj.legendnames[i].c_str(), "P");
+
+    // Close the file
+    pionfile->Close();
+    delete pionfile;
+
+    //std::cout << "I reached here, close+delete file" << std::endl; // debug line
+
+
+    //std::cout << "I reached here, done with all files" << std::endl; // debug line
+    // Draw the legend
+    legend1->Draw();
+
+    // Show the canvas
+    MultiGraphs->GetXaxis()->SetLimits(filenameobj.plotxlims[0],filenameobj.plotxlims[1]);
+    MultiGraphs->SetMinimum(filenameobj.plotylims[0]);
+    MultiGraphs->SetMaximum(filenameobj.plotylims[1]);
+    canvas1->SetMargin(0.2,0.1,0.1,0.1);
+    gPad->Modified();
+    gPad->Update();
+    //canvas1->Modified();
+    canvas1->Update();
+    canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayMeanHistograms.pdf",filenameobj.filenamemod.c_str(),errparam));
+
+    // Clean up
+    delete canvas1;
+    delete legend1;
 
     // Close the file
     file->Close();
