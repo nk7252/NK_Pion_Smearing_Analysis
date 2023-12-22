@@ -1177,7 +1177,7 @@ void OverlayMeansAIO(filename_object filenameobj, const char* histName) {
     gPad->Update();
     //canvas1->Modified();
     canvas1->Update();
-    canvas1->Print(Form("pioncode/canvas_pdf/%s_%s_%f_OverlayMeanHistograms.pdf",histName.c_str(),filenameobj.filenamemod.c_str(),errparam));
+    canvas1->Print(Form("pioncode/canvas_pdf/%s_%s_%f_OverlayMeanHistograms.pdf",histName,filenameobj.filenamemod.c_str(),errparam));
 
     // Clean up
     delete canvas1;
@@ -1335,7 +1335,7 @@ void OverlaySigmaOverMeanAIO(filename_object filenameobj, const char* histName){
 
    //canvas1->Update();
     canvas1->Modified();
-    canvas1->SaveAs(Form("pioncode/canvas_pdf/%s_%s_%f_OverlaySigma_Over_Mean.pdf",histName.c_str(),filenameobj.filenamemod.c_str(),errparam));//Print-> works too
+    canvas1->SaveAs(Form("pioncode/canvas_pdf/%s_%s_%f_OverlaySigma_Over_Mean.pdf",histName,filenameobj.filenamemod.c_str(),errparam));//Print-> works too
     
     // Clean up
     delete canvas1;
