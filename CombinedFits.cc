@@ -45,7 +45,7 @@ void SliceAndFit(filename_object filenameobj);
 void OverlayMeansAIO(filename_object filenameobj);
 
 void CombinedFits() {
-    int fileset = 1 ;
+    int fileset = 6 ;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
     // 0=weight type, 1=ac on/off, 2=co on/off, 4 ac&co on/off
     //5=weight type, new files+ hagedorn
@@ -63,12 +63,12 @@ void CombinedFits() {
     }
     //*/
     }
-
+    // hist list: h18- smeared pTs vs smeared inv mass, h27- cluster, h28 cluster+asymm, h29 asymm
     if (fileset>5){// all in one file
         //tbd
-        //OverlayMeansAIO(choosenfilenameobj);
-        //OverlaySigmaOverMean(choosenfilenameobj);
-        //plotOverlayedHistograms(choosenfilenameobj, "h12");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
+        OverlayMeansAIO(choosenfilenameobj, "h27");
+        OverlaySigmaOverMeanAIO(choosenfilenameobj, "h27");
+        //plotOverlayedHistogramsAIO(choosenfilenameobj, "h12");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
         //SliceAndFit(choosenfilenameobj);
     }
 }    
