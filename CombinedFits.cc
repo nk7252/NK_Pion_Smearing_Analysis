@@ -1036,7 +1036,7 @@ void SliceAndFit(filename_object filenameobj){
 }
 
 //----------------------------------all in one file functions
-void OverlayMeansAIO(filename_object filenameobj, const char* histName) {
+void OverlayMeansAIO(filename_object filenameobj, const char* histName, const char* histName2) {
 //void OverlayMeans(const std::vector<std::string> & fileNames, string filenamemod) {
     // Create a TCanvas
     TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
@@ -1185,7 +1185,7 @@ void OverlayMeansAIO(filename_object filenameobj, const char* histName) {
 }
 
 
-void OverlaySigmaOverMeanAIO(filename_object filenameobj, const char* histName){
+void OverlaySigmaOverMeanAIO(filename_object filenameobj, const char* histName, const char* histName2){
 //void OverlaySigmaOverMean(const std::vector<std::string>& fileNames, string filenamemod) {
     // Create a TCanvas
     TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
@@ -1203,7 +1203,7 @@ void OverlaySigmaOverMeanAIO(filename_object filenameobj, const char* histName){
     TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
     TMultiGraph *MultiGraphs = new TMultiGraph();//h18->GetNbinsX()
     // Loop over each file
-    for (size_t i = 0; i < filenameobj.fileNames.size(); ++i) {
+    for (size_t i = 0; i < filenameobj.fileNames.size(); ++i) {// loop over files. now that each file holds everything, I need to compare within one file.
         // Open the root file
         TFile* pionfile = new TFile(filenameobj.fileNames[i].c_str(), "READ");
 

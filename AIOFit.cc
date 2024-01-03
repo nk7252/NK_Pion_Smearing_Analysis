@@ -24,7 +24,6 @@ class filename_object {//object to hold my file names and related strings. thing
     std::vector<std::string> fileNames;
     std::vector<std::string> legendnames;
     std::vector<std::string> weightnames;
-    std::vector<std::string> histlist;
     string filenamemod;
     string canvasnamemod;
     std::vector<float> plotxlims;
@@ -36,15 +35,15 @@ class filename_object {//object to hold my file names and related strings. thing
 
 float extractNumber(const std::string& filePath);
 filename_object choosecomparisontype(int choosetype);
-Canvas* FitMeanAndPlot(filename_object filenameobj, const std::string& fileName, std::vector<std::string> Histlist,std::vector<std::string> HistLegend);
-void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> Histlist, std::vector<std::string> HistLegend);
+TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
+void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> HistList, std::vector<std::string> HistLegend);
 
-int main () {
+void AIOFit() {
     // 0=weight type
     int fileset = 0 ;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
-    std::vector<std::string> HistList={"h18"};
-    std::vector<std::string> HistLegend={"Smeared Pion pT"};
+    std::vector<std::string> HistList={"h18","h27","h29","h28"};
+    std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. cluster","Smeared Pion pT vs Inv Mass. asymm cut","Smeared Pion pT vs Inv Mass. clust+asymm"};
     GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
@@ -72,7 +71,7 @@ float extractNumber(const std::string& filePath) {
         //std::cout<< "substring" <<" "<< numberStr << std::endl;
         testnumber =std::stof(numberStr);
         //std::cout<< "float" <<" "<< testnumber << std::endl;
-    } 
+    }
     return testnumber;
 } 
 
@@ -96,29 +95,37 @@ filename_object choosecomparisontype(int choosetype){
 return filename_object1;
 }
 
-void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> Histlist,std::vector<std::string> HistLegend) {
+void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> HistList,std::vector<std::string> HistLegend) {
     // create canvas and open the output pdf
-    TCanvas* canvas;    
-    canvas->Print("output.pdf[");
+    TCanvas *canvas = new TCanvas("canvas1", "Canvas", 800, 600);
+    //TCanvas* canvas;    
+    canvas->Print("pioncode/canvas_pdf/output.pdf[");
     //loop over files. save 
-    for (const auto& fileName : fileNames) {
-        canvas = FitMeanAndPlot(filenameobj, fileName, Histlist, HistLegend);
+    int legendInt=0;
+    for (const auto& fileName : filenameobj.fileNames) {
+        canvas = FitMeanAndPlot(filenameobj,legendInt, fileName, HistList, HistLegend);
         // Save canvas to PDF as a page
-        canvas->Print("output.pdf");
+        canvas->Print("pioncode/canvas_pdf/output.pdf");
+        legendInt++;
     }
     // Close the PDF file
-    canvas->Print("output.pdf]");
+    canvas->Print("pioncode/canvas_pdf/output.pdf]");
     //clean up
     delete canvas;
 }
 
-Canvas* FitMeanAndPlot(filename_object filenameobj, const std::string& fileName, std::vector<std::string> Histlist,std::vector<std::string> HistLegend) {
-    
+TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend) {
+
+    // create canvas
+    TCanvas *c1 = new TCanvas("c1", "Canvas", 800, 600);
+    // Create a legend
+    TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
 
     TFile *file = new TFile(fileName.c_str(), "READ");
     if (!file || file->IsZombie()) {
         std::cerr << "Error: Unable to open file " << fileName << std::endl;
         delete c1;
+        delete legend1;
         return nullptr;
     }
 
@@ -126,25 +133,20 @@ Canvas* FitMeanAndPlot(filename_object filenameobj, const std::string& fileName,
     float errparam=filenameobj.sqrtEsmearing[0];
     double binres=2;//number of divisions per GeV
 
-
-    // Book Histograms
-    TH1F *temphist[Histlist.size()];
+    //int numhists=HistList.size();
+    // Declare Histograms
+    std::vector<TH2F*> temphist(HistList.size());
     // TMultiGraph to hold graphs.
     TMultiGraph *MultiGraphs = new TMultiGraph();
     // Create Tgraphs to hold means for each histogram
-    TGraphErrors *meanGraph[Histlist.size()];
-    // create canvas
-    TCanvas *c1 = new TCanvas("c1", "Canvas", 800, 600);
-    // Create a legend
-    TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
+    std::vector<TGraphErrors*> meanGraph(HistList.size());
+
     // loop over the two histograms being compared. probably a better way to do this since it is a 1d array.
-    for (int j=0; j <= Histlist.size(); j++){
-        meanGraph[j] = new TGraphErrors(temphist[j]->GetNbinsX());
+    for (size_t j=0; j < HistList.size(); j++){
+        std::cout << "file" << j << " of" << HistList.size() << std::endl; // debug line
         // Load histograms from the file
-        
-        TH1F *temphist[j] = static_cast<TH1F*>(file->Get(histName1.c_str()));
-        //TH2F* h18 = nullptr;
-        //pionfile->GetObject("h18", h18);
+        temphist[j] = dynamic_cast<TH2F*>(file->Get(HistList[j].c_str()));
+        meanGraph[j] = new TGraphErrors(temphist[j]->GetNbinsX());
 
         if (!temphist[j] ) {
             std::cerr << "Error: Unable to retrieve histogram "<< j << " from file " << fileName << std::endl;
@@ -155,8 +157,9 @@ Canvas* FitMeanAndPlot(filename_object filenameobj, const std::string& fileName,
 
         // Loop over each bin in the X direction
         for (int binX = 1; binX <= temphist[j]->GetNbinsX(); binX++) {
+            
             // Project along Y for each binX
-            TH1D* yProjection = temphist[j]->ProjectionY(Form("YProjection_%zu_%d", i, binX), binX, binX, "");
+            TH1D* yProjection = temphist[j]->ProjectionY(Form("YProjection_%zu_%d", j, binX), binX, binX, "");
 
             // Fit the Y projection with a Gaussian
             yProjection->Fit("gaus", "Q");
@@ -169,13 +172,9 @@ Canvas* FitMeanAndPlot(filename_object filenameobj, const std::string& fileName,
                 meanGraph[j]->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                 meanGraph[j]->SetPointError(binX, 0,fitFunc->GetParError(1));
             }
-                // Add an entry to the legend
-                //legend1->AddEntry(yProjection, Form("Version %zu, BinX %d", i, binX), "L");
-            
-            //std::cout << "I reached here, pre delete proj" << std::endl; // debug line
             // Clean up Y projection
-            delete yProjection;
             delete fitFunc;
+            delete yProjection;
         }
         // Set different line colors for each version
         int MarkerStyle = j + 24; // 
@@ -198,13 +197,13 @@ Canvas* FitMeanAndPlot(filename_object filenameobj, const std::string& fileName,
     legend1->AddEntry(meanGraph[j], HistLegend[j].c_str(), "P");
     }
 
-    
-    MultiGraphs->SetTitle(Form("Smeared Inv. Mass%s;pT (GeV);Inv. Mass (GeV)",filenameobj.canvasnamemod.c_str()));
+    std::cout << "position 1" << std::endl; // debug line
+    MultiGraphs->SetTitle(Form("Smeared Pion pT vs Inv Mass: %s weight;pT (GeV);Inv. Mass (GeV)",filenameobj.weightnames[legendInt].c_str()));
     MultiGraphs->Draw("APE");
 
 
 
-
+    
     // Draw the legend
     legend1->Draw();
 
@@ -216,6 +215,7 @@ Canvas* FitMeanAndPlot(filename_object filenameobj, const std::string& fileName,
     gPad->Modified();
     gPad->Update();
     //canvas1->Modified();
+    std::cout << "position 2" << std::endl; // debug line
     c1->Update();
     //c1->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayMeanHistograms.pdf",filenameobj.filenamemod.c_str(),errparam));
     
@@ -223,6 +223,7 @@ Canvas* FitMeanAndPlot(filename_object filenameobj, const std::string& fileName,
     file->Close();
     delete file;
     //delete legend1;
+    std::cout << "position 3" << std::endl; // debug line
     return c1;
 }
 
