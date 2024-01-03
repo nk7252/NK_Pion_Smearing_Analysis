@@ -65,7 +65,7 @@ int main(){
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
 	for (int weightmethod=0; weightmethod<4; weightmethod++) {
-		std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
+		//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 		//----------------------pion spectrum function for clusteroverlay
 		// reserve a TF1 for the chosen function just in case
 		TF1 *myFunc;
@@ -93,27 +93,49 @@ int main(){
 			tree->SetMaxTreeSize(500 * 1024 * 1024); // set max tree size to 500 mb
 			//------------------------------ book histograms. Need to cull this list. some are useless/redundant
 			// TH1* h1 = new TH1F("h1", "pi0 E",128, 0, PT_Max);
-			TH1 *h2 = new TH1D("h2", "Photon Pt", n_bins, PT_Min, PT_Max); // will be weighted, is this redundant?
-			TH1 *h3 = new TH1D("h3", "Pion PT, weighted", n_bins, PT_Min, PT_Max);
+
+			
 			TH1 *h4 = new TH1F("h4", "Pion PT, unweighted", n_bins, PT_Min, PT_Max);
 			TH1 *h5 = new TH1F("h5", "Photon Pt, unweighted", n_bins, PT_Min, PT_Max);
 			TH1 *h6 = new TH1F("h6", "inv mass of gamma pair", 100, 0, 1);
-			TH1 *h7 = new TH1F("h7", "ratio of Photon/Pion pt", n_bins, PT_Min, PT_Max);
+			//TH1 *h7 = new TH1F("h7", "ratio of Photon/Pion pt", n_bins, PT_Min, PT_Max);
 			TH1 *h8 = new TH1F("h8", "inv mass of Photon pair, smeared", 100, smeared_lower_bin_limit, smeared_upper_bin_limit);
 			TH2F *h9 = new TH2F("h9", "Smeared Pion Pt vs Smeared Inv Mass", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 			TH1 *h10 = new TH1F("h10", "Smeared Pion PT", n_bins, PT_Min, PT_Max);
-			TH1 *h11 = new TH1F("h11", "Smeared Pion PT/Pion PT ratio", n_bins, PT_Min, PT_Max);
-			TH1 *h12 = new TH1F("h12", "Smeared Pion PT, weighted", n_bins, PT_Min, PT_Max);
-			TH1 *h13 = new TH1F("h13", "ratio of weighted  Smeared-Pion-PT/ weighted Pion PT ", n_bins, PT_Min, PT_Max);
+			//TH1 *h11 = new TH1F("h11", "Smeared Pion PT/Pion PT ratio", n_bins, PT_Min, PT_Max);
+			
+			//TH1 *h13 = new TH1F("h13", "ratio of weighted  Smeared-Pion-PT/ weighted Pion PT ", n_bins, PT_Min, PT_Max);
 			//------------------------photon pT
 			TH1 *h16 = new TH1F("h16", "Smeared Photon pT", n_bins, PT_Min, PT_Max);
 			TH1 *h17 = new TH1F("h17", "Photon pT", n_bins, PT_Min, PT_Max);
-			TH1 *h20 = new TH1F("h20", "Smeared Photon pT, weighted", n_bins, PT_Min, PT_Max);
-			TH1 *h21 = new TH1F("h21", "Photon pT, weighted", n_bins, PT_Min, PT_Max);
-			TH1 *h24 = new TH1F("h24", "Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
-			TH1 *h26 = new TH1F("h26", "weighted, Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
 			
-			
+			//TH1 *h24 = new TH1F("h24", "Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
+			//TH1 *h26 = new TH1F("h26", "weighted, Photon pT ratio, smeared/unsmeared", n_bins, PT_Min, PT_Max);
+
+			std::vector<TH1*> h2(WeightNames.size());
+			std::vector<TH1*> h3(WeightNames.size());
+			std::vector<TH1*> h12(WeightNames.size());
+			std::vector<TH1*> h20(WeightNames.size());
+			std::vector<TH1*> h21(WeightNames.size());
+			std::vector<TH2F*> h18(WeightNames.size());
+			std::vector<TH2F*> h27(WeightNames.size());
+			std::vector<TH2F*> h28(WeightNames.size());
+			std::vector<TH2F*> h29(WeightNames.size());
+
+			for (int p=0; p < WeightNames.size(); p++){
+				h2[p] = new TH1D(Form("h2_%i",p),Form("Photon Pt:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max); // will be weighted, is this redundant?
+				h3[p] = new TH1D(Form("h3_%i",p),Form("Pion PT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
+				h12[p] = new TH1F(Form("h12_%i",p),Form("Smeared Pion PT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
+				h20[p] = new TH1F(Form("h20_%i",p),Form("Smeared Photon pT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
+				h21[p] = new TH1F(Form("h21_%i",p),Form("Photon pT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
+				h18[p] = new TH2F(Form("h18_%i",p),Form("Smeared Pion Pt vs Smeared Inv Mass, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+				h27[p] = new TH2F(Form("h27_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+
+				h28[p] = new TH2F(Form("h28_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+
+				h29[p] = new TH2F(Form("h29_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+			}
+			/*
 			TH2F *h18 = new TH2F("h18", "Smeared Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 			//h18->Sumw2();
 			TH2F *h27 = new TH2F("h27", "Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
@@ -121,7 +143,7 @@ int main(){
 			TH2F *h28 = new TH2F("h28", "Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster and asym cut", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 
 			TH2F *h29 = new TH2F("h29", "Smeared Pion Pt vs Smeared Inv Mass, weighted. asym cut", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-
+			*/
 			// things to add probability to add an exponentially scaled (small) energy
 			//--------------------set up random number generation
 			std::random_device rd;// generate a random number to seed random generation
@@ -140,7 +162,7 @@ int main(){
 			//--------------------generate random: angle
 			// double tpi=2*std::numbers::pi;
 			std::uniform_real_distribution<> adis(0.0, 2 * M_PI);
-			int id, size, no, WeightScale;
+			int id, size, no;
 			Vec4 gamma_lorentz[3];
 			Vec4 gamma_smeared[3];
 			Vec4 gamma_cluster[3];
@@ -149,7 +171,10 @@ int main(){
 			double P0rest = 0.0;
 			double pi0_pz = 0.0;
 			double Pi0_M = 0.1349768; // 135 MeV
-			double inv_mass, inv_mass_smeared, weight_function;
+			double inv_mass, inv_mass_smeared;
+
+			std::vector<int> WeightScale(WeightNames.size());
+			std::vector<double> weight_function(WeightNames.size()), inv_yield(WeightNames.size());
 
 			// std::cout << Pi0_M <<std::endl;
 			tree->Branch("id", &id, "id/I");
@@ -177,30 +202,29 @@ int main(){
 				double azimuthal_ang = adis(gen); // generate a random angle from 0 to 2pi
 				double Pt = PT_Max * pdis(gen);
 				//----------------------different possible weights
-				if(weightmethod==0){
-					//std::cout << "EXP Weight" <<std::endl;
-					weight_function=exp(-Pt/0.3);//originally dividing by 0.2
-					WeightScale=1e+20;
-				}
-				else if(weightmethod==1){
-					//std::cout << "Power Weight" <<std::endl;
-					weight_function=pow(Pt,-8.14);
-					WeightScale=1e+5;
-				}
-				else if(weightmethod==2){
-					//std::cout << "WSHP Weight" <<std::endl;
-					weight_function=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));
-					WeightScale=1e+14;
-				}
-				else if(weightmethod==3){
-					//std::cout << "Hagedorn Weight" <<std::endl;
-					weight_function=A/pow(1+Pt/p0,m_param);
-					WeightScale=1e+14;
-				}
-				else{
-					std::cout << "Error:No Weight method found" <<std::endl;
-				}
-				double inv_yield = WeightScale* Pt * weight_function;
+				//std::cout << "EXP Weight" <<std::endl;
+				weight_function[0]=exp(-Pt/0.3);//originally dividing by 0.2
+				WeightScale[0]=1e+14;
+				inv_yield[0] = WeightScale[0]* Pt * weight_function[0];
+
+				//std::cout << "Power Weight" <<std::endl;
+				weight_function[1]=pow(Pt,-8.14);
+				WeightScale[1]=1e+5;
+				inv_yield[1] = WeightScale[0]* Pt * weight_function[1];
+
+				//std::cout << "WSHP Weight" <<std::endl;
+				weight_function[2]=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));
+				WeightScale[2]=1e+14;
+				inv_yield[2] = WeightScale[2]* Pt * weight_function[2];
+
+				//std::cout << "Hagedorn Weight" <<std::endl;
+				weight_function[3]=A/pow(1+Pt/p0,m_param);
+				WeightScale[3]=1e+14;
+				inv_yield[3] = WeightScale[3]* Pt * weight_function[3];
+
+			//double inv_yield = WeightScale* Pt * weight_function;
+				
+
 				//std::cout << inv_yield <<std::endl;
 				//h3->Fill(Pt, inv_yield); // fill pi0 pt, weighted
 				//h4->Fill(Pt);						// fill pi0 pt, unweighted
@@ -221,18 +245,39 @@ int main(){
 
 			pythia.moreDecays();
 			std::cout << "I reached here" << std::endl; // debug line
-			std::ofstream mycsv2;
-			mycsv2.open(Form("pioncode/csvfiles/pT_IMass_IYield_diag_%f.csv", smear_factor_b));
+			//std::ofstream mycsv2;
+			//mycsv2.open(Form("pioncode/csvfiles/pT_IMass_IYield_diag_%f.csv", smear_factor_b));
 			for (int i = 0; i < pythia.event.size(); i++){ // loop over all events(pions)
 				if (pythia.event[i].id() == 111){ // if the ith event is a pion
 
 					int Gamma_daughters[2] = {pythia.event[i].daughter1(), pythia.event[i].daughter2()}; // make array of daughter particles(di gamma) event ids
 					double Pt = pythia.event[i].pT();
+					
+					//std::cout << "EXP Weight" <<std::endl;
+					weight_function[0]=exp(-Pt/0.3);//originally dividing by 0.2
+					WeightScale[0]=1e+14;
+					inv_yield[0] = WeightScale[0]* Pt * weight_function[0];
+
+					//std::cout << "Power Weight" <<std::endl;
+					weight_function[1]=pow(Pt,-8.14);
+					WeightScale[1]=1e+5;
+					inv_yield[1] = WeightScale[0]* Pt * weight_function[1];
+
+					//std::cout << "WSHP Weight" <<std::endl;
+					weight_function[2]=((1/(1+exp((Pt-t)/w)))*A/pow(1+Pt/p0,m_param)+(1-(1/(1+exp((Pt-t)/w))))*B/(pow(Pt,n)));
+					WeightScale[2]=1e+14;
+					inv_yield[2] = WeightScale[2]* Pt * weight_function[2];
+
+					//std::cout << "Hagedorn Weight" <<std::endl;
+					weight_function[3]=A/pow(1+Pt/p0,m_param);
+					WeightScale[3]=1e+14;
+					inv_yield[3] = WeightScale[3]* Pt * weight_function[3];
 
 					//----------------------different possible weights
 					// I may not need this line. The variables at play are defined above the first loop where the pions are created.
 					//I do this weight check in that loop. the values I assign should remain up to this point from that intial loop.
 					// this version is a waste of time. It would also be good to offload this part of the code to a function. It would be a lot cleaner.
+					/*
 					if(weightmethod==0){
 						//std::cout << "EXP Weight" <<std::endl;
 						weight_function=exp(-Pt/0.3);//originally dividing by 0.2
@@ -258,7 +303,7 @@ int main(){
 					}
 
 					double inv_yield = WeightScale* Pt * weight_function;
-
+					*/
 					if (pythia.event[Gamma_daughters[0]].id() == 22 && pythia.event[Gamma_daughters[1]].id() == 22){// check that the decays are photons
 						// gammadis(gen_gamma(rdgamma()));
 						
@@ -290,7 +335,7 @@ int main(){
 						gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
 						
 						///*
-						
+
 						if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
 							std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
 
@@ -327,7 +372,6 @@ int main(){
 							gamma_cluster[1]=gamma_smeared[1];
 							gamma_cluster_asymm[1]=gamma_cluster[1];
 						}//*/
-
 						gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
 						gamma_cluster[2] = gamma_cluster[0] + gamma_cluster[1];
 						gamma_cluster_asymm[2] = gamma_cluster_asymm[0] + gamma_cluster_asymm[1];
@@ -343,41 +387,48 @@ int main(){
 						//h29->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield);
 						//continue;
 						}*/
+						for (int p=0; p < WeightNames.size(); p++){//weighted histograms
+							//h2[p]->Fill(pythia.event[Gamma_daughters[0]].pT(), inv_yield[p]);
+							//h2[p]->Fill(pythia.event[Gamma_daughters[1]].pT(), inv_yield[p]);
 
-						if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<0.8 &&asymcut==1){//asymmetry cut
-						//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
-						// if I am to save both, maybe filling here would be appropriate.
-						h29->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield);// asymm
-						h28->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield);//
-						//continue;
+							h20[p]->Fill(gamma_smeared[0].pT(), inv_yield[p]);
+							h20[p]->Fill(gamma_smeared[1].pT(), inv_yield[p]);
+
+							h21[p]->Fill(gamma_lorentz[0].pT(), inv_yield[p]);
+							h21[p]->Fill(gamma_lorentz[1].pT(), inv_yield[p]);
+							
+							h3[p]->Fill(Pt, inv_yield[p]); // fill pion pt, weighted
+							h12[p]->Fill(gamma_smeared[2].pT(), inv_yield[p]);
+
+							h18[p]->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield[p]);//
+							h27[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield[p]);
+
+							if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<0.8 &&asymcut==1){//asymmetry cut
+								//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
+								// if I am to save both, maybe filling here would be appropriate.
+								h29[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);// asymm
+								h28[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield[p]);//
+								//continue;
+							}
 						}
 
-
 						// std::cout << "inv mass" << " " <<inv_mass<<std::endl;
-						h3->Fill(Pt, inv_yield); // fill pion pt, weighted
+
 						h4->Fill(Pt);			// fill pion pt, unweighted
 						h6->Fill(inv_mass);
 						h8->Fill(inv_mass_smeared);
 						h9->Fill(gamma_smeared[2].pT(), inv_mass_smeared);//change  to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
-						h10->Fill(gamma_smeared[2].pT());
-						h12->Fill(gamma_smeared[2].pT(), Pt * weight_function);
+						h10->Fill(gamma_smeared[2].pT());	
 						h17->Fill(gamma_lorentz[0].pT());//unsmeared energy spectrum
 						h17->Fill(gamma_lorentz[1].pT());
 						h16->Fill(gamma_smeared[0].pT());//smeared photon energy spectrum
 						h16->Fill(gamma_smeared[1].pT());
 
-						h20->Fill(gamma_smeared[0].pT(), Pt * weight_function);
-						h21->Fill(gamma_lorentz[0].pT(), Pt * weight_function);
-						h20->Fill(gamma_smeared[1].pT(), Pt * weight_function);
-						h21->Fill(gamma_lorentz[1].pT(), Pt * weight_function);
-						h18->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield);//change x to smeared pion pT. was previously unsmeared: pythia.event[i].pT()
-
-						h27->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield);
 
 						// mass_pt_map.insert[]
 						//std::cout << "event number" << " " << i << " " << "smeared pT" << " " << std::scientific << gamma_smeared[2].pT() << " " << "Smeared Mass" << " " << inv_mass_smeared << " " << "inv yield" << " " << std::scientific << inv_yield << std::endl;
 						
-						
+						/*
 						if(i==0){
 							mycsv2 << "event number" << "," <<  "smeared pT" <<  "," << "Smeared Mass" << "," << "inv yield" << "\n";
 							mycsv2 << i << "," << std::scientific << gamma_smeared[2].pT() << "," << inv_mass_smeared << "," << std::scientific << inv_yield << "\n";
@@ -387,7 +438,7 @@ int main(){
 							//std::cout << "I reached here" <<" "<< i <<std::endl;// debug line
 							//mycsv2 << "event number" << "," <<  "smeared pT" <<  "," << "Smeared Mass" << "," << "inv yield" << "\n";
 							mycsv2 << i << "," << std::scientific << gamma_smeared[2].pT() << "," << inv_mass_smeared << "," << std::scientific << inv_yield << "\n";
-						}
+						}*/
 
 						
 						///*
@@ -413,7 +464,6 @@ int main(){
 							E = pythia.event[j].e();
 							// std::cout << i <<" "<<id<< " " << m << " " << " E " << " " << E <<" " << " P " << " " << px<<" "<<py<<" "<<pz<<std::endl;
 							tree->Fill();
-							h2->Fill(pythia.event[j].pT(), Pt * weight_function);
 							h5->Fill(pythia.event[j].pT()); // fill gamma pt, unweighted
 						}
 					}
@@ -427,7 +477,8 @@ int main(){
 			}
 			
 			float Smeared_Mean_array[n_bins], Smeared_Variance_array[n_bins], nbins_array[n_bins]; 
-			mycsv2.close();
+			//mycsv2.close();
+			/*
 			std::ofstream mycsv;
 			mycsv.open(Form("pioncode/csvfiles/Inv_Mass_mean_variance%f.csv", smear_factor_b));
 			for (int i = 1; i < n_bins + 1; i++){
@@ -449,12 +500,14 @@ int main(){
 				// std::cout << "Smeared Mean = " << Smeared_Mean_array[i] << " , " << "Smeared Variance = " << "blank" <<std::endl;
 				delete htemp1;
 			}
-			mycsv.close();
-			h7->Divide(h2, h3);
-			h11->Divide(h10, h4);
-			h13->Divide(h12, h3);
-			h24->Divide(h16, h17);
-			h26->Divide(h20, h21);
+			mycsv.close();*/
+
+
+			//h7->Divide(h2, h3);
+			//h11->Divide(h10, h4);
+			//h13->Divide(h12, h3);
+			//h24->Divide(h16, h17);
+			//h26->Divide(h20, h21);
 			double_t realtime = timer.RealTime();
 			double_t cputime = timer.CpuTime();
 
