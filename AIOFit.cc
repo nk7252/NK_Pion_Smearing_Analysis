@@ -172,6 +172,8 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
             if (fitFunc) {
                 meanGraph[j]->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                 meanGraph[j]->SetPointError(binX, 0,fitFunc->GetParError(1));
+                // Set the legend entry to the title of the original 2D histogram
+                meanGraph[j]->SetTitle(temphist[j]->GetTitle());
             }
             // Clean up Y projection
             delete fitFunc;
@@ -195,7 +197,7 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
             std::cout << "draw for subsequent" << std::endl; // debug line
         }       
     // Add an entry to the legend
-    legend1->AddEntry(meanGraph[j], HistLegend[j].c_str(), "P");
+    legend1->AddEntry(meanGraph[j],meanGraph[j]->GetTitle() , "lp");//HistLegend[j].c_str(),"P"
     }
 
     std::cout << "position 1" << std::endl; // debug line
