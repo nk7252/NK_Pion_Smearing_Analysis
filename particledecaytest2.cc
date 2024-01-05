@@ -71,7 +71,6 @@ int main(){
 	TF1 *myFunc;
 	myFunc=ChooseSpectrumFunction(2, PT_Min, PT_Max);
 
-
 	for (int smear_factor_itt = 9; smear_factor_itt < 9 + 1; smear_factor_itt++)
 	{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 	// only want .155
