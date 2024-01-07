@@ -46,15 +46,16 @@ void AIOFit() {
     // 0=weight type
     int fileset = 0 ;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
-    std::vector<std::string> HistList={"h18","h27","h29","h28"};
+    std::vector<std::string> HistList={"h18_","h27_","h29_","h28_"};
     std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. cluster","Smeared Pion pT vs Inv Mass. asymm cut","Smeared Pion pT vs Inv Mass. clust+asymm"};
     GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
+    
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
     //plotOverlayedHistograms(choosenfilenameobj, "h12");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
     //SliceAndFit(choosenfilenameobj);
 
-    ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000_EXP.root", "h18", "test");
+    //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
 }    
 
 float extractNumber(const std::string& filePath) {
@@ -80,7 +81,7 @@ filename_object choosecomparisontype(int choosetype){
     filename_object filename_object1;// 0=weight type, 1=ac on/off, 2=co on/off, 3=ac&co on/off
     if(choosetype==0){
         //filename_object weightfilenameobj;
-        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000_EXP.root", "pioncode/rootfiles/Pi0FastMC_0.155000_POWER.root", "pioncode/rootfiles/Pi0FastMC_0.155000_WSHP.root","pioncode/rootfiles/Pi0FastMC_0.155000_HAGEDORN.root"};
+        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000.root"};
         filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.filenamemod="weightmethod_co1_ac1";
@@ -102,13 +103,29 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
     //TCanvas* canvas;    
     canvas->Print("pioncode/canvas_pdf/output.pdf[");
     //loop over files. save 
-    int legendInt=0;
-    for (const auto& fileName : filenameobj.fileNames) {
-        canvas = FitMeanAndPlot(filenameobj,legendInt, fileName, HistList, HistLegend);
-        // Save canvas to PDF as a page
-        canvas->Print("pioncode/canvas_pdf/output.pdf");
-        legendInt++;
+    //int legendInt=0;
+    
+    for (size_t l = 0; l < filenameobj.weightnames.size(); ++l) {
+        std::vector<std::string> histogramName;
+        int legendInt=0;
+        // Construct the histogram name with the index appended
+        for (size_t v = 0; v < HistList.size(); ++v) {
+            histogramName.push_back(HistList[v] + std::to_string(l));
+            std::cout << histogramName[v] << std::endl; // debug line
+        }
+
+        for (const auto& fileName : filenameobj.fileNames) {
+                canvas = FitMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
+                // Save canvas to PDF as a page
+                canvas->Print("pioncode/canvas_pdf/output.pdf");
+                legendInt++;
+                std::cout << "filename loop done" << std::endl; // debug line
+        }
+       // Clear the histogramName vector for the next iteration
+        histogramName.clear();
+        std::cout << "l loop done" << std::endl; // debug line
     }
+    
     // Close the PDF file
     canvas->Print("pioncode/canvas_pdf/output.pdf]");
     //clean up
@@ -148,14 +165,14 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
         // Load histograms from the file
         temphist[j] = dynamic_cast<TH2F*>(file->Get(HistList[j].c_str()));
         meanGraph[j] = new TGraphErrors(temphist[j]->GetNbinsX());
-
+        std::cout << "loaded hists? made graph" << std::endl; // debug line
         if (!temphist[j] ) {
             std::cerr << "Error: Unable to retrieve histogram "<< j << " from file " << fileName << std::endl;
             file->Close();
             delete c1;
             return nullptr;
         }
-
+        std::cout << "pre bin loop" << std::endl; // debug line
         // Loop over each bin in the X direction
         for (int binX = 1; binX <= temphist[j]->GetNbinsX(); binX++) {
             
@@ -173,12 +190,13 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
                 meanGraph[j]->SetPoint(binX, binX/binres,fitFunc->GetParameter(1));
                 meanGraph[j]->SetPointError(binX, 0,fitFunc->GetParError(1));
                 // Set the legend entry to the title of the original 2D histogram
-                meanGraph[j]->SetTitle(temphist[j]->GetTitle());
+                //meanGraph[j]->SetTitle(temphist[j]->GetTitle());
             }
             // Clean up Y projection
             delete fitFunc;
             delete yProjection;
         }
+        std::cout << "bin loop done" << std::endl; // debug line
         // Set different line colors for each version
         int MarkerStyle = j + 24; // 
         int MarkerColor = j + 1;
@@ -197,7 +215,7 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
             std::cout << "draw for subsequent" << std::endl; // debug line
         }       
     // Add an entry to the legend
-    legend1->AddEntry(meanGraph[j],meanGraph[j]->GetTitle() , "lp");//HistLegend[j].c_str(),"P"
+    legend1->AddEntry(meanGraph[j], HistLegend[j].c_str(), "P");//meanGraph[j]->GetTitle(),"P"
     }
 
     std::cout << "position 1" << std::endl; // debug line
@@ -242,15 +260,15 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
     TFile* file = new TFile(filenameobj.fileNames[0].c_str(), "READ");
     if (!file || file->IsZombie()) {
         std::cerr << "Error: Could not open file " << fileName.c_str() << std::endl;
-        return nullptr;
+        //return nullptr;
     }
 
     // Get the 2D histogram from the file
-    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get("h27"));
+    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get("h27_2"));
     if (!hist2D) {
-        std::cerr << "Error: Could not retrieve 2D histogram " << file->Get("h27") << " from file" << std::endl;
+        std::cerr << "Error: Could not retrieve 2D histogram " << file->Get("h27_2") << " from file" << std::endl;
         file->Close();
-        return nullptr;
+        //return nullptr;
     }
     int NX= hist2D->GetNbinsX();
     file->Close();//*/
@@ -259,10 +277,10 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
     canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf[",filenameobj.filenamemod.c_str(), errparam));
 
     for (int i=1;i<NX+1;i++){
-        TH1D* yProjection1 = getYProjectionof2DHist(fileName.c_str(), "h27",i,i);
-        TH1D* yProjection2 = getYProjectionof2DHist(fileName.c_str(), "h18",i,i);
+        TH1D* yProjection1 = getYProjectionof2DHist(fileName.c_str(), "h27_2",i,i);//on
+        TH1D* yProjection2 = getYProjectionof2DHist(fileName.c_str(), "h18_2",i,i);//off
         TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
-        TH1D *ratioClone = (TH1D *)yProjection2->Clone("ratioClone");
+        TH1D *ratioClone = (TH1D *)yProjection1->Clone("ratioClone");
         histClone->Add(yProjection1, -1);
         canvas1->Divide(1,3);
         canvas1->cd(1);   
@@ -277,7 +295,7 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
         histClone->Draw();
         histClone->SetTitle(Form("Cluster Overlay on - off. Bin %i;Invariant Mass (GeV); Counts",i));
         canvas1->cd(3);
-        ratioClone->Divide(yProjection1);
+        ratioClone->Divide(yProjection2);
         ratioClone->Draw();
         ratioClone->SetMaximum(5);
         ratioClone->SetTitle(Form("Cluster Overlay on/off. Bin %i;Invariant Mass (GeV); Counts",i));
@@ -288,8 +306,8 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
         canvas1->Clear();
         legend1->Clear();
     }
-    TH1D* yProjection1 = getYProjectionof2DHist(fileName.c_str(), "h27",1,NX);
-    TH1D* yProjection2 = getYProjectionof2DHist(fileName.c_str(), "h18",1,NX);
+    TH1D* yProjection1 = getYProjectionof2DHist(fileName.c_str(), "h27_2",1,NX);
+    TH1D* yProjection2 = getYProjectionof2DHist(fileName.c_str(), "h18_2",1,NX);
     TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
     TH1D *ratioClone = (TH1D *)yProjection2->Clone("ratioClone");
     histClone->Add(yProjection1, -1);
@@ -313,6 +331,8 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
     ratioClone->SetMaximum(5);
     ratioClone->SetTitle("Cluster Overlay on/off. All Bins;Invariant Mass (GeV); Counts");
     canvas1->Modified();
+    // Draw the legend
+    //legend1->Draw();
     canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf",filenameobj.filenamemod.c_str(), errparam));//Print-> works too
     //close the pdf?
     canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf]",filenameobj.filenamemod.c_str(), errparam));
