@@ -36,6 +36,7 @@ class filename_object {//object to hold my file names and related strings. thing
 float extractNumber(const std::string& filePath);
 filename_object choosecomparisontype(int choosetype);
 TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
+TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
 void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> HistList, std::vector<std::string> HistLegend);
 void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName, const std::string& LegendName);
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
@@ -247,6 +248,126 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
     std::cout << "position 3" << std::endl; // debug line
     return c1;
 }
+
+TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend) {
+
+    // create canvas
+    TCanvas *c1 = new TCanvas("c1", "Canvas", 800, 600);
+    // Create a legend
+    TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
+
+    TFile *file = new TFile(fileName.c_str(), "READ");
+    if (!file || file->IsZombie()) {
+        std::cerr << "Error: Unable to open file " << fileName << std::endl;
+        delete c1;
+        delete legend1;
+        return nullptr;
+    }
+
+    //plotting operations.
+    float errparam=filenameobj.sqrtEsmearing[0];
+    double binres=2;//number of divisions per GeV
+
+    //int numhists=HistList.size();
+    // Declare Histograms
+    std::vector<TH2F*> temphist(HistList.size());
+    // TMultiGraph to hold graphs.
+    TMultiGraph *MultiGraphs = new TMultiGraph();
+    // Create Tgraphs to hold means for each histogram
+    std::vector<TGraphErrors*> meanGraph(HistList.size());
+
+    // loop over the two histograms being compared. probably a better way to do this since it is a 1d array.
+    for (size_t j=0; j < HistList.size(); j++){
+        std::cout << "file" << j << " of" << HistList.size() << std::endl; // debug line
+        // Load histograms from the file
+        temphist[j] = dynamic_cast<TH2F*>(file->Get(HistList[j].c_str()));
+        meanGraph[j] = new TGraphErrors(temphist[j]->GetNbinsX());
+        std::cout << "loaded hists? made graph" << std::endl; // debug line
+        if (!temphist[j] ) {
+            std::cerr << "Error: Unable to retrieve histogram "<< j << " from file " << fileName << std::endl;
+            file->Close();
+            delete c1;
+            return nullptr;
+        }
+        std::cout << "pre bin loop" << std::endl; // debug line
+        // Loop over each bin in the X direction
+        for (int binX = 1; binX <= temphist[j]->GetNbinsX(); binX++) {
+            
+            // Project along Y for each binX
+            TH1D* yProjection = temphist[j]->ProjectionY(Form("YProjection_%zu_%d", j, binX), binX, binX, "");
+
+            // Fit the Y projection with a Gaussian
+            yProjection->Fit("gaus", "Q");
+
+            // Access the fit parameters
+            TF1* fitFunc = yProjection->GetFunction("gaus");
+
+            // Check if the fit function is valid
+            if (fitFunc) {
+                //double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
+                //double meanoversigmaerr = meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//m/s*(serr/s+merr/m)
+
+                meanGraph[j]->SetPoint(binX, binX/binres,fitFunc->GetParameter(2)/fitFunc->GetParameter(1));
+                meanGraph[j]->SetPointError(binX, 0,(fitFunc->GetParameter(2)/fitFunc->GetParameter(1))*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1)));//(sigma/mean)*[sigmaerr/sigma+meanerr/mean]
+                // Set the legend entry to the title of the original 2D histogram
+                //meanGraph[j]->SetTitle(temphist[j]->GetTitle());
+            }
+            // Clean up Y projection
+            delete fitFunc;
+            delete yProjection;
+        }
+        std::cout << "bin loop done" << std::endl; // debug line
+        // Set different line colors for each version
+        int MarkerStyle = j + 24; // 
+        int MarkerColor = j + 1;
+        //meanGraph->SetLineColor(lineColor);
+        meanGraph[j]->SetMarkerStyle(MarkerStyle);
+        meanGraph[j]->SetMarkerColor(MarkerColor);
+        // Overlay the mean histogram on the same canvas
+        if (j == 0) {
+            //meanGraph->Draw("AP"); // Draw histogram for the first version
+            //canvas1->Print("OverlayMeanHistograms.pdf");
+            MultiGraphs->Add(meanGraph[j],"PE");
+            std::cout << "draw for the first file" << std::endl; // debug line
+        } else {
+            MultiGraphs->Add(meanGraph[j],"PE");
+            //meanGraph->Draw("P SAME"); // Draw subsequent histograms on the same canvas
+            std::cout << "draw for subsequent" << std::endl; // debug line
+        }       
+    // Add an entry to the legend
+    legend1->AddEntry(meanGraph[j], HistLegend[j].c_str(), "P");//meanGraph[j]->GetTitle(),"P"
+    }
+
+    std::cout << "position 1" << std::endl; // debug line
+    MultiGraphs->SetTitle(Form("Smeared Pion pT vs Inv Mass: %s weight;pT (GeV);Inv. Mass (GeV)",filenameobj.weightnames[legendInt].c_str()));
+    MultiGraphs->Draw("APE");
+
+
+
+    
+    // Draw the legend
+    legend1->Draw();
+
+    // Show the canvas
+    MultiGraphs->GetXaxis()->SetLimits(filenameobj.plotxlims[0],filenameobj.plotxlims[1]);
+    MultiGraphs->SetMinimum(filenameobj.plotylims[2]);
+    MultiGraphs->SetMaximum(filenameobj.plotylims[3]);
+    c1->SetMargin(0.2,0.1,0.1,0.1);
+    gPad->Modified();
+    gPad->Update();
+    //canvas1->Modified();
+    std::cout << "position 2" << std::endl; // debug line
+    c1->Update();
+    //c1->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayMeanHistograms.pdf",filenameobj.filenamemod.c_str(),errparam));
+    
+    // Close the file and clean up
+    file->Close();
+    delete file;
+    //delete legend1;
+    std::cout << "position 3" << std::endl; // debug line
+    return c1;
+}
+
 
 
 void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName, const std::string& LegendName){//only works if filenames.size()=2 !!
