@@ -22,6 +22,7 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 //forward declarators
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE);
+Pythia8::Vec4 PositionResSmear(Pythia8::Vec4& originalPhoton, double PosSmearFactor);
 
 int main(){ 
 	TStopwatch timer;
@@ -134,10 +135,10 @@ int main(){
 			h28[p] = new TH2F(Form("h28_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 			h29[p] = new TH2F(Form("h29_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 
-			h30[p] = new TH2F(Form("h30_%i",p),Form("Smeared Pion Pt vs Smeared Energy, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h31[p] = new TH2F(Form("31_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h32[p] = new TH2F(Form("h32_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h33[p] = new TH2F(Form("h33_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+			h30[p] = new TH2F(Form("h30_%i",p),Form("Smeared Pion Pt vs Smeared Energy, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, n_bins, 0, PT_Max);
+			h31[p] = new TH2F(Form("31_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
+			h32[p] = new TH2F(Form("h32_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
+			h33[p] = new TH2F(Form("h33_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
 		}
 		/*
 		TH2F *h18 = new TH2F("h18", "Smeared Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
@@ -341,7 +342,7 @@ int main(){
 					///*
 
 					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
-						std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
+						//std::cout << "before cluster" << " " << gamma_smeared[0].e() <<std::endl;
 
 						// Randomly choose an entry from the branch
 						//TBranch* branch = tree->GetBranch("pz");
@@ -357,20 +358,20 @@ int main(){
 
 						gamma_cluster_asymm[0]=gamma_cluster[0];
 						//gamma_smeared[0].e(gamma_smeared[0].e() + myFunc->GetRandom());
-						std::cout << "after cluster" << " " << gamma_cluster[0].e() <<std::endl;
+						//std::cout << "after cluster" << " " << gamma_cluster[0].e() <<std::endl;
 					}
 					else{
 						gamma_cluster[0]=gamma_smeared[0];
 						gamma_cluster_asymm[0]=gamma_cluster[0];
 					}
 					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 2
-						std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
+						//std::cout << "before cluster" << " " << gamma_smeared[1].e() <<std::endl;
 
 						gamma_cluster[1] = clusterPhoton(gamma_smeared[1], 2, myFunc->GetRandom());
 
 						gamma_cluster_asymm[1]=gamma_cluster[1];
 						//gamma_smeared[1].e(gamma_smeared[1].e() +myFunc->GetRandom());
-						std::cout << "after cluster" << " " << gamma_cluster[1].e() <<std::endl;
+						//std::cout << "after cluster" << " " << gamma_cluster[1].e() <<std::endl;
 					}
 					else{
 						gamma_cluster[1]=gamma_smeared[1];
@@ -410,6 +411,7 @@ int main(){
 						h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
 						h31[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].e(), inv_yield[p]);//
 
+
 						if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<0.8 &&asymcut==1){//asymmetry cut
 							//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
 							// if I am to save both, maybe filling here would be appropriate.
@@ -419,6 +421,7 @@ int main(){
 							h32[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
 							h33[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].e(), inv_yield[p]);//
 						}
+						//std::cout << "smeared energy " << gamma_smeared[2].e() <<". clustered energy " << gamma_cluster[2].e() << " . ratio c/s "<< gamma_cluster[2].e()/gamma_smeared[2].e()<< std::endl;
 					}
 
 					// std::cout << "inv mass" << " " <<inv_mass<<std::endl;
@@ -621,4 +624,19 @@ Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double ra
 	return newPhoton+originalPhoton;
 }
 
+Pythia8::Vec4 PositionResSmear(Pythia8::Vec4& originalPhoton, double PosSmearFactor) {
+	
+	Pythia8::Vec4 newPhoton;
+
+
+	newPhoton.e(randomE);
+	
+	newPhoton.px(originalPhoton.px() * (randomE / originalPhoton.e()));
+	newPhoton.py(originalPhoton.py() * (randomE / originalPhoton.e()));	
+	newPhoton.pz(originalPhoton.pz() * (randomE / originalPhoton.e()));		
+	
+    // Return the sum of the original 4-vector and the new photon 4-vector
+    //return originalVector + photon;
+	return newPhoton+originalPhoton;
+}
 

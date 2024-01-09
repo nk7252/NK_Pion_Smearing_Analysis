@@ -104,11 +104,12 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
     //TCanvas* canvas;    
     canvas->Print("pioncode/canvas_pdf/output.pdf[");
     //loop over files. save 
-    //int legendInt=0;
-    
+    int legendInt=0;
+    //loop over weight methods
     for (size_t l = 0; l < filenameobj.weightnames.size(); ++l) {
         std::vector<std::string> histogramName;
-        int legendInt=0;
+        //int legendInt=0;
+
         // Construct the histogram name with the index appended
         for (size_t v = 0; v < HistList.size(); ++v) {
             histogramName.push_back(HistList[v] + std::to_string(l));
@@ -117,14 +118,20 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
 
         for (const auto& fileName : filenameobj.fileNames) {
                 canvas = FitMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
-                // Save canvas to PDF as a page
+                // Save mean canvas to PDF as a page
                 canvas->Print("pioncode/canvas_pdf/output.pdf");
-                legendInt++;
+
+                canvas = FitSigmaMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
+                // Save sigma/mean canvas to PDF as a page
+                canvas->Print("pioncode/canvas_pdf/output.pdf");
+                
                 std::cout << "filename loop done" << std::endl; // debug line
         }
+        
        // Clear the histogramName vector for the next iteration
         histogramName.clear();
         std::cout << "l loop done" << std::endl; // debug line
+        legendInt++;
     }
     
     // Close the PDF file
@@ -339,7 +346,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
     }
 
     std::cout << "position 1" << std::endl; // debug line
-    MultiGraphs->SetTitle(Form("Smeared Pion pT vs Inv Mass: %s weight;pT (GeV);Inv. Mass (GeV)",filenameobj.weightnames[legendInt].c_str()));
+    MultiGraphs->SetTitle(Form("Smeared Pion pT vs Sigma/Inv Mass Mean: %s weight;pT (GeV);Sigma/Inv. Mass ",filenameobj.weightnames[legendInt].c_str()));
     MultiGraphs->Draw("APE");
 
 
