@@ -22,7 +22,7 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 //forward declarators
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE);
-Pythia8::Vec4 PositionResSmear(Pythia8::Vec4& originalPhoton, double PosSmearFactor);
+Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor)
 
 int main(){ 
 	TStopwatch timer;
@@ -65,7 +65,7 @@ int main(){
 	float smear_factor_a = 0;
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
-
+	float posit_smearingFactor = 5.0; // Example smearing factor
 	//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 	//----------------------pion spectrum function for clusteroverlay
 	// reserve a TF1 for the chosen function just in case
@@ -124,6 +124,12 @@ int main(){
 		std::vector<TH2F*> h32(WeightNames.size());
 		std::vector<TH2F*> h33(WeightNames.size());
 
+		std::vector<TH2F*> h34(WeightNames.size());
+		std::vector<TH2F*> h35(WeightNames.size());
+
+		std::vector<TH2F*> h100(WeightNames.size());
+
+
 		for (int p=0; p < WeightNames.size(); p++){
 			h2[p] = new TH1D(Form("h2_%i",p),Form("Photon Pt:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max); // will be weighted, is this redundant?
 			h3[p] = new TH1D(Form("h3_%i",p),Form("Pion PT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
@@ -139,6 +145,17 @@ int main(){
 			h31[p] = new TH2F(Form("31_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
 			h32[p] = new TH2F(Form("h32_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
 			h33[p] = new TH2F(Form("h33_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
+
+
+
+			h34[p] = new TH2F(Form("h34_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
+
+			h35[p] = new TH2F(Form("h35_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
+
+
+
+
+			h100[p] = new TH2F(Form("h100_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
 		}
 		/*
 		TH2F *h18 = new TH2F("h18", "Smeared Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
@@ -172,6 +189,10 @@ int main(){
 		Vec4 gamma_smeared[3];
 		Vec4 gamma_cluster[3];
 		Vec4 gamma_cluster_asymm[3];
+		Vec4 gamma_Blair_Cuts[3];
+		Vec4 gamma_All_Cuts[3];
+		Vec4 gamma_position smear[3];
+
 		double m, E, px, py, pz, pi0_px, pi0_py, pi0_E, scale_factor1, scale_factor2, smear_factor1, smear_factor2;
 		double P0rest = 0.0;
 		double pi0_pz = 0.0;
@@ -624,19 +645,22 @@ Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double ra
 	return newPhoton+originalPhoton;
 }
 
-Pythia8::Vec4 PositionResSmear(Pythia8::Vec4& originalPhoton, double PosSmearFactor) {
-	
-	Pythia8::Vec4 newPhoton;
+Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//, Pythia8::Rndm* rndm
+	Pythia8::Pythia pythia;
+    Pythia8::Rndm& rndm = pythia.rndm;
+    // Smear the z-component of the momentum
+    double pz_smear = photon.pz() + smearingFactor * rndm->gauss();
+
+    // Calculate the energy to keep the length of the four-momentum the same
+    // Assuming the photon mass is zero
+    double energy = sqrt(photon.px()*photon.px() + photon.py()*photon.py() + pz_smear*pz_smear);
+
+    // Create a new four-vector with the smeared momentum and updated energy
+    Pythia8::Vec4 smearedPhoton(photon.px(), photon.py(), pz_smear, energy);
 
 
-	newPhoton.e(randomE);
-	
-	newPhoton.px(originalPhoton.px() * (randomE / originalPhoton.e()));
-	newPhoton.py(originalPhoton.py() * (randomE / originalPhoton.e()));	
-	newPhoton.pz(originalPhoton.pz() * (randomE / originalPhoton.e()));		
-	
-    // Return the sum of the original 4-vector and the new photon 4-vector
-    //return originalVector + photon;
-	return newPhoton+originalPhoton;
+    return smearedPhoton;
 }
+
+
 

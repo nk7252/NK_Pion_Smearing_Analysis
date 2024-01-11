@@ -398,7 +398,7 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
                 }
                 else if (filenameobj.weightnames[i]=="POWER"){//power 
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
-                    double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//m/s*(serr/s+merr/m)
+                    double meanoversigmaerr = meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//m/s*(serr/s+merr/m)
 
                     meanGraph->SetPoint(binX, binX/binres,meanoversigma);
                     meanGraph->SetPointError(binX, 0,meanoversigmaerr);
@@ -407,14 +407,14 @@ void OverlaySigmaOverMean(filename_object filenameobj) {
                 }
                 else if (filenameobj.weightnames[i]=="WSHP") {//woods saxon
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
-                    double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//(m/s)_err=m/s*(serr/s+merr/m)
+                    double meanoversigmaerr = meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//(m/s)_err=m/s*(serr/s+merr/m)
 
                     meanGraph->SetPoint(binX, binX/binres,meanoversigma);
                     meanGraph->SetPointError(binX, 0,meanoversigmaerr);
                 }
                 else if (filenameobj.weightnames[i]=="HAGEDORN") {//HAGEDORN
                     double meanoversigma =fitFunc->GetParameter(2)/fitFunc->GetParameter(1);
-                    double meanoversigmaerr=meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//(m/s)_err=m/s*(serr/s+merr/m)
+                    double meanoversigmaerr = meanoversigma*(fitFunc->GetParError(2)/fitFunc->GetParameter(2)+fitFunc->GetParError(1)/fitFunc->GetParameter(1));//(m/s)_err=m/s*(serr/s+merr/m)
 
                     meanGraph->SetPoint(binX, binX/binres,meanoversigma);
                     meanGraph->SetPointError(binX, 0,meanoversigmaerr);
