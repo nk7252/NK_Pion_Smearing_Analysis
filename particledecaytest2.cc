@@ -66,7 +66,7 @@ int main(){
 	float smear_factor_a = 0;
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
-	float posit_smearingFactor = 0.05; // Example smearing factor for position
+	float posit_smearingFactor = 0.01; // Example smearing factor for position
 
 	//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 	//----------------------pion spectrum function for clusteroverlay
@@ -457,7 +457,7 @@ int main(){
 							h33[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].e(), inv_yield[p]);//
 
 
-							h100[p]->Fill(gamma_All_Cuts[2].pT(),gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+							h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
 						}
 						//std::cout << "smeared energy " << gamma_smeared[2].e() <<". clustered energy " << gamma_cluster[2].e() << " . ratio c/s "<< gamma_cluster[2].e()/gamma_smeared[2].e()<< std::endl;
 					}
