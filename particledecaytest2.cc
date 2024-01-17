@@ -22,7 +22,7 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 //forward declarators
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE);
-Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor)
+Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor);
 
 int main(){ 
 	TStopwatch timer;
