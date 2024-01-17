@@ -423,6 +423,7 @@ int main(){
 					std::cout << "pion, unsmr: px= " << gamma_lorentz[2].px() << " , py= " << gamma_lorentz[2].py() << " , pz= " <<gamma_lorentz[2].pz() << " , pT= " <<gamma_lorentz[2].pT() << " , E= " <<gamma_lorentz[2].e() << " , M= " <<gamma_lorentz[2].mCalc() <<std::endl;
 
 					std::cout << "smeared Pion: px= " << gamma_smeared[2].px() << " , py= " << gamma_smeared[2].py() << " , pz= " <<gamma_smeared[2].pz() << " , pT= " <<gamma_smeared[2].pT() << " , E= " <<gamma_smeared[2].e()  << " , M= " << gamma_smeared[2].mCalc() <<std::endl;
+					std::cout << "Posit smeared Pion: px= " << gamma_position_smear[2].px() << " , py= " << gamma_position_smear[2].py() << " , pz= " <<gamma_position_smear[2].pz() << " , pT= " <<gamma_position_smear[2].pT() << " , E= " <<gamma_position_smear[2].e()  << " , M= " << gamma_position_smear[2].mCalc() <<std::endl;
 					/*
 					if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())>0.8 &&asymcut==1){//asymmetry cut
 					//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
