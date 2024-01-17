@@ -172,15 +172,18 @@ int main(){
 		std::random_device rd;// generate a random number to seed random generation
 		std::random_device rdgamma;// generate a random number to seed random generation of daughter gamma for smearing
 		std::random_device rdgammacluster;// random number to test clustering
+		std::random_device rdgammapositsmr;// random number to test position smearing
 		// std::mt19937 gen(rd());          // mersenne_twister_engine seeded with rd
 		std::mt19937_64 gen(rd());            // mersenne_twister_engine 64 bit seeded with rd
 		std::mt19937_64 gen_gamma(rdgamma()); // mersenne_twister_engine 64 bit seeded with rdgamma for gamma smearing
 		std::mt19937_64 gen_gammacluster(rdgammacluster());//generate random number to test clustering 
+		std::mt19937_64 gen_gammapositsmear(rdgammapositsmr());//generate random number to test clustering 
 		// std::ranlux48 gen(rd()); // ranlux48 seeded with rd
 		//--------------------generate random: momentum
 		// std::uniform_real_distribution<> pdis(0.0,PT_Max);
 		std::normal_distribution<double> gammadis(0.0, 1.0);  // generate normal distribution for gamma smearing, mean zero, variance 1
 		std::uniform_real_distribution<> gammacluster(0, 1.0); // random probability to have photons clustered together. if above certain value, add a random photon from the smeared+weighted photon spectrum. cutoff will be tuned.
+		std::normal_distribution<double> gamma_positsmear(0.0, 1.0);//normally distributed position smearing
 		std::uniform_real_distribution<> pdis(PT_ratio, 1.0); // alternative scheme with min PT to avoid power law complications.
 		//--------------------generate random: angle
 		// double tpi=2*std::numbers::pi;
@@ -360,8 +363,9 @@ int main(){
 					gamma_smeared[0] = smear_factor1 * pythia.event[Gamma_daughters[0]].p();//is px py pz recalculated? I assume so
 					// std::cout << "E" << " " <<gamma_lorentz[0].e()<< " " << "smeared E" << " " <<gamma_smeared[0].e()<< " " <<std::endl; // debug, is the factor being applied?
 					gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
-					gamma_position_smear[0]=PositionResSmear(gamma_smeared[0], posit_smearingFactor);
-					gamma_position_smear[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor);
+					
+					gamma_position_smear[0]=PositionResSmear(gamma_smeared[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_position_smear[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
 
 					///*
 
