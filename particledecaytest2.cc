@@ -407,7 +407,7 @@ int main(){
 						gamma_cluster_asymm[1]=gamma_cluster[1];
 					}//*/
 
-					gamma_All_Cuts[2]=PositionResSmear(gamma_cluster_asymm[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear)) + PositionResSmear(gamma_cluster_asymm[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_All_Cuts[2] = PositionResSmear(gamma_cluster_asymm[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear)) + PositionResSmear(gamma_cluster_asymm[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
 
 					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
 					gamma_cluster[2] = gamma_cluster[0] + gamma_cluster[1];
@@ -415,6 +415,11 @@ int main(){
 
 					gamma_position_smear[2]=gamma_position_smear[0]+gamma_position_smear[1];
 					inv_mass_smeared = gamma_smeared[2].mCalc();
+					// diagnostic
+					std::cout << "photon 1, unsmr: px= " << gamma_lorentz[0].px() << " , px=" << gamma_lorentz[0].py() << " , py=" <<gamma_lorentz[0].pz() << " , pz=" <<gamma_lorentz[0].pt() << " , pt=" <<gamma_lorentz[0].e() << " , E=" <<std::endl;
+					std::cout << "photon 2, unsmr: px= " << gamma_lorentz[1].px() << " , px=" << gamma_lorentz[1].py() << " , py=" <<gamma_lorentz[1].pz() << " , pz=" <<gamma_lorentz[1].pt() << " , pt=" <<gamma_lorentz[1].e() << " , E=" <<std::endl;
+					std::cout << "pion, unsmr: px= " << gamma_lorentz[2].px() << " , px=" << gamma_lorentz[2].py() << " , py=" <<gamma_lorentz[2].pz() << " , pz=" <<gamma_lorentz[2].pt() << " , pt=" <<gamma_lorentz[2].e() << " , E=" <<std::endl;
+					std::cout << "smeared Pion: px= " << gamma_smeared[2].px() << " , px=" << gamma_smeared[2].py() << " , py=" <<gamma_smeared[2].pz() << " , pz=" <<gamma_smeared[2].pt() << " , pt=" <<gamma_smeared[2].e() << " , E=" <<std::endl;
 					/*
 					if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())>0.8 &&asymcut==1){//asymmetry cut
 					//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
