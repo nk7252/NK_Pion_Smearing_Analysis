@@ -699,17 +699,20 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
     // Recalculate x and y components. 
     // We need to solve for px and py in the equation: energy^2 = px^2 + py^2 + pz_smear^2
     // We will maintain the ratio of px to py the same as in the original photon
-    double original_px_to_py_ratio = (photon.py() != 0) ? photon.px() / photon.py() : 0;
-    double py_squared = (energy*energy - pz_smear*pz_smear) / (1 + original_px_to_py_ratio*original_px_to_py_ratio);
+ // We need to solve for px and py in the equation: energy^2 = px^2 + py^2 + pz_smear^2
+    double pt_squared = energy*energy - pz_smear*pz_smear;
     
-    if (py_squared < 0) {
+    if (pt_squared < 0) {
         // In case of numerical issues leading to a negative value, we clamp it to zero.
-        py_squared = 0;
+        pt_squared = 0;
     }
-    
-    double py_smear = sqrt(py_squared);
-    double px_smear = original_px_to_py_ratio * py_smear;
 
+ 	double pt = sqrt(pt_squared);
+    double pt_original = sqrt(photon.px()*photon.px() + photon.py()*photon.py());
+
+    // Scale the x and y components to maintain the original direction
+    double px_smear = (photon.px() > 0) ? abs((photon.px() / pt_original) * pt) : -abs((photon.px() / pt_original) * pt);
+    double py_smear = (photon.py() > 0) ? abs((photon.py() / pt_original) * pt) : -abs((photon.py() / pt_original) * pt);
 	// Create a new four-vector with the smeared momentum and original energy
     Pythia8::Vec4 smearedPhoton(px_smear, py_smear, pz_smear, energy);
 	
