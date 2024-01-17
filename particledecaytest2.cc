@@ -65,7 +65,8 @@ int main(){
 	float smear_factor_a = 0;
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
-	float posit_smearingFactor = 5.0; // Example smearing factor
+	float posit_smearingFactor = 5.0; // Example smearing factor for position
+
 	//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 	//----------------------pion spectrum function for clusteroverlay
 	// reserve a TF1 for the chosen function just in case
@@ -191,7 +192,7 @@ int main(){
 		Vec4 gamma_cluster_asymm[3];
 		Vec4 gamma_Blair_Cuts[3];
 		Vec4 gamma_All_Cuts[3];
-		Vec4 gamma_position smear[3];
+		Vec4 gamma_position_smear[3];
 
 		double m, E, px, py, pz, pi0_px, pi0_py, pi0_E, scale_factor1, scale_factor2, smear_factor1, smear_factor2;
 		double P0rest = 0.0;
@@ -359,7 +360,9 @@ int main(){
 					gamma_smeared[0] = smear_factor1 * pythia.event[Gamma_daughters[0]].p();//is px py pz recalculated? I assume so
 					// std::cout << "E" << " " <<gamma_lorentz[0].e()<< " " << "smeared E" << " " <<gamma_smeared[0].e()<< " " <<std::endl; // debug, is the factor being applied?
 					gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
-					
+					gamma_position_smear[0]=PositionResSmear(gamma_smeared[0], posit_smearingFactor);
+					gamma_position_smear[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor);
+
 					///*
 
 					if (gammacluster(gen_gammacluster)>coprob && clusteroverlay==1){//overlay with photon cluster 1
@@ -398,11 +401,12 @@ int main(){
 						gamma_cluster[1]=gamma_smeared[1];
 						gamma_cluster_asymm[1]=gamma_cluster[1];
 					}//*/
+					
 					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
 					gamma_cluster[2] = gamma_cluster[0] + gamma_cluster[1];
 					gamma_cluster_asymm[2] = gamma_cluster_asymm[0] + gamma_cluster_asymm[1];
+					gamma_position_smear[2]=gamma_position_smear[0]+gamma_position_smear[1];
 					inv_mass_smeared = gamma_smeared[2].mCalc();
-
 					/*
 					if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())>0.8 &&asymcut==1){//asymmetry cut
 					//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
@@ -432,6 +436,8 @@ int main(){
 						h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
 						h31[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].e(), inv_yield[p]);//
 
+						
+						h34[p]->Fill(gamma_position_smear[2].pT(), gamma_position_smear[2].mCalc(), inv_yield[p]);//position smearing
 
 						if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<0.8 &&asymcut==1){//asymmetry cut
 							//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
