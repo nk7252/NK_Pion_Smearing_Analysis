@@ -457,7 +457,7 @@ int main(){
 							h33[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].e(), inv_yield[p]);//
 
 
-							h100[p]->Fill(gamma_All_Cuts[2].pT(),gamma_All_Cuts[2].mCalc(), inv_yield[p])
+							h100[p]->Fill(gamma_All_Cuts[2].pT(),gamma_All_Cuts[2].mCalc(), inv_yield[p]);
 						}
 						//std::cout << "smeared energy " << gamma_smeared[2].e() <<". clustered energy " << gamma_cluster[2].e() << " . ratio c/s "<< gamma_cluster[2].e()/gamma_smeared[2].e()<< std::endl;
 					}
