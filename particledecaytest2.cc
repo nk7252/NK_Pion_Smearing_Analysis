@@ -44,6 +44,7 @@ int main(){
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP","HAGEDORN"};
 	//-----------------------------------
 	int asymcut=1;//apply asymm cut.
+	float asymval= 0.6;
 	int clusteroverlay = 1;//overlayed cluster check
 	float coprob=0.8;//random numbers(0-1) greater than this value will have some smearing added.
 
@@ -405,10 +406,13 @@ int main(){
 						gamma_cluster[1]=gamma_smeared[1];
 						gamma_cluster_asymm[1]=gamma_cluster[1];
 					}//*/
-					
+
+					gamma_All_Cuts[2]=PositionResSmear(gamma_cluster_asymm[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear)) + PositionResSmear(gamma_cluster_asymm[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+
 					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
 					gamma_cluster[2] = gamma_cluster[0] + gamma_cluster[1];
 					gamma_cluster_asymm[2] = gamma_cluster_asymm[0] + gamma_cluster_asymm[1];
+
 					gamma_position_smear[2]=gamma_position_smear[0]+gamma_position_smear[1];
 					inv_mass_smeared = gamma_smeared[2].mCalc();
 					/*
@@ -443,7 +447,7 @@ int main(){
 						
 						h34[p]->Fill(gamma_position_smear[2].pT(), gamma_position_smear[2].mCalc(), inv_yield[p]);//position smearing
 
-						if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<0.8 &&asymcut==1){//asymmetry cut
+						if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<asymval &&asymcut==1){//asymmetry cut
 							//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
 							// if I am to save both, maybe filling here would be appropriate.
 							h29[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);// asymm
@@ -451,6 +455,9 @@ int main(){
 							//continue;
 							h32[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
 							h33[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].e(), inv_yield[p]);//
+
+
+							h100[p]->Fill(gamma_All_Cuts[2].pT(),gamma_All_Cuts[2].mCalc(), inv_yield[p])
 						}
 						//std::cout << "smeared energy " << gamma_smeared[2].e() <<". clustered energy " << gamma_cluster[2].e() << " . ratio c/s "<< gamma_cluster[2].e()/gamma_smeared[2].e()<< std::endl;
 					}
