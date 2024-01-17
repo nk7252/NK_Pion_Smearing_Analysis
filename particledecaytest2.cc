@@ -655,7 +655,7 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
 	Pythia8::Pythia pythia;
     Pythia8::Rndm& rndm = pythia.rndm;
     // Smear the z-component of the momentum
-    double pz_smear = photon.pz() + smearingFactor * rndm->gauss();
+    double pz_smear = photon.pz() + smearingFactor * rndm.gauss();
 
     // Calculate the energy to keep the length of the four-momentum the same
     // Assuming the photon mass is zero
