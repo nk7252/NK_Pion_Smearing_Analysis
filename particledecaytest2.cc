@@ -145,18 +145,18 @@ int main(){
 			h30[p] = new TH2F(Form("h30_%i",p),Form("Smeared Pion Pt vs Smeared Energy, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, n_bins, 0, PT_Max);
 			h31[p] = new TH2F(Form("31_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
 			h32[p] = new TH2F(Form("h32_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
-			h33[p] = new TH2F(Form("h33_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
+			h33[p] = new TH2F(Form("h33_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
 
 
 
-			h34[p] = new TH2F(Form("h34_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
+			h34[p] = new TH2F(Form("h34_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
 
-			h35[p] = new TH2F(Form("h35_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
-
-
+			h35[p] = new TH2F(Form("h35_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
 
 
-			h100[p] = new TH2F(Form("h100_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s",WeightNames[p].c_str()), 100, 0, 6, 100, 0, 6);
+
+
+			h100[p] = new TH2F(Form("h100_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, n_bins, 0, PT_Max);
 		}
 		/*
 		TH2F *h18 = new TH2F("h18", "Smeared Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
@@ -675,7 +675,7 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
 	// method 2 
 	//calculate the pT to keep the length of the four momenta the same. then smear the px and py to match.
 	//*
-	
+
 	double pz_smear = photon.pz() + smearingFactor;
     // Keep the energy constant
     double energy = photon.e();
