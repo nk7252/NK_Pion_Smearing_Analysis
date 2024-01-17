@@ -65,7 +65,7 @@ int main(){
 	float smear_factor_a = 0;
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
-	float posit_smearingFactor = 5.0; // Example smearing factor for position
+	float posit_smearingFactor = 0.1; // Example smearing factor for position
 
 	//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 	//----------------------pion spectrum function for clusteroverlay
@@ -356,7 +356,7 @@ int main(){
 					// std::cout << "pion E" << " " <<gamma_lorentz[2].e()<< " " << "smear_factor1" << " " <<smear_factor1<< " " << "smear_factor2" << " " <<smear_factor2<< " " <<std::endl;
 
 					// position smearing. smear z phi
-					// generate random numbers and move endpoint of the vector by smearing in z and phi so ~1 tower size in z and rphi.
+					// generate random numbers and move endpoint of the vector by smearing in z and p hi so ~1 tower size in z and rphi.
 					// if spread over 2 towers you can fit a better position. to ~0.5 tower size.
 
 
@@ -656,16 +656,72 @@ Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double ra
 }
 
 Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//, Pythia8::Rndm* rndm
-
+	//------------------------------------------
+	// method 1
     // Smear the z-component of the momentum
-    double pz_smear = photon.pz() + smearingFactor;
+
+    //double pz_smear = photon.pz() + smearingFactor;
 
     // Calculate the energy to keep the length of the four-momentum the same
     // Assuming the photon mass is zero
-    double energy = sqrt(photon.px()*photon.px() + photon.py()*photon.py() + pz_smear*pz_smear);
+
+    //double energy = sqrt(photon.px()*photon.px() + photon.py()*photon.py() + pz_smear*pz_smear);
 
     // Create a new four-vector with the smeared momentum and updated energy
-    Pythia8::Vec4 smearedPhoton(photon.px(), photon.py(), pz_smear, energy);
+
+    //Pythia8::Vec4 smearedPhoton(photon.px(), photon.py(), pz_smear, energy);
+
+	//------------------------------------------
+	// method 2 
+	//calculate the pT to keep the length of the four momenta the same. then smear the px and py to match.
+	//*
+
+    // Keep the energy constant
+    double energy = photon.e();
+
+    // Recalculate x and y components. 
+    // We need to solve for px and py in the equation: energy^2 = px^2 + py^2 + pz_smear^2
+    // We will maintain the ratio of px to py the same as in the original photon
+    double original_px_to_py_ratio = (photon.py() != 0) ? photon.px() / photon.py() : 0;
+    double py_squared = (energy*energy - pz_smear*pz_smear) / (1 + original_px_to_py_ratio*original_px_to_py_ratio);
+    
+    if (py_squared < 0) {
+        // In case of numerical issues leading to a negative value, we clamp it to zero.
+        py_squared = 0;
+    }
+    
+    double py_smear = sqrt(py_squared);
+    double px_smear = original_px_to_py_ratio * py_smear;
+
+	// Create a new four-vector with the smeared momentum and original energy
+    Pythia8::Vec4 smearedPhoton(px_smear, py_smear, pz_smear, energy);
+	
+	//*/
+
+	//------------------------------------------
+	// method 3
+	// this is one where I zmear z and phi
+	/*
+	// Smear the z-component of the momentum
+    double pz_smear = photon.pz() + smearingFactorZ ;
+
+    // Calculate the transverse momentum (pT)
+    double pT = sqrt(photon.px() * photon.px() + photon.py() * photon.py());
+
+    // Smear the azimuthal angle (phi)
+    double phi = atan2(photon.py(), photon.px());
+    double phi_smear = phi + smearingFactorPhi * rndm->gauss();
+
+    // Calculate the smeared px and py components
+    double px_smear = pT * cos(phi_smear);
+    double py_smear = pT * sin(phi_smear);
+
+    // Assuming the photon mass is zero, the energy is the magnitude of the momentum vector
+    double energy = sqrt(px_smear * px_smear + py_smear * py_smear + pz_smear * pz_smear);
+
+    // Create a new four-vector with the smeared momentum
+    Pythia8::Vec4 smearedPhoton(px_smear, py_smear, pz_smear, energy);
+	*/
 
 
     return smearedPhoton;
