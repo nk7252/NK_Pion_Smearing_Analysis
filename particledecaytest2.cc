@@ -54,7 +54,7 @@ int main(){
 	//Blair specific cuts
 	float DeltaRcut = 1.1; 
 	float pt1cut =1.3;   
-	float pt1cut =0.7; 
+	float pt2cut =0.7; 
 	//nclus is not something I can do here is it          
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
