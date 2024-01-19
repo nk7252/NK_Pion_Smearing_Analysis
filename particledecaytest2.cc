@@ -715,6 +715,7 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
 	double znew=energyscale*pz_smear;
 
    	//std::cout << "E_New/E_old" << sqrt(xnew*xnew +ynew*ynew +znew*znew)/energy << std::endl;
+	std::cout << "New Z = " << znew*znew << " , New Phi = " << atan(ynew/xnew)*180/3.1415 << std::endl;
     Pythia8::Vec4 smearedPhoton(xnew, ynew, znew, sqrt(xnew*xnew +ynew*ynew +znew*znew));
     return smearedPhoton;
 }
