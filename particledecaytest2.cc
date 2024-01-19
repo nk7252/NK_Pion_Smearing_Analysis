@@ -135,6 +135,7 @@ int main(){
 
 		std::vector<TH2F*> h34(WeightNames.size());
 		std::vector<TH2F*> h35(WeightNames.size());
+		std::vector<TH1F*> h35_1d(WeightNames.size());
 
 		std::vector<TH2F*> h100(WeightNames.size());
 
@@ -159,8 +160,8 @@ int main(){
 
 			h34[p] = new TH2F(Form("h34_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 
-			h35[p] = new TH2F(Form("h35_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-
+			h35[p] = new TH2F(Form("h35_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 120, 0, 1.2);
+			h35_1d[p] = new TH1F(Form("h35_1d_%i",p), Form("Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()) 120, 0, 1.2);
 
 
 
@@ -482,6 +483,7 @@ int main(){
 
 							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[2], pt2cut)==true){
 								h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
+								h35_1d[p]->Fill(gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
 							}
 
 							h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
