@@ -22,7 +22,7 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 //forward declarators
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE);
-Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor);
+Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx,double smearingFactory,double smearingFactorz);
 bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMax);
 bool pTCut(const Pythia8::Vec4& particle, float ptCut);
 
@@ -415,7 +415,7 @@ int main(){
 						gamma_cluster_asymm[1]=gamma_cluster[1];
 					}//*/
 
-					gamma_All_Cuts[2] = PositionResSmear(gamma_cluster_asymm[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear)) + PositionResSmear(gamma_cluster_asymm[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_All_Cuts[2] = PositionResSmear(gamma_cluster_asymm[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear)) + PositionResSmear(gamma_cluster_asymm[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
 
 					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
 					gamma_cluster[2] = gamma_cluster[0] + gamma_cluster[1];
@@ -691,7 +691,7 @@ Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double ra
 	return newPhoton+originalPhoton;
 }
 
-Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//, Pythia8::Rndm* rndm
+Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx,double smearingFactory,double smearingFactorz) {//, Pythia8::Rndm* rndm
 
 	//calculate the pT to keep the length of the four momenta the same. then smear the px and py to match.
 	//*
@@ -715,7 +715,7 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
 	double znew=energyscale*pz_smear;
 
    	//std::cout << "E_New/E_old" << sqrt(xnew*xnew +ynew*ynew +znew*znew)/energy << std::endl;
-	std::cout << "old Z/New Z = " << photon.pz()*photon.pz() <<" / " << znew*znew << " = " << photon.pz()*photon.pz()/znew*znew<< " , New Phi = " << atan(photon.py()/photon.px())*180/3.1415 << " / " << atan(ynew/xnew)*180/3.1415 << " = " << atan(photon.py()/photon.px())/atan(ynew/xnew)<<std::endl;
+	std::cout << "old Z/New Z = " << photon.pz()*photon.pz() <<" / " << znew*znew << " = " << (photon.pz()*photon.pz())/(znew*znew)<< " , New Phi = " << atan(photon.py()/photon.px())*180/3.1415 << " / " << atan(ynew/xnew)*180/3.1415 << " = " << atan(photon.py()/photon.px())/atan(ynew/xnew)<<std::endl;
     Pythia8::Vec4 smearedPhoton(xnew, ynew, znew, sqrt(xnew*xnew +ynew*ynew +znew*znew));
     return smearedPhoton;
 }
