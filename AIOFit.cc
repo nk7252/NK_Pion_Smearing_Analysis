@@ -361,7 +361,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
 
     // Show the canvas
     MultiGraphs->GetXaxis()->SetLimits(filenameobj.plotxlims[0],filenameobj.plotxlims[1]);
-    MultiGraphs->SetMinimum(filenameobj.plotylims[2]);
+    MultiGraphs->SetMinimum(0.5);
     MultiGraphs->SetMaximum(filenameobj.plotylims[3]);
     c1->SetMargin(0.2,0.1,0.1,0.1);
     gPad->Modified();
