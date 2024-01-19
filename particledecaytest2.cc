@@ -73,7 +73,7 @@ int main(){
 	float smear_factor_a = 0;
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
-	float posit_smearingFactor = 1.0; // Example smearing factor for position
+	float posit_smearingFactor = 100.0; // Example smearing factor for position
 
 	//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 	//----------------------pion spectrum function for clusteroverlay
@@ -695,13 +695,13 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
 
 	//calculate the pT to keep the length of the four momenta the same. then smear the px and py to match.
 	//*
-	double xsmear = photon.pAbs()*smearingFactor + 1;
+	double xsmear = smearingFactor + 1;
 	double px_smear = photon.px()*xsmear;
 
-	double ysmear = photon.pAbs()*smearingFactor + 1;
+	double ysmear = smearingFactor + 1;
 	double py_smear = photon.py()*ysmear;
 
-	double zsmear = photon.pAbs()*smearingFactor + 1;
+	double zsmear = smearingFactor + 1;
 	double pz_smear = photon.pz()*zsmear;
 
 
