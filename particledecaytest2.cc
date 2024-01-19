@@ -161,7 +161,7 @@ int main(){
 			h34[p] = new TH2F(Form("h34_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 
 			h35[p] = new TH2F(Form("h35_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 120, 0, 1.2);
-			h35_1d[p] = new TH1F(Form("h35_1d_%i",p), Form("Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()) 120, 0, 1.2);
+			h35_1d[p] = new TH1F(Form("h35_1d_%i",p), Form("Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), 120, 0, 1.2);
 
 
 
