@@ -38,7 +38,7 @@ filename_object choosecomparisontype(int choosetype);
 TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
 TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
 void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> HistList, std::vector<std::string> HistLegend);
-void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName, const std::string& LegendName);
+void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName1,const char* histName2, const std::string& LegendName);
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
 
 
@@ -47,13 +47,17 @@ void AIOFit() {
     // 0=weight type
     int fileset = 0 ;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
-    std::vector<std::string> HistList={"h18_","h27_","h29_","h28_"};
-    std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. cluster","Smeared Pion pT vs Inv Mass. asymm cut","Smeared Pion pT vs Inv Mass. clust+asymm"};
+    //std::vector<std::string> HistList={"h18_","h27_","h29_","h28_"};
+    //std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. cluster","Smeared Pion pT vs Inv Mass. asymm cut","Smeared Pion pT vs Inv Mass. clust+asymm"};
+
+    std::vector<std::string> HistList={"h18_","h29_","h35_","h34_"};
+    std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. clust+asymm","Smeared Pion pT vs Inv Mass. Blair cuts","Smeared Pion pT vs Inv Mass. +pos res"};
+
     GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
     
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
-    //plotOverlayedHistograms(choosenfilenameobj, "h12");//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
+    //plotOverlayedHistograms(choosenfilenameobj, "h12");//accepts 1d hist?//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
     //SliceAndFit(choosenfilenameobj);
 
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
@@ -377,7 +381,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
 
 
 
-void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName, const std::string& LegendName){//only works if filenames.size()=2 !!
+void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName1,const char* histName2, const std::string& LegendName){//only works if filenames.size()=2 !!
     TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
     TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
     
