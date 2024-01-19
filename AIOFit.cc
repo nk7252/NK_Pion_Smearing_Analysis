@@ -92,7 +92,7 @@ filename_object choosecomparisontype(int choosetype){
         filename_object1.filenamemod="weightmethod_co1_ac1";
         //filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";  
         filename_object1.plotxlims={0.9,6.4};//min, max
-        filename_object1.plotylims={0.13,0.17,0.08,0.25,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
+        filename_object1.plotylims={0.13,0.17,0.0,0.25,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff=6;
         filename_object1.binres=2;
     }
@@ -361,7 +361,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
 
     // Show the canvas
     MultiGraphs->GetXaxis()->SetLimits(filenameobj.plotxlims[0],filenameobj.plotxlims[1]);
-    MultiGraphs->SetMinimum(0.5);
+    MultiGraphs->SetMinimum(filenameobj.plotylims[2]);
     MultiGraphs->SetMaximum(filenameobj.plotylims[3]);
     c1->SetMargin(0.2,0.1,0.1,0.1);
     gPad->Modified();
