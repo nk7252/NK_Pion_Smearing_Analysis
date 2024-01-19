@@ -373,8 +373,8 @@ int main(){
 					// std::cout << "E" << " " <<gamma_lorentz[0].e()<< " " << "smeared E" << " " <<gamma_smeared[0].e()<< " " <<std::endl; // debug, is the factor being applied?
 					gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
 					
-					gamma_position_smear[0]=PositionResSmear(gamma_smeared[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
-					gamma_position_smear[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_position_smear[0]=PositionResSmear(gamma_smeared[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_position_smear[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
 
 					///*
 
