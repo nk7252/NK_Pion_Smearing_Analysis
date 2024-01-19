@@ -801,7 +801,7 @@ bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMa
     double dEta = Photon1.eta() - Photon2.eta();
     double dPhi = acos(cos(Photon1.phi() - Photon2.phi()));  // Correct way to handle the periodicity
     double deltaR = sqrt(dEta * dEta + dPhi * dPhi);
-    return deltaR > DeltaRcut;
+    return deltaR > DeltaRcutMax;
 }
 
 // Function to check if the transverse momentum (pT) of a particle is greater than a specified cut
