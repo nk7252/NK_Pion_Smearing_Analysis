@@ -52,7 +52,7 @@ int main(){
 	float coprob=0.8;//random numbers(0-1) greater than this value will have some smearing added.
 
 	//Blair specific cuts
-	float DeltaRcut = 1.1; 
+	float DeltaRcut_MAX = 1.1; 
 	float pt1cut =1.3;   
 	float pt2cut =0.7; 
 	//nclus is not something I can do here is it          
@@ -480,7 +480,7 @@ int main(){
 							h33[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].e(), inv_yield[p]);//
 
 
-							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[2], pt2cut)==true){
+							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[2], pt2cut)==true){
 								h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
 							}
 
