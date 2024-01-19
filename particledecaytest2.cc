@@ -695,13 +695,13 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx,doub
 
 	//calculate the pT to keep the length of the four momenta the same. then smear the px and py to match.
 	//*
-	double xsmear = smearingFactor + 1;
+	double xsmear = smearingFactorx + 1;
 	double px_smear = photon.px()*xsmear;
 
-	double ysmear = smearingFactor + 1;
+	double ysmear = smearingFactory + 1;
 	double py_smear = photon.py()*ysmear;
 
-	double zsmear = smearingFactor + 1;
+	double zsmear = smearingFactorz + 1;
 	double pz_smear = photon.pz()*zsmear;
 
 
