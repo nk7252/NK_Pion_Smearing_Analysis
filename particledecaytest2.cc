@@ -23,7 +23,7 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE);
 Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor);
-bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcut);
+bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMax);
 bool pTCut(const Pythia8::Vec4& particle, float ptCut);
 
 int main(){ 
@@ -797,7 +797,7 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
 }
 
 // Function to check if Delta R between two four-vectors is greater than a specified cut
-bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcut) {
+bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMax) {
     double dEta = Photon1.eta() - Photon2.eta();
     double dPhi = acos(cos(Photon1.phi() - Photon2.phi()));  // Correct way to handle the periodicity
     double deltaR = sqrt(dEta * dEta + dPhi * dPhi);
