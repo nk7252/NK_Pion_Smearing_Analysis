@@ -23,6 +23,8 @@ using namespace Pythia8;	// Let Pythia8:: be implicit.
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max);
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE);
 Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor);
+bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcut);
+bool pTCut(const Pythia8::Vec4& particle, float ptCut);
 
 int main(){ 
 	TStopwatch timer;
@@ -43,12 +45,17 @@ int main(){
 	//int weightmethod = 3;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP","HAGEDORN"};
 	//-----------------------------------
+	//cuts
 	int asymcut=1;//apply asymm cut.
 	float asymval= 0.6;
 	int clusteroverlay = 1;//overlayed cluster check
 	float coprob=0.8;//random numbers(0-1) greater than this value will have some smearing added.
 
-
+	//Blair specific cuts
+	float DeltaRcut = 1.1; 
+	float pt1cut =1.3;   
+	float pt1cut =0.7; 
+	//nclus is not something I can do here is it          
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
 	double t = 4.5;
@@ -413,17 +420,24 @@ int main(){
 					gamma_cluster[2] = gamma_cluster[0] + gamma_cluster[1];
 					gamma_cluster_asymm[2] = gamma_cluster_asymm[0] + gamma_cluster_asymm[1];
 
+					gamma_Blair_Cuts[0]=gamma_cluster_asymm[0];
+					gamma_Blair_Cuts[1]=gamma_cluster_asymm[1];
+					gamma_Blair_Cuts[2]=gamma_cluster_asymm[2];
+
 					gamma_position_smear[2]=gamma_position_smear[0]+gamma_position_smear[1];
 					inv_mass_smeared = gamma_smeared[2].mCalc();
 					// diagnostic
-					std::cout << "photon 1, unsmr: px= " << gamma_lorentz[0].px() << " , py= " << gamma_lorentz[0].py() << " , pz= " <<gamma_lorentz[0].pz() << " , pT= " <<gamma_lorentz[0].pT() << " , E= " <<gamma_lorentz[0].e() <<std::endl;
+					//std::cout << "photon 1, unsmr: px= " << gamma_lorentz[0].px() << " , py= " << gamma_lorentz[0].py() << " , pz= " <<gamma_lorentz[0].pz() << " , pT= " <<gamma_lorentz[0].pT() << " , E= " <<gamma_lorentz[0].e() <<std::endl;
 
-					std::cout << "photon 2, unsmr: px= " << gamma_lorentz[1].px() << " , py= " << gamma_lorentz[1].py() << " , pz= " <<gamma_lorentz[1].pz() << " , pT= " <<gamma_lorentz[1].pT() << " , E= " <<gamma_lorentz[1].e() <<std::endl;
+					//std::cout << "photon 2, unsmr: px= " << gamma_lorentz[1].px() << " , py= " << gamma_lorentz[1].py() << " , pz= " <<gamma_lorentz[1].pz() << " , pT= " <<gamma_lorentz[1].pT() << " , E= " <<gamma_lorentz[1].e() <<std::endl;
 
-					std::cout << "pion, unsmr: px= " << gamma_lorentz[2].px() << " , py= " << gamma_lorentz[2].py() << " , pz= " <<gamma_lorentz[2].pz() << " , pT= " <<gamma_lorentz[2].pT() << " , E= " <<gamma_lorentz[2].e() << " , M= " <<gamma_lorentz[2].mCalc() <<std::endl;
+					//std::cout << "pion, unsmr: px= " << gamma_lorentz[2].px() << " , py= " << gamma_lorentz[2].py() << " , pz= " <<gamma_lorentz[2].pz() << " , pT= " <<gamma_lorentz[2].pT() << " , E= " <<gamma_lorentz[2].e() << " , M= " <<gamma_lorentz[2].mCalc() <<std::endl;
 
-					std::cout << "smeared Pion: px= " << gamma_smeared[2].px() << " , py= " << gamma_smeared[2].py() << " , pz= " <<gamma_smeared[2].pz() << " , pT= " <<gamma_smeared[2].pT() << " , E= " <<gamma_smeared[2].e()  << " , M= " << gamma_smeared[2].mCalc() <<std::endl;
-					std::cout << "Posit smeared Pion: px= " << gamma_position_smear[2].px() << " , py= " << gamma_position_smear[2].py() << " , pz= " <<gamma_position_smear[2].pz() << " , pT= " <<gamma_position_smear[2].pT() << " , E= " <<gamma_position_smear[2].e()  << " , M= " << gamma_position_smear[2].mCalc() <<std::endl;
+					//std::cout << "smeared Pion: px= " << gamma_smeared[2].px() << " , py= " << gamma_smeared[2].py() << " , pz= " <<gamma_smeared[2].pz() << " , pT= " <<gamma_smeared[2].pT() << " , E= " <<gamma_smeared[2].e()  << " , M= " << gamma_smeared[2].mCalc() <<std::endl;
+
+					//std::cout << "Posit smeared Pion: px= " << gamma_position_smear[2].px() << " , py= " << gamma_position_smear[2].py() << " , pz= " <<gamma_position_smear[2].pz() << " , pT= " <<gamma_position_smear[2].pT() << " , E= " <<gamma_position_smear[2].e()  << " , M= " << gamma_position_smear[2].mCalc() <<std::endl;
+
+
 					/*
 					if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())>0.8 &&asymcut==1){//asymmetry cut
 					//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
@@ -465,6 +479,11 @@ int main(){
 							h32[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
 							h33[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].e(), inv_yield[p]);//
 
+
+							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[2], pt2cut)==true){
+								h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
+							}
+							h35[p]
 
 							h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
 						}
@@ -743,9 +762,55 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
     Pythia8::Vec4 smearedPhoton(px_smear, py_smear, pz_smear, energy);
 	*/
 
+	//------------------------------------------
+	// method 4 
+	//calculate the pT to keep the length of the four momenta the same. then scale the px and py to match.
+	//
+	//*
+	double zsmear = smearingFactor*photon.p2() + 1;
+	double pz_smear = photon.pz()*zsmear;
+    // Keep the energy constant
+    double energy = photon.e();
+
+    // Recalculate x and y components. 
+    // We need to solve for px and py in the equation: energy^2 = px^2 + py^2 + pz_smear^2
+    // We will maintain the ratio of px to py the same as in the original photon
+ // We need to solve for px and py in the equation: energy^2 = px^2 + py^2 + pz_smear^2
+    double pt_squared = energy*energy - pz_smear*pz_smear;
+    
+    if (pt_squared < 0) {
+        // In case of numerical issues leading to a negative value, we clamp it to zero.
+        pt_squared = 0;
+    }
+
+ 	double pt = sqrt(pt_squared);
+    double pt_original = sqrt(photon.px()*photon.px() + photon.py()*photon.py());
+
+    // Scale the x and y components to maintain the original direction
+    double px_smear = (photon.px() > 0) ? abs((photon.px() / pt_original) * pt) : -abs((photon.px() / pt_original) * pt);
+    double py_smear = (photon.py() > 0) ? abs((photon.py() / pt_original) * pt) : -abs((photon.py() / pt_original) * pt);
+	// Create a new four-vector with the smeared momentum and original energy
+    Pythia8::Vec4 smearedPhoton(px_smear, py_smear, pz_smear, energy);
+	
+
 
     return smearedPhoton;
 }
 
+// Function to check if Delta R between two four-vectors is greater than a specified cut
+bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcut) {
+    double dEta = Photon1.eta() - Photon2.eta();
+    double dPhi = acos(cos(Photon1.phi() - Photon2.phi()));  // Correct way to handle the periodicity
+    double deltaR = sqrt(dEta * dEta + dPhi * dPhi);
+    return deltaR > DeltaRcut;
+}
 
+// Function to check if the transverse momentum (pT) of a particle is greater than a specified cut
+bool pTCut(const Pythia8::Vec4& particle, float ptCut) {
+    // Calculate the transverse momentum (pT)
+    double pT = particle.pT();
+
+    // Check if pT is greater than the cut value
+    return pT > ptCut;
+}
 
