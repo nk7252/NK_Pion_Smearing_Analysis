@@ -765,7 +765,7 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
 	// method 4 
 	//calculate the pT to keep the length of the four momenta the same. then scale the px and py to match.
 	//
-	//*
+	/*
 	double zsmear = smearingFactor*photon.p2() + 1;
 	double pz_smear = photon.pz()*zsmear;
     // Keep the energy constant
@@ -790,7 +790,7 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactor) {//,
     double py_smear = (photon.py() > 0) ? abs((photon.py() / pt_original) * pt) : -abs((photon.py() / pt_original) * pt);
 	// Create a new four-vector with the smeared momentum and original energy
     Pythia8::Vec4 smearedPhoton(px_smear, py_smear, pz_smear, energy);
-	
+	//*/
 
 
     return smearedPhoton;
