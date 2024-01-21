@@ -40,6 +40,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
 void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> HistList, std::vector<std::string> HistLegend);
 void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName1,const char* histName2, const std::string& LegendName);
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
+void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName)
 
 
 
@@ -105,8 +106,12 @@ return filename_object1;
 void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> HistList,std::vector<std::string> HistLegend) {
     // create canvas and open the output pdf
     TCanvas *canvas = new TCanvas("canvas1", "Canvas", 800, 600);
-    //TCanvas* canvas;    
-    canvas->Print("pioncode/canvas_pdf/output.pdf[");
+    //TCanvas* canvas;
+    std::string combinedhiststring;
+    for (const auto& str : HistList) {
+        combinedhiststring += str;
+    }    
+    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf[",combinedhiststring,filenameobj.sqrtEsmearing));
     //loop over files. save 
     int legendInt=0;
     //loop over weight methods
@@ -123,11 +128,11 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
         for (const auto& fileName : filenameobj.fileNames) {
                 canvas = FitMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
                 // Save mean canvas to PDF as a page
-                canvas->Print("pioncode/canvas_pdf/output.pdf");
+                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf",combinedhiststring,filenameobj.sqrtEsmearing));
 
                 canvas = FitSigmaMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
                 // Save sigma/mean canvas to PDF as a page
-                canvas->Print("pioncode/canvas_pdf/output.pdf");
+                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf",combinedhiststring,filenameobj.sqrtEsmearing));
                 
                 std::cout << "filename loop done" << std::endl; // debug line
         }
@@ -139,7 +144,7 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
     }
     
     // Close the PDF file
-    canvas->Print("pioncode/canvas_pdf/output.pdf]");
+    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf]",combinedhiststring,filenameobj.sqrtEsmearing));
     //clean up
     delete canvas;
 }
@@ -396,9 +401,9 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
     }
 
     // Get the 2D histogram from the file
-    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get("h27_2"));
+    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get("histName2_2"));
     if (!hist2D) {
-        std::cerr << "Error: Could not retrieve 2D histogram " << file->Get("h27_2") << " from file" << std::endl;
+        std::cerr << "Error: Could not retrieve 2D histogram " << file->Get("histName2_2") << " from file" << std::endl;
         file->Close();
         //return nullptr;
     }
@@ -409,8 +414,8 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
     canvas1->Print(Form("pioncode/canvas_pdf/%s_%f_InvMassprojections.pdf[",filenameobj.filenamemod.c_str(), errparam));
 
     for (int i=1;i<NX+1;i++){
-        TH1D* yProjection1 = getYProjectionof2DHist(fileName.c_str(), "h27_2",i,i);//on
-        TH1D* yProjection2 = getYProjectionof2DHist(fileName.c_str(), "h18_2",i,i);//off
+        TH1D* yProjection1 = getYProjectionof2DHist(fileName.c_str(), "histName2_2",i,i);//on
+        TH1D* yProjection2 = getYProjectionof2DHist(fileName.c_str(), "histName1_2",i,i);//off
         TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
         TH1D *ratioClone = (TH1D *)yProjection1->Clone("ratioClone");
         histClone->Add(yProjection1, -1);
@@ -438,8 +443,8 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
         canvas1->Clear();
         legend1->Clear();
     }
-    TH1D* yProjection1 = getYProjectionof2DHist(fileName.c_str(), "h27_2",1,NX);
-    TH1D* yProjection2 = getYProjectionof2DHist(fileName.c_str(), "h18_2",1,NX);
+    TH1D* yProjection1 = getYProjectionof2DHist(fileName.c_str(), "histName2_2",1,NX);
+    TH1D* yProjection2 = getYProjectionof2DHist(fileName.c_str(), "histName1_2",1,NX);
     TH1D *histClone = (TH1D *)yProjection2->Clone("histClone");
     TH1D *ratioClone = (TH1D *)yProjection2->Clone("ratioClone");
     histClone->Add(yProjection1, -1);
@@ -497,5 +502,189 @@ TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int fir
     file->Close();
 
     return hist1D;
+}
+
+// 2d hist fitting and metrics
+void SliceAndFit(filename_object filenameobj, const char* histName, const char* fileName){
+
+	//int E_error_param = 155;
+    int E_error_param = static_cast<int>(filenameobj.sqrtEsmearing[0]);
+	//std::vector<std::string> WeightNames = filenameobj.weightnames//{"EXP", "POWER", "WSHP"};
+	//int weightmethod=2;//0=exp,1=power,2=wshp
+	//double binres=2;
+
+    cout << "processing:" << fileName << " Histogram: " << histName << "\n";
+    TFile *pionfile = new TFile(Form("pioncode/rootfiles/%s", pionfilename)); 
+    TH2F* hist2D = dynamic_cast<TH2F*>(pionfile->Get(histName));
+    //TH2F *hist2D = (TH2F *)pionfile->Get("hist2D");
+    
+    TString canvasname = Form("Sliced_%d_thousandths_%s", E_error_param, Time); 
+    const char *pdfname = canvasname;
+    TCanvas *c1 = new TCanvas(canvasname, canvasname, 3000, 1200);
+    
+    // c1->SetFillColor(42);
+    //c1->Divide(2, 1); // nx, ny
+    /////////////////////////////////////////////weighted
+
+    c1->Divide(2, 3);
+    c1->cd(1);
+    // c1->cd(1);
+    gPad->SetTopMargin(0.12);
+    gPad->SetFillColor(33);
+    gPad->SetLogz();
+    hist2D->Draw("colz");
+    printf("error test code\n");
+    hist2D->GetXaxis()->SetLabelSize(0.06);
+    hist2D->GetYaxis()->SetLabelSize(0.06);
+    hist2D->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    hist2D->GetYaxis()->SetTitle("Invariant Mass [GeV/c^2]");
+    hist2D->SetMarkerColor(kYellow);
+    // Fit slices projected along Y fron bins in X [1,64] with more than 2 bins in Y filled
+    hist2D->FitSlicesY(0, 0, -1, 0);//, "EMW"
+
+    //
+
+    // Show fitted "mean" for each slice
+    c1->cd(2);
+    gPad->SetFillColor(33);
+    TH2F *hist2D_0 = (TH2F *)pionfile->Get("hist2D_0");
+    hist2D_0->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    hist2D_0->Draw();
+
+    c1->cd(3);
+    gPad->SetTopMargin(0.12);
+    gPad->SetLeftMargin(0.15);
+    gPad->SetFillColor(33);
+    TH2F *hist2D_1 = (TH2F *)pionfile->Get("hist2D_1");
+    hist2D_1->GetYaxis()->SetTitle("Mean");
+    hist2D_1->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    // hist2D_1->SetAxisRange(0.1, 0.16,"Y");
+    hist2D_1->Draw();
+
+    // Show fitted "sigma" for each slice
+    // c1->cd(2);
+    c1->cd(4);
+    gPad->SetTopMargin(0.12);
+    gPad->SetLeftMargin(0.15);
+    gPad->SetFillColor(33);
+    TH2F *hist2D_2 = (TH2F *)pionfile->Get("hist2D_2");
+    hist2D_2->SetMinimum(0.8);
+    hist2D_2->GetYaxis()->SetTitle("Sigma");
+    hist2D_2->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    hist2D_2->Draw();
+
+    // Show fitted variance(sigma^2) for each slice
+    c1->cd(5);
+    TH2F *hist2D_3 = (TH2F *)hist2D_2->Clone("hist2D_3"); // clone sigma
+    gPad->SetTopMargin(0.12);
+    gPad->SetLeftMargin(0.15);
+    gPad->SetFillColor(33);
+    hist2D_3->Multiply(hist2D_2); // multiply cloned sigma by sigma
+    // hist2D_3->SetMinimum(0.8);
+    hist2D_3->SetTitle("Value of par[2]^2=Variance;Pion Pt [GeV/c];Variance");
+    hist2D_3->Draw();
+
+    // Show fitted mean/variance for each slice
+    c1->cd(6);
+    // TH2F* hist2D_4 = (TH2F*)hist2D_1->Clone("hist2D_4");//clone mean
+    TH2F *hist2D_4 = (TH2F *)hist2D_2->Clone("hist2D_4"); // clone sigma instead
+    gPad->SetTopMargin(0.12);
+    gPad->SetLeftMargin(0.15);
+    gPad->SetFillColor(33);
+    hist2D_4->Divide(hist2D_3); // divide by variance. 2 is sigma
+    hist2D_4->SetTitle("Value of par[1]/par[2]^2=Mean/Variance;Pion Pt [GeV/c];Mean/Variance");
+    // hist2D_4->SetMinimum(0.8);
+    hist2D_4->Draw();
+
+    cout << canvasname << "\n";
+    c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", pdfname));
+
+    delete c1;
+
+/*
+
+    if (E_error_param == 155)
+    {
+        TCanvas *c2 = new TCanvas("c2", "c2", 400, 900);
+        c2->Divide(1, 2);
+        c2->cd(1);
+        TH2F *hist2D_5 = (TH2F *)hist2D_2->Clone("hist2D_5");
+        hist2D_5->SetAxisRange(0., 16., "x");
+        // hist2D_5->Scale(1000/135);
+        // hist2D_5->SetAxisRange(0., 0.2,"y");
+        hist2D_5->Draw();
+        hist2D_5->GetYaxis()->SetTitle("Sigma");
+        hist2D_5->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+
+        c2->cd(2);
+        /// they said  "A beam momentum spread (δp/p ≈ 2%) is quadratically subtracted from σ/μ of the fit, in order to unfolded beam momentum spread from the relative energy resolution. The Gauss function parameter of μ and energy resolution from each fit are plotted against the  nominal beam energy as linearity and resolution." 
+        TH2F *hist2D_6 = (TH2F *)hist2D_2->Clone("hist2D_6"); // sigma/mean
+
+        hist2D_6->Divide(hist2D_1); // sigma/mean
+
+        // TH2F* hist2D_7 = (TH2F*)hist2D_6->Clone("hist2D_7");// clone (sigma/mean)to get (sigma/mean)^2
+        // hist2D_7->Multiply(hist2D_6);//(sigma/mean)^2
+        // hist2D_7->Add(-0.0004);//why?
+        // TH2F* hist2D_8 = (TH2F*)hist2D_7->Clone("hist2D_8");
+        // hist2D_8->Divide(hist2D_7);// call this the new sigma/mean
+        // hist2D_8->Multiply(hist2D_1);//multiply by the mean to find a new Sigma
+        // hist2D_8->Divide(135);//scale it to find sigma_M/M directly
+
+        hist2D_6->SetAxisRange(0., 16., "x");
+        hist2D_6->SetAxisRange(0., 0.2, "y");
+        hist2D_6->Draw();
+        hist2D_6->GetYaxis()->SetTitle("Sigma/Mean");
+        hist2D_6->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+        
+        c2->SaveAs(Form("pioncode/canvas_pdf/%s_truncatedsigma.pdf", pdfname));
+        delete c2;
+    }
+
+    
+    TCanvas *c3 = new TCanvas("c3", "c3", 3000, 3000);
+    
+    FitYProjectionsAndGraph(c3, hist2D, pdfname, binres, weightmethod);
+    c3->SaveAs(Form("pioncode/canvas_pdf/Alt_Projection_%s.pdf", pdfname));
+*/
+
+    pionfile->Close();
+    delete c3;
+}
+
+//misc operations
+void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName) {
+    // Open the source file
+    TFile sourceFile(sourceFileName, "READ");
+    if (!sourceFile.IsOpen()) {
+        std::cerr << "Error: Unable to open source file!" << std::endl;
+        return;
+    }
+
+    // Retrieve the histogram
+    TH1* histogram = dynamic_cast<TH1*>(sourceFile.Get(histogramName));
+    if (!histogram) {
+        std::cerr << "Error: Histogram not found in source file!" << std::endl;
+        sourceFile.Close();
+        return;
+    }
+
+    // Detach the histogram from the source file
+    histogram->SetDirectory(0);
+
+    // Close the source file
+    sourceFile.Close();
+
+    // Open the target file
+    TFile targetFile(targetFileName, "UPDATE");
+    if (!targetFile.IsOpen()) {
+        std::cerr << "Error: Unable to open target file!" << std::endl;
+        return;
+    }
+
+    // Write the histogram to the target file
+    histogram->Write();
+
+    // Close the target file
+    targetFile.Close();
 }
 

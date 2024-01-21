@@ -123,7 +123,8 @@ int main(){
 		std::vector<TH1*> h20(WeightNames.size());
 		std::vector<TH1*> h21(WeightNames.size());
 
-		std::vector<TH2F*> h18(WeightNames.size());\
+		std::vector<TH2F*> h18(WeightNames.size());
+		std::vector<TH2F*> h18_1d(WeightNames.size());
 		std::vector<TH2F*> h27(WeightNames.size());
 
 		std::vector<TH2F*> h28(WeightNames.size());
@@ -149,8 +150,9 @@ int main(){
 			h12[p] = new TH1F(Form("h12_%i",p),Form("Smeared Pion PT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
 			h20[p] = new TH1F(Form("h20_%i",p),Form("Smeared Photon pT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
 			h21[p] = new TH1F(Form("h21_%i",p),Form("Photon pT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
-			h18[p] = new TH2F(Form("h18_%i",p),Form("Smeared Pion Pt vs Smeared Inv Mass, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 
+			h18[p] = new TH2F(Form("h18_%i",p),Form("Smeared Pion Pt vs Smeared Inv Mass, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+			h18_1d[p] = new TH2F(Form("h18_%i",p),Form("Smeared Pion Pt vs Smeared Inv Mass, weighted:%s",WeightNames[p].c_str()),100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 
 			h27[p] = new TH2F(Form("h27_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
 			h28[p] = new TH2F(Form("h28_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
@@ -470,6 +472,7 @@ int main(){
 						h12[p]->Fill(gamma_smeared[2].pT(), inv_yield[p]);
 
 						h18[p]->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield[p]);//
+						h18[p]->Fill(inv_mass_smeared, inv_yield[p]);//
 						h27[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield[p]);
 
 						h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
@@ -477,6 +480,7 @@ int main(){
 
 						
 						h34[p]->Fill(gamma_position_smear[2].pT(), gamma_position_smear[2].mCalc(), inv_yield[p]);//position smearing
+						h34_1d[p]->Fill(gamma_position_smear[2].mCalc(), inv_yield[p]);//position smearing
 
 						if(abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<asymval &&asymcut==1){//asymmetry cut
 							//std::cout << "Asymmetry Cut" << " " << abs(gamma_smeared[0].e()-gamma_smeared[1].e())/(gamma_smeared[0].e()+gamma_smeared[1].e())<<std::endl;
@@ -494,6 +498,7 @@ int main(){
 							}
 
 							h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+							h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
 						}
 						//std::cout << "smeared energy " << gamma_smeared[2].e() <<". clustered energy " << gamma_cluster[2].e() << " . ratio c/s "<< gamma_cluster[2].e()/gamma_smeared[2].e()<< std::endl;
 					}
