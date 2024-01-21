@@ -61,8 +61,9 @@ void AIOFit() {
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
     //plotOverlayedHistograms(choosenfilenameobj, "h12");//accepts 1d hist?//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
-    //SliceAndFit(choosenfilenameobj);
-
+    SliceAndFit(choosenfilenameobj, "h18_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// smeared
+    SliceAndFit(choosenfilenameobj, "h34_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// position
+    SliceAndFit(choosenfilenameobj, "h35_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
 }    
 
@@ -403,9 +404,9 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
     }
 
     // Get the 2D histogram from the file
-    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get("histName2_2"));
+    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get(histName2));
     if (!hist2D) {
-        std::cerr << "Error: Could not retrieve 2D histogram " << file->Get("histName2_2") << " from file" << std::endl;
+        std::cerr << "Error: Could not retrieve 2D histogram " << file->Get(histName2) << " from file" << std::endl;
         file->Close();
         //return nullptr;
     }
@@ -517,8 +518,8 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 
     cout << "processing:" << fileName << " Histogram: " << histName << "\n";
     TFile *pionfile = new TFile(filenameobj.fileNames[0].c_str(), "READ"); 
-    TH2F* hist2D = dynamic_cast<TH2F*>(pionfile->Get(histName));
-    //TH2F *hist2D = (TH2F *)pionfile->Get("hist2D");
+    //TH2F* hist2D = dynamic_cast<TH2F*>(pionfile->Get(histName));
+    TH2F *hist2D = (TH2F *)pionfile->Get(histName);
     
     TString canvasname = Form("Sliced_%d_thousandths", E_error_param); //remvod %s for Time 
     const char *pdfname = canvasname;
@@ -549,7 +550,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     // Show fitted "mean" for each slice
     c1->cd(2);
     gPad->SetFillColor(33);
-    TH2F *hist2D_0 = (TH2F *)pionfile->Get("hist2D_0");
+    TH2F *hist2D_0 = (TH2F *)pionfile->Get(Form("%s_0",histName));
     hist2D_0->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
     hist2D_0->Draw();
 
@@ -557,7 +558,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
-    TH2F *hist2D_1 = (TH2F *)pionfile->Get("hist2D_1");
+    TH2F *hist2D_1 = (TH2F *)pionfile->Get(Form("%s_1",histName));
     hist2D_1->GetYaxis()->SetTitle("Mean");
     hist2D_1->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
     // hist2D_1->SetAxisRange(0.1, 0.16,"Y");
@@ -569,7 +570,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
-    TH2F *hist2D_2 = (TH2F *)pionfile->Get("hist2D_2");
+    TH2F *hist2D_2 = (TH2F *)pionfile->Get(Form("%s_2",histName));
     hist2D_2->SetMinimum(0.8);
     hist2D_2->GetYaxis()->SetTitle("Sigma");
     hist2D_2->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
@@ -577,7 +578,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 
     // Show fitted variance(sigma^2) for each slice
     c1->cd(5);
-    TH2F *hist2D_3 = (TH2F *)hist2D_2->Clone("hist2D_3"); // clone sigma
+    TH2F *hist2D_3 = (TH2F *)hist2D_2->Clone(Form("%s_3",histName)); // clone sigma
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
@@ -589,7 +590,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     // Show fitted mean/variance for each slice
     c1->cd(6);
     // TH2F* hist2D_4 = (TH2F*)hist2D_1->Clone("hist2D_4");//clone mean
-    TH2F *hist2D_4 = (TH2F *)hist2D_2->Clone("hist2D_4"); // clone sigma instead
+    TH2F *hist2D_4 = (TH2F *)hist2D_2->Clone(Form("%s_4",histName)); // clone sigma instead
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
