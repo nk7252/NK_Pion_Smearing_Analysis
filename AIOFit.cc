@@ -518,9 +518,17 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 
     cout << "processing:" << fileName << " Histogram: " << histName << "\n";
     TFile *pionfile = new TFile(filenameobj.fileNames[0].c_str(), "READ"); 
+    if (!pionfile || pionfile->IsZombie()) {
+        std::cerr << "Error opening file." << std::endl;
+        // Handle error or return
+    }
     //TH2F* hist2D = dynamic_cast<TH2F*>(pionfile->Get(histName));
     TH2F *hist2D = (TH2F *)pionfile->Get(histName);
-    
+    if (!hist2D) {
+        std::cerr << "Histogram not found." << std::endl;
+        // Handle error or return
+    }
+
     TString canvasname = Form("Sliced_%d_thousandths", E_error_param); //remvod %s for Time 
     const char *pdfname = canvasname;
     TCanvas *c1 = new TCanvas(canvasname, canvasname, 3000, 1200);
@@ -543,7 +551,8 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     hist2D->GetYaxis()->SetTitle("Invariant Mass [GeV/c^2]");
     hist2D->SetMarkerColor(kYellow);
     // Fit slices projected along Y fron bins in X [1,64] with more than 2 bins in Y filled
-    hist2D->FitSlicesY(0, 0, -1, 0);//, "EMW"
+    TObjArray aSlices;
+    hist2D->FitSlicesY(0, 0, -1, 0, &aSlices);//, "EMW" "QNR",
 
     //
 
@@ -600,7 +609,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     hist2D_4->Draw();
 
     cout << canvasname << "\n";
-    c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", pdfname));
+    c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", canvasname.c_str()));
 
     delete c1;
 
@@ -652,6 +661,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     */
 
     pionfile->Close();
+    delete pionfile;
 }
 
 //misc operations
