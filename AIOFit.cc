@@ -29,11 +29,11 @@ class filename_object {//object to hold my file names and related strings. thing
     std::vector<float> plotxlims;
     std::vector<float> plotylims;
     int pTcutoff;
-    std::vector<float> sqrtEsmearing;
+    std::vector<int> sqrtEsmearing;
     int binres;
 };
 // declarations
-float extractNumber(const std::string& filePath);
+int extractNumber(const std::string& filepath);
 filename_object choosecomparisontype(int choosetype);
 TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
 TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
@@ -61,30 +61,45 @@ void AIOFit() {
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
     //plotOverlayedHistograms(choosenfilenameobj, "h12");//accepts 1d hist?//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
-    SliceAndFit(choosenfilenameobj, "h18_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// smeared
+
+    //SliceAndFit(choosenfilenameobj, "h18_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// smeared
     SliceAndFit(choosenfilenameobj, "h34_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// position
+    printf("error test code\n");
     SliceAndFit(choosenfilenameobj, "h35_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
 }    
 
-float extractNumber(const std::string& filePath) {
-    // Find the first underscore in the filepath
-    size_t firstUnderscorePos = filePath.find('_');
-
-    // Find the second underscore in the filepath
-    size_t secondUnderscorePos = filePath.find('_', firstUnderscorePos + 1);
-    float testnumber;
-    // Check if both underscores are found and there is a number between them
-    if (firstUnderscorePos != std::string::npos && secondUnderscorePos != std::string::npos && secondUnderscorePos > firstUnderscorePos + 1) {
-        //std::cout<< "I reached here" << std::endl;
-        // Extract the substring between the two underscores
-        std::string numberStr = filePath.substr(firstUnderscorePos + 1, secondUnderscorePos - firstUnderscorePos - 1);
-        //std::cout<< "substring" <<" "<< numberStr << std::endl;
-        testnumber =std::stof(numberStr);
-        //std::cout<< "float" <<" "<< testnumber << std::endl;
+int extractNumber(const std::string& filepath) {
+     // Find the start of the decimal part
+    size_t startPos = filepath.find(".") + 1;
+    if (startPos == 0 || startPos >= filepath.length()) {
+        std::cerr << "Error: '.' not found in the filepath or at the end" << std::endl;
+        return -1; // or handle error differently
     }
-    return testnumber;
-} 
+
+    // Find the end of the number (assuming .root at the end)
+    size_t endPos = filepath.rfind(".root");
+    if (endPos == std::string::npos) {
+        std::cerr << "Error: '.root' not found in the filepath" << std::endl;
+        return -1; // or handle error differently
+    }
+
+    // Extract the substring containing the decimal part of the number
+    std::string decimalStr = filepath.substr(startPos, endPos - startPos);
+
+    // Remove trailing zeros
+    decimalStr.erase(decimalStr.find_last_not_of('0') + 1, std::string::npos);
+
+    // Convert the string to an integer
+    try {
+        int number = std::stoi(decimalStr);
+        return number;
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "Error: Invalid number in the filepath" << std::endl;
+        return -1; // or handle error differently
+    }
+}
+
 
 filename_object choosecomparisontype(int choosetype){
     filename_object filename_object1;// 0=weight type, 1=ac on/off, 2=co on/off, 3=ac&co on/off
@@ -114,7 +129,7 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
     for (const auto& str : HistList) {
         combinedhiststring += str;
     }    
-    canvas->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayPlot.pdf[",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf[",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
     //loop over files. save 
     int legendInt=0;
     //loop over weight methods
@@ -131,11 +146,11 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
         for (const auto& fileName : filenameobj.fileNames) {
                 canvas = FitMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
                 // Save mean canvas to PDF as a page
-                canvas->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
 
                 canvas = FitSigmaMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
                 // Save sigma/mean canvas to PDF as a page
-                canvas->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
                 
                 std::cout << "filename loop done" << std::endl; // debug line
         }
@@ -147,7 +162,7 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
     }
     
     // Close the PDF file
-    canvas->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayPlot.pdf]",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf]",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
     //clean up
     delete canvas;
 }
@@ -509,14 +524,14 @@ TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int fir
 
 // 2d hist fitting and metrics
 void SliceAndFit(filename_object filenameobj, const char* histName, const char* fileName){
-
-	//int E_error_param = 155;
-    int E_error_param = static_cast<int>(filenameobj.sqrtEsmearing[0]);
+    //ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+	//int E_error_param = 155;static_cast<int>(
+    //int E_error_param = filenameobj.sqrtEsmearing[0];
 	//std::vector<std::string> WeightNames = filenameobj.weightnames//{"EXP", "POWER", "WSHP"};
 	//int weightmethod=2;//0=exp,1=power,2=wshp
 	//double binres=2;
 
-    cout << "processing:" << fileName << " Histogram: " << histName << "\n";
+    cout <<"\n"<< "processing:" << fileName << " Histogram: " << histName << "\n";
     TFile *pionfile = new TFile(filenameobj.fileNames[0].c_str(), "READ"); 
     if (!pionfile || pionfile->IsZombie()) {
         std::cerr << "Error opening file." << std::endl;
@@ -529,7 +544,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
         // Handle error or return
     }
 
-    TString canvasname = Form("Sliced_%d_thousandths", E_error_param); //remvod %s for Time 
+    TString canvasname = Form("%s_Esmear_%d_Thousandths",histName, filenameobj.sqrtEsmearing[0]); //remvod %s for Time 
     const char *pdfname = canvasname;
     TCanvas *c1 = new TCanvas(canvasname, canvasname, 3000, 1200);
     
@@ -544,30 +559,46 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     gPad->SetFillColor(33);
     gPad->SetLogz();
     hist2D->Draw("colz");
-    printf("error test code\n");
+    //printf("error test code\n");
     hist2D->GetXaxis()->SetLabelSize(0.06);
     hist2D->GetYaxis()->SetLabelSize(0.06);
     hist2D->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
     hist2D->GetYaxis()->SetTitle("Invariant Mass [GeV/c^2]");
     hist2D->SetMarkerColor(kYellow);
     // Fit slices projected along Y fron bins in X [1,64] with more than 2 bins in Y filled
-    TObjArray aSlices;
-    hist2D->FitSlicesY(0, 0, -1, 0, &aSlices);//, "EMW" "QNR",
+    TObjArray aSlices;//owner of slices?
+    hist2D->FitSlicesY(0, 0, -1, 0,"QNR", &aSlices);//, "EMW" "QNR",L-log likelihood
 
     //
 
     // Show fitted "mean" for each slice
     c1->cd(2);
     gPad->SetFillColor(33);
-    TH2F *hist2D_0 = (TH2F *)pionfile->Get(Form("%s_0",histName));
-    hist2D_0->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
-    hist2D_0->Draw();
+
+    // Create a 1D histogram for the integrals
+    int nBinsX = hist2D->GetXaxis()->GetNbins();
+    TH1D *hIntegrals = new TH1D("hIntegrals", "Integrals over Y;X-axis;Integral", nBinsX, hist2D->GetXaxis()->GetXmin(), hist2D->GetXaxis()->GetXmax());
+
+    // note this gives the weighted entries!!!!!
+    // Loop over each bin in X
+    for (int i = 1; i <= nBinsX; ++i) {
+        // Integrate over all bins in Y for the current bin in X
+        double integral = hist2D->Integral(i, i, 1, hist2D->GetYaxis()->GetNbins());
+        
+        // Fill the 1D histogram
+        hIntegrals->SetBinContent(i, integral);
+    }
+    hIntegrals->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    gPad->SetLogy();
+    hIntegrals->Draw();
+
 
     c1->cd(3);
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
-    TH2F *hist2D_1 = (TH2F *)pionfile->Get(Form("%s_1",histName));
+    TH2F *hist2D_1 = (TH2F *)aSlices[1];
+    //TH2F *hist2D_1 = (TH2F *)pionfile->Get(Form("%s_1",histName));
     hist2D_1->GetYaxis()->SetTitle("Mean");
     hist2D_1->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
     // hist2D_1->SetAxisRange(0.1, 0.16,"Y");
@@ -579,7 +610,8 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
-    TH2F *hist2D_2 = (TH2F *)pionfile->Get(Form("%s_2",histName));
+    TH2F *hist2D_2 = (TH2F *)aSlices[2];
+    //TH2F *hist2D_2 = (TH2F *)pionfile->Get(Form("%s_2",histName));
     hist2D_2->SetMinimum(0.8);
     hist2D_2->GetYaxis()->SetTitle("Sigma");
     hist2D_2->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
@@ -587,81 +619,44 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 
     // Show fitted variance(sigma^2) for each slice
     c1->cd(5);
-    TH2F *hist2D_3 = (TH2F *)hist2D_2->Clone(Form("%s_3",histName)); // clone sigma
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
-    hist2D_3->Multiply(hist2D_2); // multiply cloned sigma by sigma
-    // hist2D_3->SetMinimum(0.8);
-    hist2D_3->SetTitle("Value of par[2]^2=Variance;Pion Pt [GeV/c];Variance");
-    hist2D_3->Draw();
+     //TH2F *hist2D_0 = (TH2F *)pionfile->Get(Form("%s_0",histName));
+    TH2F *hist2D_chi2 = (TH2F *)pionfile->Get(Form("%s_chi2",histName));
+    //TH2F *hist2D_chi2 = (TH2F *)aSlices[3];
+    if (!hist2D_chi2 ) {
+        std::cerr << "Histogram " << Form("%s_chi2", histName) << " not found. Exiting SliceAndFit" << std::endl;
+        return;
+    // Handle error or return
+    } 
+    hist2D_chi2->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    //gPad->SetLogy();
+    hist2D_chi2->Draw();
+    // hist2D_chi2->SetMinimum(0.8);
+    hist2D_chi2->SetTitle("chi^2/NDF;Pion Pt [GeV/c];chi^2/NDF");
 
-    // Show fitted mean/variance for each slice
+    // Show fitted sigma/mean for each slice
     c1->cd(6);
-    // TH2F* hist2D_4 = (TH2F*)hist2D_1->Clone("hist2D_4");//clone mean
-    TH2F *hist2D_4 = (TH2F *)hist2D_2->Clone(Form("%s_4",histName)); // clone sigma instead
+    TH2F *hist2D_4 = (TH2F *)hist2D_1->Clone(Form("%s_4",histName)); // clone mean
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
-    hist2D_4->Divide(hist2D_3); // divide by variance. 2 is sigma
-    hist2D_4->SetTitle("Value of par[1]/par[2]^2=Mean/Variance;Pion Pt [GeV/c];Mean/Variance");
+    hist2D_4->Divide(hist2D_2); // divide by sigma
+    hist2D_4->SetTitle("Value of par[2]/par[1]=Sigma/Mean;Pion Pt [GeV/c];Sigma/Mean");
     // hist2D_4->SetMinimum(0.8);
     hist2D_4->Draw();
 
     cout << canvasname << "\n";
-    c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", canvasname.c_str()));
+    c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", canvasname.Data()));
 
     delete c1;
 
-    /*
-
-    if (E_error_param == 155)
-    {
-        TCanvas *c2 = new TCanvas("c2", "c2", 400, 900);
-        c2->Divide(1, 2);
-        c2->cd(1);
-        TH2F *hist2D_5 = (TH2F *)hist2D_2->Clone("hist2D_5");
-        hist2D_5->SetAxisRange(0., 16., "x");
-        // hist2D_5->Scale(1000/135);
-        // hist2D_5->SetAxisRange(0., 0.2,"y");
-        hist2D_5->Draw();
-        hist2D_5->GetYaxis()->SetTitle("Sigma");
-        hist2D_5->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
-
-        c2->cd(2);
-        /// they said  "A beam momentum spread (δp/p ≈ 2%) is quadratically subtracted from σ/μ of the fit, in order to unfolded beam momentum spread from the relative energy resolution. The Gauss function parameter of μ and energy resolution from each fit are plotted against the  nominal beam energy as linearity and resolution." 
-        TH2F *hist2D_6 = (TH2F *)hist2D_2->Clone("hist2D_6"); // sigma/mean
-
-        hist2D_6->Divide(hist2D_1); // sigma/mean
-
-        // TH2F* hist2D_7 = (TH2F*)hist2D_6->Clone("hist2D_7");// clone (sigma/mean)to get (sigma/mean)^2
-        // hist2D_7->Multiply(hist2D_6);//(sigma/mean)^2
-        // hist2D_7->Add(-0.0004);//why?
-        // TH2F* hist2D_8 = (TH2F*)hist2D_7->Clone("hist2D_8");
-        // hist2D_8->Divide(hist2D_7);// call this the new sigma/mean
-        // hist2D_8->Multiply(hist2D_1);//multiply by the mean to find a new Sigma
-        // hist2D_8->Divide(135);//scale it to find sigma_M/M directly
-
-        hist2D_6->SetAxisRange(0., 16., "x");
-        hist2D_6->SetAxisRange(0., 0.2, "y");
-        hist2D_6->Draw();
-        hist2D_6->GetYaxis()->SetTitle("Sigma/Mean");
-        hist2D_6->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
-        
-        c2->SaveAs(Form("pioncode/canvas_pdf/%s_truncatedsigma.pdf", pdfname));
-        delete c2;
-    }
-
-    
-    TCanvas *c3 = new TCanvas("c3", "c3", 3000, 3000);
-    
-    FitYProjectionsAndGraph(c3, hist2D, pdfname, binres, weightmethod);
-    c3->SaveAs(Form("pioncode/canvas_pdf/Alt_Projection_%s.pdf", pdfname));
-    //delete c3;
-    */
-
+    printf("error test code\n");
+    delete hIntegrals;
     pionfile->Close();
     delete pionfile;
+    printf("error test code\n");
 }
 
 //misc operations
