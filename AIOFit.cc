@@ -40,11 +40,13 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
 void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> HistList, std::vector<std::string> HistLegend);
 void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName1,const char* histName2, const std::string& LegendName);
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
-void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName)
+void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName);
+void SliceAndFit(filename_object filenameobj, const char* histName, const char* fileName);
 
 
 
 void AIOFit() {
+    transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass", "pioncode/rootfiles/Pi0FastMC_0.155000.root");
     // 0=weight type
     int fileset = 0 ;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
@@ -54,7 +56,7 @@ void AIOFit() {
     std::vector<std::string> HistList={"h18_","h29_","h35_","h34_"};
     std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. clust+asymm","Smeared Pion pT vs Inv Mass. Blair cuts","Smeared Pion pT vs Inv Mass. +pos res"};
 
-    GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
+    //GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
     
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
@@ -111,7 +113,7 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
     for (const auto& str : HistList) {
         combinedhiststring += str;
     }    
-    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf[",combinedhiststring,filenameobj.sqrtEsmearing));
+    canvas->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayPlot.pdf[",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
     //loop over files. save 
     int legendInt=0;
     //loop over weight methods
@@ -128,11 +130,11 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
         for (const auto& fileName : filenameobj.fileNames) {
                 canvas = FitMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
                 // Save mean canvas to PDF as a page
-                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf",combinedhiststring,filenameobj.sqrtEsmearing));
+                canvas->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
 
                 canvas = FitSigmaMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
                 // Save sigma/mean canvas to PDF as a page
-                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf",combinedhiststring,filenameobj.sqrtEsmearing));
+                canvas->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
                 
                 std::cout << "filename loop done" << std::endl; // debug line
         }
@@ -144,7 +146,7 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
     }
     
     // Close the PDF file
-    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf]",combinedhiststring,filenameobj.sqrtEsmearing));
+    canvas->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayPlot.pdf]",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
     //clean up
     delete canvas;
 }
@@ -514,11 +516,11 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 	//double binres=2;
 
     cout << "processing:" << fileName << " Histogram: " << histName << "\n";
-    TFile *pionfile = new TFile(Form("pioncode/rootfiles/%s", pionfilename)); 
+    TFile *pionfile = new TFile(filenameobj.fileNames[0].c_str(), "READ"); 
     TH2F* hist2D = dynamic_cast<TH2F*>(pionfile->Get(histName));
     //TH2F *hist2D = (TH2F *)pionfile->Get("hist2D");
     
-    TString canvasname = Form("Sliced_%d_thousandths_%s", E_error_param, Time); 
+    TString canvasname = Form("Sliced_%d_thousandths", E_error_param); //remvod %s for Time 
     const char *pdfname = canvasname;
     TCanvas *c1 = new TCanvas(canvasname, canvasname, 3000, 1200);
     
@@ -601,7 +603,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 
     delete c1;
 
-/*
+    /*
 
     if (E_error_param == 155)
     {
@@ -645,10 +647,10 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     
     FitYProjectionsAndGraph(c3, hist2D, pdfname, binres, weightmethod);
     c3->SaveAs(Form("pioncode/canvas_pdf/Alt_Projection_%s.pdf", pdfname));
-*/
+    //delete c3;
+    */
 
     pionfile->Close();
-    delete c3;
 }
 
 //misc operations
