@@ -124,7 +124,8 @@ int main(){
 		std::vector<TH1*> h21(WeightNames.size());
 
 		std::vector<TH2F*> h18(WeightNames.size());
-		std::vector<TH2F*> h18_1d(WeightNames.size());
+		std::vector<TH1F*> h18_1d(WeightNames.size());
+
 		std::vector<TH2F*> h27(WeightNames.size());
 
 		std::vector<TH2F*> h28(WeightNames.size());
@@ -137,6 +138,7 @@ int main(){
 
 		std::vector<TH2F*> h34(WeightNames.size());
 		std::vector<TH1F*> h34_1d(WeightNames.size());
+
 		std::vector<TH2F*> h35(WeightNames.size());
 		std::vector<TH1F*> h35_1d(WeightNames.size());
 
