@@ -474,7 +474,8 @@ int main(){
 						h12[p]->Fill(gamma_smeared[2].pT(), inv_yield[p]);
 
 						h18[p]->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield[p]);//
-						h18[p]->Fill(inv_mass_smeared, inv_yield[p]);//
+						h18_1d[p]->Fill(inv_mass_smeared, inv_yield[p]);//
+						
 						h27[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield[p]);
 
 						h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
