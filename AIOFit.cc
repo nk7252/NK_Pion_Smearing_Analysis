@@ -583,10 +583,15 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     // Loop over each bin in X
     for (int i = 1; i <= nBinsX; ++i) {
         // Integrate over all bins in Y for the current bin in X
-        double integral = hist2D->Integral(i, i, 1, hist2D->GetYaxis()->GetNbins());
-        
+        //double integral = hist2D->Integral(i, i, 1, hist2D->GetYaxis()->GetNbins());
+        double sumEntries = 0;
+        // Sum entries over all bins in Y for the current bin in X
+        for (int j = 1; j <= hist2D->GetYaxis()->GetNbins(); ++j) {
+            sumEntries += hist2D->GetEntries(i, j);
+        }
         // Fill the 1D histogram
-        hIntegrals->SetBinContent(i, integral);
+        //hIntegrals->SetBinContent(i, integral);
+        hIntegrals->SetBinContent(i, sumEntries);
     }
     hIntegrals->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
     gPad->SetLogy();
