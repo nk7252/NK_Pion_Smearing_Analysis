@@ -64,8 +64,8 @@ void AIOFit() {
 
     //SliceAndFit(choosenfilenameobj, "h18_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// smeared
     SliceAndFit(choosenfilenameobj, "h34_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// position
-    printf("error test code\n");
     SliceAndFit(choosenfilenameobj, "h35_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair
+    SliceAndFit(choosenfilenameobj, "h100_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
 }    
 
@@ -568,7 +568,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     // Fit slices projected along Y fron bins in X [1,64] with more than 2 bins in Y filled
     TObjArray aSlices;//owner of slices?
     hist2D->FitSlicesY(0, 0, -1, 0,"QNR", &aSlices);//, "EMW" "QNR",L-log likelihood
-
+    aSlices.SetOwner(kTRUE);
     //
 
     // Show fitted "mean" for each slice
@@ -617,7 +617,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     hist2D_2->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
     hist2D_2->Draw();
 
-    // Show fitted variance(sigma^2) for each slice
+    // Show chi^2/ndf
     c1->cd(5);
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
@@ -638,25 +638,22 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 
     // Show fitted sigma/mean for each slice
     c1->cd(6);
-    TH2F *hist2D_4 = (TH2F *)hist2D_1->Clone(Form("%s_4",histName)); // clone mean
+    TH2F *hist2D_4 = (TH2F *)hist2D_2->Clone(Form("%s_4",histName)); // clone sigma
     gPad->SetTopMargin(0.12);
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
-    hist2D_4->Divide(hist2D_2); // divide by sigma
+    hist2D_4->Divide(hist2D_1); // divide by mean
     hist2D_4->SetTitle("Value of par[2]/par[1]=Sigma/Mean;Pion Pt [GeV/c];Sigma/Mean");
     // hist2D_4->SetMinimum(0.8);
     hist2D_4->Draw();
 
-    cout << canvasname << "\n";
     c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", canvasname.Data()));
 
     delete c1;
-
-    printf("error test code\n");
     delete hIntegrals;
+    aSlices.Delete();
     pionfile->Close();
     delete pionfile;
-    printf("error test code\n");
 }
 
 //misc operations
