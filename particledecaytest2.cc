@@ -81,7 +81,7 @@ int main(){
 	TF1 *myFunc;
 	myFunc=ChooseSpectrumFunction(2, PT_Min, PT_Max);
 
-	for (int smear_factor_itt = 9; smear_factor_itt < 9 + 1; smear_factor_itt++)
+	for (int smear_factor_itt = 0; smear_factor_itt < 9 + 1; smear_factor_itt++)
 	{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 	// only want .155
 		float smear_factor_basevalue = 0.065; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
