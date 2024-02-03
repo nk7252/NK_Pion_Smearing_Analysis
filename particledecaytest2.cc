@@ -31,9 +31,10 @@ int main(){
 	timer.Start();
 	int NPions = 1 * 1000000;//
 	// int n_bins=1+ceil(log2(Nevents));
-	int PT_Max = 64; // 65
-	int PT_Min = 0;	 // cross check to elimate power law problems
+	int PT_Max = 20; // 64 normally, [0.2,10] to compare to geant sim
+	float PT_Min = 0.2;	 // cross check to elimate power law problems
 	double PT_ratio = PT_Min / PT_Max;
+	int MassNBins =40;
 	// int n_bins=round((1/4)*PT_Max);
 	// int n_bins=round(1+3.222*log(NPions));
 	int binres=2;//number of divisions per GeV
@@ -49,7 +50,7 @@ int main(){
 	int asymcut=1;//apply asymm cut.
 	float asymval= 0.6;
 	int clusteroverlay = 1;//overlayed cluster check
-	float coprob=0.8;//random numbers(0-1) greater than this value will have some smearing added.
+	float coprob=0.95;//random numbers(0-1) greater than this value will have some smearing added.
 
 	//Blair specific cuts
 	float DeltaRcut_MAX = 1.1; 
@@ -69,11 +70,11 @@ int main(){
 	// float smeared_lower_bin_limit=0.11;
 	// float smeared_upper_bin_limit=0.16;
 	float smeared_lower_bin_limit = 0.0;
-	float smeared_upper_bin_limit = 0.25;
+	float smeared_upper_bin_limit = 0.4;
 	float smear_factor_a = 0;
 	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
 	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
-	float posit_smearingFactor = 0.01; // Example smearing factor for position
+	float posit_smearingFactor = 2.8; // Example smearing factor for position. use half of phnx pos res(simplified) try 2.8 mm. can set the scale to whatever I want, so I will use mm.
 
 	//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 	//----------------------pion spectrum function for clusteroverlay
@@ -81,12 +82,12 @@ int main(){
 	TF1 *myFunc;
 	myFunc=ChooseSpectrumFunction(2, PT_Min, PT_Max);
 
-	for (int smear_factor_itt = 0; smear_factor_itt < 9 + 1; smear_factor_itt++)
+	for (int smear_factor_itt = 23; smear_factor_itt < 28 + 1; smear_factor_itt++)
 	{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 	// only want .155
-		float smear_factor_basevalue = 0.065; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
+		//float smear_factor_basevalue = 0.065; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
-		float smear_factor_b = smear_factor_basevalue + 0.01 * smear_factor_itt;
+		float smear_factor_b =0.005 +  0.01 * smear_factor_itt;//smear_factor_basevalue +
 		//float smear_factor_b = 0.03;
 		//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 		//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
@@ -105,7 +106,7 @@ int main(){
 		TH1 *h6 = new TH1F("h6", "inv mass of gamma pair", 100, 0, 1);
 		//TH1 *h7 = new TH1F("h7", "ratio of Photon/Pion pt", n_bins, PT_Min, PT_Max);
 		TH1 *h8 = new TH1F("h8", "inv mass of Photon pair, smeared", 100, smeared_lower_bin_limit, smeared_upper_bin_limit);
-		TH2F *h9 = new TH2F("h9", "Smeared Pion Pt vs Smeared Inv Mass", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+		TH2F *h9 = new TH2F("h9", "Smeared Pion Pt vs Smeared Inv Mass", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
 		TH1 *h10 = new TH1F("h10", "Smeared Pion PT", n_bins, PT_Min, PT_Max);
 		//TH1 *h11 = new TH1F("h11", "Smeared Pion PT/Pion PT ratio", n_bins, PT_Min, PT_Max);
 		
@@ -132,9 +133,13 @@ int main(){
 		std::vector<TH2F*> h29(WeightNames.size());
 
 		std::vector<TH2F*> h30(WeightNames.size());
+		std::vector<TH1F*> h30_1d(WeightNames.size());
+
 		std::vector<TH2F*> h31(WeightNames.size());
-		std::vector<TH2F*> h32(WeightNames.size());
-		std::vector<TH2F*> h33(WeightNames.size());
+		std::vector<TH1F*> h31_1d(WeightNames.size());
+
+		//std::vector<TH2F*> h32(WeightNames.size());//empty
+		//std::vector<TH2F*> h33(WeightNames.size());//empty
 
 		std::vector<TH2F*> h34(WeightNames.size());
 		std::vector<TH1F*> h34_1d(WeightNames.size());
@@ -153,30 +158,30 @@ int main(){
 			h20[p] = new TH1F(Form("h20_%i",p),Form("Smeared Photon pT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
 			h21[p] = new TH1F(Form("h21_%i",p),Form("Photon pT, weighted:%s",WeightNames[p].c_str()) , n_bins, PT_Min, PT_Max);
 
-			h18[p] = new TH2F(Form("h18_%i",p),Form("Smeared Pion Pt vs Smeared Inv Mass, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h18_1d[p] = new TH1F(Form("h18_1d_%i",p),Form("Smeared Pion Pt vs Smeared Inv Mass, weighted:%s",WeightNames[p].c_str()),100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+			h18[p] = new TH2F(Form("h18_%i",p),Form("Smeared Pion Pt vs Smeared Inv Mass, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
+			h18_1d[p] = new TH1F(Form("h18_1d_%i",p),Form("Smeared Pion Pt vs Smeared Inv Mass, weighted:%s",WeightNames[p].c_str()),100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
 
-			h27[p] = new TH2F(Form("h27_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h28[p] = new TH2F(Form("h28_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h29[p] = new TH2F(Form("h29_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+			h27[p] = new TH2F(Form("h27_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
+			h28[p] = new TH2F(Form("h28_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
+			h29[p] = new TH2F(Form("h29_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
 
-			h30[p] = new TH2F(Form("h30_%i",p),Form("Smeared Pion Pt vs Smeared Energy, weighted:%s",WeightNames[p].c_str()) , n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h31[p] = new TH2F(Form("31_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h32[p] = new TH2F(Form("h32_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h33[p] = new TH2F(Form("h33_%i",p), Form("Smeared Pion Pt vs Smeared Energy, weighted. cluster and asym cut:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+			h30[p] = new TH2F(Form("h30_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, 0, smeared_upper_bin_limit);
+			h30_1d[p] = new TH1F(Form("h30_1d_%i",p), Form("Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s",WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
 
-
-
-			h34[p] = new TH2F(Form("h34_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h34_1d[p] = new TH1F(Form("h34_1d_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-
-			h35[p] = new TH2F(Form("h35_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 120, 0, 1.2);
-			h35_1d[p] = new TH1F(Form("h35_1d_%i",p), Form("Smeared Inv Mass, weighted. Blair's cuts:%s",WeightNames[p].c_str()), 120, 0, 1.2);
+			h31[p] = new TH2F(Form("h31_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts+pos res:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, 0, smeared_upper_bin_limit);
+			h31_1d[p] = new TH1F(Form("h31_1d_%i",p), Form("Smeared Inv Mass, weighted. Blair's cuts+pos res:%s",WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
 
 
+			h34[p] = new TH2F(Form("h34_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
+			h34_1d[p] = new TH1F(Form("h34_1d_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
 
-			h100[p] = new TH2F(Form("h100_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
-			h100_1d[p] = new TH1F(Form("h100_1d_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s",WeightNames[p].c_str()), 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
+			h35[p] = new TH2F(Form("h35_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts+cluster:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, 0, smeared_upper_bin_limit);
+			h35_1d[p] = new TH1F(Form("h35_1d_%i",p), Form("Smeared Inv Mass, weighted. Blair's cuts+cluster:%s",WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
+
+
+
+			h100[p] = new TH2F(Form("h100_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+			h100_1d[p] = new TH1F(Form("h100_1d_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s",WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
 		}
 		/*
 		TH2F *h18 = new TH2F("h18", "Smeared Pion Pt vs Smeared Inv Mass, weighted", n_bins, 0, PT_Max, 100, smeared_lower_bin_limit, 2 * smeared_upper_bin_limit);
@@ -216,6 +221,7 @@ int main(){
 		Vec4 gamma_Blair_Cuts[3];
 		Vec4 gamma_All_Cuts[3];
 		Vec4 gamma_position_smear[3];
+		Vec4 gamma_Blair_position[3];
 
 		double m, E, px, py, pz, pi0_px, pi0_py, pi0_E, scale_factor1, scale_factor2, smear_factor1, smear_factor2;
 		double P0rest = 0.0;
@@ -294,7 +300,7 @@ int main(){
 		}
 
 		pythia.moreDecays();
-		std::cout << "I reached here" << std::endl; // debug line
+		//std::cout << "I reached here" << std::endl; // debug line
 		//std::ofstream mycsv2;
 		//mycsv2.open(Form("pioncode/csvfiles/pT_IMass_IYield_diag_%f.csv", smear_factor_b));
 		for (int i = 0; i < pythia.event.size(); i++){ // loop over all events(pions)
@@ -384,8 +390,6 @@ int main(){
 					// std::cout << "E" << " " <<gamma_lorentz[0].e()<< " " << "smeared E" << " " <<gamma_smeared[0].e()<< " " <<std::endl; // debug, is the factor being applied?
 					gamma_smeared[1] = smear_factor2 * pythia.event[Gamma_daughters[1]].p();
 					
-					gamma_position_smear[0]=PositionResSmear(gamma_smeared[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
-					gamma_position_smear[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
 
 					///*
 
@@ -425,8 +429,13 @@ int main(){
 						gamma_cluster[1]=gamma_smeared[1];
 						gamma_cluster_asymm[1]=gamma_cluster[1];
 					}//*/
+					gamma_All_Cuts[0]=PositionResSmear(gamma_cluster_asymm[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_All_Cuts[1]=PositionResSmear(gamma_cluster_asymm[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_All_Cuts[2] = gamma_All_Cuts[0] + gamma_All_Cuts[1];
 
-					gamma_All_Cuts[2] = PositionResSmear(gamma_cluster_asymm[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear)) + PositionResSmear(gamma_cluster_asymm[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_Blair_position[0]=PositionResSmear(gamma_smeared[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_Blair_position[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_Blair_position[2]= gamma_Blair_position[0] + gamma_Blair_position[1];
 
 					gamma_smeared[2] = gamma_smeared[0] + gamma_smeared[1];
 					gamma_cluster[2] = gamma_cluster[0] + gamma_cluster[1];
@@ -436,6 +445,8 @@ int main(){
 					gamma_Blair_Cuts[1]=gamma_cluster_asymm[1];
 					gamma_Blair_Cuts[2]=gamma_cluster_asymm[2];
 
+					gamma_position_smear[0]=PositionResSmear(gamma_smeared[0], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
+					gamma_position_smear[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
 					gamma_position_smear[2]=gamma_position_smear[0]+gamma_position_smear[1];
 					inv_mass_smeared = gamma_smeared[2].mCalc();
 					// diagnostic
@@ -478,10 +489,6 @@ int main(){
 						
 						h27[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield[p]);
 
-						h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
-						h31[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].e(), inv_yield[p]);//
-
-						
 						h34[p]->Fill(gamma_position_smear[2].pT(), gamma_position_smear[2].mCalc(), inv_yield[p]);//position smearing
 						h34_1d[p]->Fill(gamma_position_smear[2].mCalc(), inv_yield[p]);//position smearing
 
@@ -490,18 +497,24 @@ int main(){
 							// if I am to save both, maybe filling here would be appropriate.
 							h29[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);// asymm
 							h28[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield[p]);//
-							//continue;
-							h32[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].e(), inv_yield[p]);//
-							h33[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].e(), inv_yield[p]);//
 
 
-							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[2], pt2cut)==true){
-								h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
+							if(DeltaRcut(gamma_smeared[0], gamma_smeared[1], DeltaRcut_MAX)==false && pTCut(gamma_smeared[0], pt1cut)==true && pTCut(gamma_smeared[1], pt2cut)==true){
+								h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);// data+mc cuts, no pos res or occupancy
+								h30_1d[p]->Fill(gamma_smeared[2].mCalc(), inv_yield[p]);
+							}
+							if(DeltaRcut(gamma_Blair_position[0], gamma_Blair_position[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_position[0], pt1cut)==true && pTCut(gamma_Blair_position[1], pt2cut)==true){
+								h31[p]->Fill(gamma_Blair_position[2].pT(), gamma_Blair_position[2].mCalc(), inv_yield[p]);// data+mc cuts,  pos res on ,no occupancy
+								h31_1d[p]->Fill(gamma_Blair_position[2].mCalc(), inv_yield[p]);
+							}
+							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[1], pt2cut)==true){
+								h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);// data+mc cuts,  pos res off , occupancy on
 								h35_1d[p]->Fill(gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
 							}
-
-							h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
-							h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+							if(DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_All_Cuts[0], pt1cut)==true && pTCut(gamma_All_Cuts[1], pt2cut)==true){
+								h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);// blair+pos+occupancy
+								h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+							}
 						}
 						//std::cout << "smeared energy " << gamma_smeared[2].e() <<". clustered energy " << gamma_cluster[2].e() << " . ratio c/s "<< gamma_cluster[2].e()/gamma_smeared[2].e()<< std::endl;
 					}
@@ -710,18 +723,44 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx,doub
 
 	//calculate the pT to keep the length of the four momenta the same. then smear the px and py to match.
 	//*
-	double xsmear = smearingFactorx + 1;
-	double px_smear = photon.px()*xsmear;
+	//double xsmear = smearingFactorx + 1;
+	//there is a position vector on the detector
+	//new vector which is x/r, y/r, and z/r
+	// multiply by e to get px py pz
+	// I can do the reverse now px=e*x/r.
+	// reverse is e*x/px=r. px/e=x/|r|. I know the inner radius of EMCALL. I can use that for the magnitude of r? 
+	// increase length of vector until it intersects with the EMCAL barrel
+	// for p.rapidity zero r=EMCAL radius. off
+	// now I have a position vector. I can smear the position vector. and then go back to the momentum vector. 
+	//EMCAL inner radius =900mm
 
-	double ysmear = smearingFactory + 1;
-	double py_smear = photon.py()*ysmear;
+	//phnx pos res was like 5.7 mm/sqrt(E). try multiplying by 2.5 as a first guess as to the pos res scale.
+	// scale not by towersize in p rapid? but by abs tower size?
+	//tower size is 2.5 cm and it is half the size of phenix
+	// module size is approx moiliere rad for sphenix and phenix. sphenix emcal is at a smaller rad than phenix emcal. so sphenix needs to be made of a material that has a smaller m radius? it is. some tungsten powder. so we need to look at the tower size to find the pos res. The block size is 54 mm. so 5.4 cm. so the pos res should be roughly a factor 2 less than phenix.
+	// spehnix should be ~2.8 mm
 
-	double zsmear = smearingFactorz + 1;
-	double pz_smear = photon.pz()*zsmear;
+	double energy = photon.e();
+	//construct the position vector
 
+	double posx =900*photon.px()/photon.e();// 900 mm for EMCAL inner radius
+	double posy =900*photon.py()/photon.e();
+	double posz =900*photon.pz()/photon.e();
+
+	// smear the position vectors. abs smearing coming from the pos res of phnx(for now)
+
+	posx += smearingFactorx/sqrt(energy);
+	posy += smearingFactory/sqrt(energy);
+	posz += smearingFactorz/sqrt(energy);
+
+	// return to momentum vectors.
+
+	double px_smear=posx*photon.e()/900;
+	double py_smear=posy*photon.e()/900;
+	double pz_smear=posz*photon.e()/900;
 
     // Keep the energy constant
-    double energy = photon.e();
+    
 	double E_New = sqrt(px_smear*px_smear +py_smear*py_smear +pz_smear*pz_smear);
 	double energyscale=energy/E_New;
 
@@ -729,11 +768,14 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx,doub
 	double ynew=energyscale*py_smear;
 	double znew=energyscale*pz_smear;
 
-   	//std::cout << "E_New/E_old" << sqrt(xnew*xnew +ynew*ynew +znew*znew)/energy << std::endl;
-	//std::cout << "old Z/New Z = " << photon.pz()*photon.pz() <<" / " << znew*znew << " = " << (photon.pz()*photon.pz())/(znew*znew)<< " , New Phi = " << atan(photon.py()/photon.px())*180/3.1415 << " / " << atan(ynew/xnew)*180/3.1415 << " = " << atan(photon.py()/photon.px())/atan(ynew/xnew)<<std::endl;
-    Pythia8::Vec4 smearedPhoton(xnew, ynew, znew, sqrt(xnew*xnew +ynew*ynew +znew*znew));
+
+    Pythia8::Vec4 smearedPhoton(xnew, ynew, znew, energy);// sqrt(xnew*xnew +ynew*ynew +znew*znew)
     return smearedPhoton;
 }
+   	//std::cout << "E_New/E_old" << sqrt(xnew*xnew +ynew*ynew +znew*znew)/energy << std::endl;
+	//std::cout << "old Z/New Z = " << photon.pz()*photon.pz() <<" / " << znew*znew << " = " << (photon.pz()*photon.pz())/(znew*znew)<< " , New Phi = " << atan(photon.py()/photon.px())*180/3.1415 << " / " << atan(ynew/xnew)*180/3.1415 << " = " << atan(photon.py()/photon.px())/atan(ynew/xnew)<<std::endl;
+
+
 
 // Function to check if Delta R between two four-vectors is greater than a specified cut
 bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMax) {

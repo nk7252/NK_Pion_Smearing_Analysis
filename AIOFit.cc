@@ -40,32 +40,40 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
 void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> HistList, std::vector<std::string> HistLegend);
 void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName1,const char* histName2, const std::string& LegendName);
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
-void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName);
+void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName, const char* NewhistogramName);
 void SliceAndFit(filename_object filenameobj, const char* histName, const char* fileName);
 
 
 
 void AIOFit() {
-    transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass", "pioncode/rootfiles/Pi0FastMC_0.155000.root");
+    transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass", "pioncode/rootfiles/Pi0FastMC_0.155000.root", "h_InvMass_Single_pi0");
+    transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", "pioncode/rootfiles/Pi0FastMC_0.235000.root", "h_InvMass_data");
+    transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", "pioncode/rootfiles/Pi0FastMC_0.155000.root", "h_pTdiff_InvMass_Single_pi0");
     // 0=weight type
-    int fileset = 0 ;
+    int fileset = 0;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
     //std::vector<std::string> HistList={"h18_","h27_","h29_","h28_"};
     //std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. cluster","Smeared Pion pT vs Inv Mass. asymm cut","Smeared Pion pT vs Inv Mass. clust+asymm"};
 
-    std::vector<std::string> HistList={"h18_","h29_","h35_","h34_"};
-    std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. clust+asymm","Smeared Pion pT vs Inv Mass. Blair cuts","Smeared Pion pT vs Inv Mass. +pos res"};
+    std::vector<std::string> HistList={"h30_","h35_","h31_","h100_"};
+    std::vector<std::string> HistLegend={"Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy","Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts+cluster","Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts+pos res","Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects"};
 
-    //GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
+    GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
     
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
     //plotOverlayedHistograms(choosenfilenameobj, "h12");//accepts 1d hist?//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
 
     //SliceAndFit(choosenfilenameobj, "h18_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// smeared
-    SliceAndFit(choosenfilenameobj, "h34_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// position
-    SliceAndFit(choosenfilenameobj, "h35_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair
-    SliceAndFit(choosenfilenameobj, "h100_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair
+    //SliceAndFit(choosenfilenameobj, "h34_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// position
+    //SliceAndFit(choosenfilenameobj, "h35_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair
+    
+    //SliceAndFit(choosenfilenameobj, "h30_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts, no pos res, no occupancy
+    //SliceAndFit(choosenfilenameobj, "h31_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts + pos res, no occupancy
+    //SliceAndFit(choosenfilenameobj, "h100_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts + pos + occupancy
+    //SliceAndFit(choosenfilenameobj, "h34_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// no cuts+ pos res
+    //SliceAndFit(choosenfilenameobj, "h35_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts+ occupancy
+    //SliceAndFit(choosenfilenameobj, "h18_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts, no pos res, no occupancy
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
 }    
 
@@ -110,7 +118,7 @@ filename_object choosecomparisontype(int choosetype){
         filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.filenamemod="weightmethod_co1_ac1";
         //filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";  
-        filename_object1.plotxlims={0.9,6.4};//min, max
+        filename_object1.plotxlims={0.9,30};//min, max6.4
         filename_object1.plotylims={0.13,0.17,0.0,0.25,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff=6;
         filename_object1.binres=2;
@@ -567,7 +575,9 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     hist2D->SetMarkerColor(kYellow);
     // Fit slices projected along Y fron bins in X [1,64] with more than 2 bins in Y filled
     TObjArray aSlices;//owner of slices?
+    hist2D->GetXaxis()->SetRangeUser(0, 30);
     hist2D->FitSlicesY(0, 0, -1, 0,"QNR", &aSlices);//, "EMW" "QNR",L-log likelihood
+    
     aSlices.SetOwner(kTRUE);
     //
 
@@ -589,7 +599,6 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     hIntegrals->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
     gPad->SetLogy();
     hIntegrals->Draw();
-
 
     c1->cd(3);
     gPad->SetTopMargin(0.12);
@@ -655,7 +664,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 }
 
 //misc operations
-void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName) {
+void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName, const char* NewhistogramName) {
     // Open the source file
     TFile sourceFile(sourceFileName, "READ");
     if (!sourceFile.IsOpen()) {
@@ -664,9 +673,16 @@ void transferHistogram(const char* sourceFileName, const char* histogramName, co
     }
 
     // Retrieve the histogram
-    TH1* histogram = dynamic_cast<TH1*>(sourceFile.Get(histogramName));
-    if (!histogram) {
+    TObject* obj = sourceFile.Get(histogramName);
+    if (!obj) {
         std::cerr << "Error: Histogram not found in source file!" << std::endl;
+        sourceFile.Close();
+        return;
+    }
+
+    TH1* histogram = dynamic_cast<TH1*>(obj);
+    if (!histogram) {
+        std::cerr << "Error: Object is not a histogram!" << std::endl;
         sourceFile.Close();
         return;
     }
@@ -676,6 +692,9 @@ void transferHistogram(const char* sourceFileName, const char* histogramName, co
 
     // Close the source file
     sourceFile.Close();
+
+    // Change the name of the histogram
+    histogram->SetName(NewhistogramName);
 
     // Open the target file
     TFile targetFile(targetFileName, "UPDATE");
