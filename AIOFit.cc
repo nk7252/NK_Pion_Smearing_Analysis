@@ -42,39 +42,62 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
 void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName, const char* NewhistogramName);
 void SliceAndFit(filename_object filenameobj, const char* histName, const char* fileName);
+void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype);
+
 
 
 
 void AIOFit() {
-    transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass", "pioncode/rootfiles/Pi0FastMC_0.155000.root", "h_InvMass_Single_pi0");
-    transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", "pioncode/rootfiles/Pi0FastMC_0.235000.root", "h_InvMass_data");
-    transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", "pioncode/rootfiles/Pi0FastMC_0.155000.root", "h_pTdiff_InvMass_Single_pi0");
+
+///*
+    const char* destinationhist="pioncode/rootfiles/Pi0FastMC_0.211000.root";
+
+    //transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", destinationhist, "h_InvMass_data");
+
+    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass", destinationhist, "h_InvMass_Single_pi0");
+
+    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
+//*/
+
     // 0=weight type
     int fileset = 0;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
     //std::vector<std::string> HistList={"h18_","h27_","h29_","h28_"};
     //std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. cluster","Smeared Pion pT vs Inv Mass. asymm cut","Smeared Pion pT vs Inv Mass. clust+asymm"};
 
+//*
     std::vector<std::string> HistList={"h30_","h35_","h31_","h100_"};
-    std::vector<std::string> HistLegend={"Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy","Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts+cluster","Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts+pos res","Smeared Pion Pt vs Smeared Inv Mass, weighted. All Cuts+effects"};
+    std::vector<std::string> HistLegend={"Cuts","Cuts+Cluster","Cuts+Pos_Res","Cuts+CL+PR"};
 
     GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
-    
+//*/    
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
     //plotOverlayedHistograms(choosenfilenameobj, "h12");//accepts 1d hist?//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
 
-    //SliceAndFit(choosenfilenameobj, "h18_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// smeared
-    //SliceAndFit(choosenfilenameobj, "h34_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// position
-    //SliceAndFit(choosenfilenameobj, "h35_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair
+    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.211000.root";
+//*
+    //SliceAndFit(choosenfilenameobj, "h18_2", sourcehistfile);// smeared
+    //SliceAndFit(choosenfilenameobj, "h34_2", sourcehistfile);// position res
     
-    //SliceAndFit(choosenfilenameobj, "h30_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts, no pos res, no occupancy
-    //SliceAndFit(choosenfilenameobj, "h31_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts + pos res, no occupancy
-    //SliceAndFit(choosenfilenameobj, "h100_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts + pos + occupancy
-    //SliceAndFit(choosenfilenameobj, "h34_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// no cuts+ pos res
-    //SliceAndFit(choosenfilenameobj, "h35_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts+ occupancy
-    //SliceAndFit(choosenfilenameobj, "h18_2", "pioncode/rootfiles/Pi0FastMC_0.155000.root");// Blair cuts, no pos res, no occupancy
+    SliceAndFit(choosenfilenameobj, "h30_2", sourcehistfile);// just cuts
+    SliceAndFit(choosenfilenameobj, "h31_2", sourcehistfile);// cuts + pos res
+    //SliceAndFit(choosenfilenameobj, "h35_2", sourcehistfile);// cuts + occupancy
+
+    //SliceAndFit(choosenfilenameobj, "h100_2", sourcehistfile);// cuts + pos + occupancy
+//*/
+    //int histtype= 0=fastmc, 1=geant, 2=data?
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0",  1.0, 0.11, 0.18 , 40, 0.4, 1);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4);
+    //h_InvMass_Single_pi0 h_InvMass_data
+
+    //ScaleHistogramErrorsAndFit(233, "pioncode/rootfiles/Pi0FastMC_0.233000.root", "h100_1d_2",  1.1, 0.09, 0.23 , 40, 0.4)
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
+
+    // Code to exit ROOT after running the macro
+    //gApplication->Terminate(0);
 }    
 
 int extractNumber(const std::string& filepath) {
@@ -113,7 +136,7 @@ filename_object choosecomparisontype(int choosetype){
     filename_object filename_object1;// 0=weight type, 1=ac on/off, 2=co on/off, 3=ac&co on/off
     if(choosetype==0){
         //filename_object weightfilenameobj;
-        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.155000.root"};
+        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.211000.root"};
         filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.filenamemod="weightmethod_co1_ac1";
@@ -540,7 +563,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 	//double binres=2;
 
     cout <<"\n"<< "processing:" << fileName << " Histogram: " << histName << "\n";
-    TFile *pionfile = new TFile(filenameobj.fileNames[0].c_str(), "READ"); 
+    TFile *pionfile = new TFile(fileName, "READ"); 
     if (!pionfile || pionfile->IsZombie()) {
         std::cerr << "Error opening file." << std::endl;
         // Handle error or return
@@ -663,6 +686,103 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     delete pionfile;
 }
 
+void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype) {//filename_object filenameobj,
+//)
+    cout <<"\n"<< "processing: " << fileName << " Histogram: " << histName << "\n" << " With Error scaled by: " << errorScaleFactor << "\n" << " Fit from " << fitRangeLow << " to " << fitRangeHigh  <<"\n";
+    TFile *pionfile = new TFile(fileName, "READ"); 
+    if (!pionfile || pionfile->IsZombie()) {
+        std::cerr << "Error opening file." << std::endl;
+        // Handle error or return
+    }
+    //TH2F* hist2D = dynamic_cast<TH2F*>(pionfile->Get(histName));
+    TH1F *hist1D = (TH1F *)pionfile->Get(histName);
+    if (!hist1D) {
+        std::cerr << "Histogram not found." << std::endl;
+        // Handle error or return
+    }
+    // Rebin the histogram to have 'numBins' bins
+    // First, calculate the rebin factor assuming the histogram's range is 0 to maxXRange
+    int currentNumBins = hist1D->GetNbinsX();
+    double currentXMax = hist1D->GetXaxis()->GetXmax();
+    int rebinFactor = currentNumBins / numBins;
+    if (rebinFactor > 1) { // Only rebin if the factor is greater than 1
+        std::cout << "rebin by: " << rebinFactor << std::endl;
+        hist1D->Rebin(rebinFactor);
+    }
+    
+    // Set the maximum range on the x-axis to maxXRange
+    // Note: This should be done after rebinning to maintain consistent bin widths
+    hist1D->GetXaxis()->SetRangeUser(hist1D->GetXaxis()->GetXmin(), maxXRange);
+
+    // Scale the error bars
+    if(errorScaleFactor>1){
+    std::cout << "rescaling error bars by: " << errorScaleFactor << std::endl;
+        for (int i = 1; i <= hist1D->GetNbinsX(); ++i) {
+            double originalError = hist1D->GetBinError(i);
+            hist1D->SetBinError(i, originalError * errorScaleFactor);
+        }  
+    }
+    
+
+    ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+    // Fit a Gaussian to the histogram within the specified range
+    TF1* gaussFit = new TF1("gaussFit", "gaus", fitRangeLow, fitRangeHigh);
+    //hist1D->Fit(gaussFit, "WRQM"); // initial fit paramaters
+    hist1D->Fit(gaussFit, "RM"); // 
+
+    // Create a canvas to draw the histogram and fit
+    TString canvasname = Form("%s_PeakFit_%d_Thousandths_escale_%f",histName, Esmearfactor ,errorScaleFactor); 
+    TCanvas* c1 = new TCanvas(canvasname, canvasname, 800, 600);
+    hist1D->SetMinimum(0.0);
+    hist1D->Draw("E"); // Draw histogram with error bars
+    gaussFit->Draw("SAME"); // Draw the fit on the same canvas
+    gPad->Modified();
+    gPad->Update();
+    std::cout << "Chi-squared: " << gaussFit->GetChisquare() << std::endl;
+    std::cout << "Number of Degrees of Freedom: " << gaussFit->GetNDF() << std::endl;
+    std::cout << "Chi-squared/NDF: " << gaussFit->GetChisquare()/gaussFit->GetNDF() << std::endl;
+    std::cout << "Relative Width: " << gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1) << std::endl;
+
+    //const char *pdfname = canvasname;
+    // Print the canvas to a file
+    c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", canvasname.Data()));
+
+
+    // Second canvas: Custom list of fit results
+    TCanvas* c2 = new TCanvas("canvas2", "Fit Parameters", 800, 600);
+    c2->cd();
+
+    TPaveText* pt = new TPaveText(0.1, 0.1, 0.9, 0.9, "blNDC"); // blNDC: borderless, normalized coordinates
+    pt->SetTextAlign(12); // Align text to the left
+    pt->SetFillColor(0); // Transparent background
+
+    // Adding custom text entries
+    pt->AddText(Form("Hist = %s", histName));
+    pt->AddText("Fit Parameters:");
+    pt->AddText(Form("Fit Range = %f to %f", fitRangeLow, fitRangeHigh));
+    pt->AddText(Form("Mean = %f +/- %f", gaussFit->GetParameter(1), gaussFit->GetParError(1)));
+    pt->AddText(Form("Sigma = %f +/- %f", gaussFit->GetParameter(2), gaussFit->GetParError(2)));
+    pt->AddText(Form("Relative Width: %f",gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1)));   
+    pt->AddText(Form("Chi2/NDF = %f / %d= %f", gaussFit->GetChisquare(), gaussFit->GetNDF(),gaussFit->GetChisquare()/gaussFit->GetNDF()));
+    if(histtype==0){
+        pt->AddText("smearing details:");
+        pt->AddText(Form("E smear = %.1f percent", Esmearfactor/10.f ));
+        pt->AddText("Pos res = 2.8 mm ");
+        pt->AddText("Cluster prob=off for h31,\n 1 percent for h100");
+    }
+    if(histtype==0 ||histtype==1) pt->AddText("Pions Generated from 0.2-10 GeV");
+
+    // You can add more custom lines as needed
+    // pt->AddText("Additional Info: ...");
+
+    pt->Draw();
+    c2->SaveAs(Form("pioncode/canvas_pdf/FitInfo_%s.pdf", canvasname.Data()));
+
+    // Clean up
+    delete c1; // Automatically deletes gaussFit as well since it's drawn on the canvas
+    delete c2; // Automatically deletes gaussFit as well since it's drawn on the canvas
+}
+
 //misc operations
 void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName, const char* NewhistogramName) {
     // Open the source file
@@ -709,4 +829,6 @@ void transferHistogram(const char* sourceFileName, const char* histogramName, co
     // Close the target file
     targetFile.Close();
 }
+
+
 

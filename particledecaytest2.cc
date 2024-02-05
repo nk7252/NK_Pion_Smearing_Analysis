@@ -31,7 +31,7 @@ int main(){
 	timer.Start();
 	int NPions = 1 * 1000000;//
 	// int n_bins=1+ceil(log2(Nevents));
-	int PT_Max = 20; // 64 normally, [0.2,10] to compare to geant sim
+	int PT_Max = 64; // 64 normally, [0.2,10] to compare to geant sim
 	float PT_Min = 0.2;	 // cross check to elimate power law problems
 	double PT_ratio = PT_Min / PT_Max;
 	int MassNBins =40;
@@ -50,12 +50,14 @@ int main(){
 	int asymcut=1;//apply asymm cut.
 	float asymval= 0.6;
 	int clusteroverlay = 1;//overlayed cluster check
-	float coprob=0.95;//random numbers(0-1) greater than this value will have some smearing added.
+	float coprob=0.99;//random numbers(0-1) greater than this value will have some smearing added.
 
 	//Blair specific cuts
 	float DeltaRcut_MAX = 1.1; 
 	float pt1cut =1.3;   
-	float pt2cut =0.7; 
+	float pt2cut =0.7;
+	float ptMaxCut =7;
+	float nclus_ptCut =0.5;
 	//nclus is not something I can do here is it          
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
@@ -82,12 +84,12 @@ int main(){
 	TF1 *myFunc;
 	myFunc=ChooseSpectrumFunction(2, PT_Min, PT_Max);
 
-	for (int smear_factor_itt = 23; smear_factor_itt < 28 + 1; smear_factor_itt++)
+	for (int smear_factor_itt = 0; smear_factor_itt < 5 + 1; smear_factor_itt++)
 	{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 	// only want .155
-		//float smear_factor_basevalue = 0.065; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
+		float smear_factor_basevalue = 0.21; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
-		float smear_factor_b =0.005 +  0.01 * smear_factor_itt;//smear_factor_basevalue +
+		float smear_factor_b =smear_factor_basevalue+ 0.001 * smear_factor_itt;//smear_factor_basevalue +
 		//float smear_factor_b = 0.03;
 		//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 		//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
@@ -449,6 +451,10 @@ int main(){
 					gamma_position_smear[1]=PositionResSmear(gamma_smeared[1], posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear), posit_smearingFactor*gamma_positsmear(gen_gammapositsmear));
 					gamma_position_smear[2]=gamma_position_smear[0]+gamma_position_smear[1];
 					inv_mass_smeared = gamma_smeared[2].mCalc();
+					
+
+
+
 					// diagnostic
 					//std::cout << "photon 1, unsmr: px= " << gamma_lorentz[0].px() << " , py= " << gamma_lorentz[0].py() << " , pz= " <<gamma_lorentz[0].pz() << " , pT= " <<gamma_lorentz[0].pT() << " , E= " <<gamma_lorentz[0].e() <<std::endl;
 
@@ -471,6 +477,9 @@ int main(){
 					//h29->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield);
 					//continue;
 					}*/
+					
+
+
 					for (int p=0; p < WeightNames.size(); p++){//weighted histograms
 						//h2[p]->Fill(pythia.event[Gamma_daughters[0]].pT(), inv_yield[p]);
 						//h2[p]->Fill(pythia.event[Gamma_daughters[1]].pT(), inv_yield[p]);
@@ -498,20 +507,19 @@ int main(){
 							h29[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);// asymm
 							h28[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield[p]);//
 
-
-							if(DeltaRcut(gamma_smeared[0], gamma_smeared[1], DeltaRcut_MAX)==false && pTCut(gamma_smeared[0], pt1cut)==true && pTCut(gamma_smeared[1], pt2cut)==true){
+							if(DeltaRcut(gamma_smeared[0], gamma_smeared[1], DeltaRcut_MAX)==false && pTCut(gamma_smeared[0], pt1cut)==true && pTCut(gamma_smeared[1], pt2cut)==true && nclus_ptCut<gamma_smeared[0].pT()<ptMaxCut && nclus_ptCut<gamma_smeared[1].pT()<ptMaxCut && gamma_smeared[2].pT()>1.22*(pt1cut+pt2cut)){
 								h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);// data+mc cuts, no pos res or occupancy
 								h30_1d[p]->Fill(gamma_smeared[2].mCalc(), inv_yield[p]);
 							}
-							if(DeltaRcut(gamma_Blair_position[0], gamma_Blair_position[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_position[0], pt1cut)==true && pTCut(gamma_Blair_position[1], pt2cut)==true){
+							if(DeltaRcut(gamma_Blair_position[0], gamma_Blair_position[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_position[0], pt1cut)==true && pTCut(gamma_Blair_position[1], pt2cut)==true  && nclus_ptCut<gamma_Blair_position[0].pT()<ptMaxCut && nclus_ptCut<gamma_Blair_position[1].pT()<ptMaxCut && gamma_Blair_position[2].pT()>1.22*(pt1cut+pt2cut)){
 								h31[p]->Fill(gamma_Blair_position[2].pT(), gamma_Blair_position[2].mCalc(), inv_yield[p]);// data+mc cuts,  pos res on ,no occupancy
 								h31_1d[p]->Fill(gamma_Blair_position[2].mCalc(), inv_yield[p]);
 							}
-							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[1], pt2cut)==true){
+							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[1], pt2cut)==true  && nclus_ptCut<gamma_Blair_Cuts[0].pT()<ptMaxCut && nclus_ptCut<gamma_Blair_Cuts[1].pT()<ptMaxCut && gamma_Blair_Cuts[2].pT()>1.22*(pt1cut+pt2cut)){
 								h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);// data+mc cuts,  pos res off , occupancy on
 								h35_1d[p]->Fill(gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
 							}
-							if(DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_All_Cuts[0], pt1cut)==true && pTCut(gamma_All_Cuts[1], pt2cut)==true){
+							if(DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_All_Cuts[0], pt1cut)==true && pTCut(gamma_All_Cuts[1], pt2cut)==true  && nclus_ptCut<gamma_All_Cuts[0].pT()<ptMaxCut && nclus_ptCut<gamma_All_Cuts[1].pT()<ptMaxCut && gamma_All_Cuts[2].pT()>1.22*(pt1cut+pt2cut)){
 								h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);// blair+pos+occupancy
 								h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
 							}
