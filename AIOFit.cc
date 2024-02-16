@@ -54,7 +54,7 @@ void AIOFit() {
 
     //transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", destinationfile, "h_InvMass_data");
 
-    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_130", destinationfile, "h_InvMass_Single_pi0_smear13");
+    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_131", destinationfile, "h_InvMass_Single_pi0_smear13_1");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
 //*/
@@ -90,9 +90,8 @@ void AIOFit() {
     //int histtype= 0=fastmc, 1=geant, 2=data?
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear13",  1.0, 0.08, 0.17 , 40, 0.4, 1);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear13",  1.0, 0.09, 0.17 , 40, 0.4, 1);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear13",  1.0, 0.10, 0.17 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear13",  1.0, 0.10, 0.18 , 40, 0.4, 1);
+
 
 
 
