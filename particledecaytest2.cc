@@ -74,8 +74,8 @@ int main(){
 	float smeared_lower_bin_limit = 0.0;
 	float smeared_upper_bin_limit = 0.4;
 	float smear_factor_a = 0;
-	float smear_factor_d = 0.02;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
-	float smear_factor_c = 0.028; // first parameter in test beam parameterization?
+	float smear_factor_d = 0.0;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
+	float smear_factor_c = 0.02; // first parameter in test beam parameterization? 2.8 in test beam.
 	float posit_smearingFactor = 2.8; // Example smearing factor for position. use half of phnx pos res(simplified) try 2.8 mm. can set the scale to whatever I want, so I will use mm.
 
 	//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
