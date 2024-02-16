@@ -54,7 +54,7 @@ void AIOFit() {
 
     //transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", destinationfile, "h_InvMass_data");
 
-    transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_130", destinationfile, "h_InvMass_Single_pi0_smear13");
+    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_130", destinationfile, "h_InvMass_Single_pi0_smear13");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
 //*/
@@ -69,7 +69,7 @@ void AIOFit() {
     std::vector<std::string> HistList={"h30_","h35_","h31_","h100_"};
     std::vector<std::string> HistLegend={"Cuts","Cuts+Cluster","Cuts+Pos_Res","Cuts+CL+PR"};
 
-    GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
+    //GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
 //*/    
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
@@ -80,16 +80,23 @@ void AIOFit() {
     //SliceAndFit(choosenfilenameobj, "h18_2", sourcehistfile);// smeared
     //SliceAndFit(choosenfilenameobj, "h34_2", sourcehistfile);// position res
     
-    SliceAndFit(choosenfilenameobj, "h30_2", sourcehistfile);// just cuts
-    SliceAndFit(choosenfilenameobj, "h31_2", sourcehistfile);// cuts + pos res
+    //SliceAndFit(choosenfilenameobj, "h30_2", sourcehistfile);// just cuts
+    //SliceAndFit(choosenfilenameobj, "h31_2", sourcehistfile);// cuts + pos res
     //SliceAndFit(choosenfilenameobj, "h35_2", sourcehistfile);// cuts + occupancy
 
     //SliceAndFit(choosenfilenameobj, "h100_2", sourcehistfile);// cuts + pos + occupancy
 //*/
+    //void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype)
     //int histtype= 0=fastmc, 1=geant, 2=data?
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear13",  1.0, 0.11, 0.18 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear13",  1.0, 0.08, 0.17 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear13",  1.0, 0.09, 0.17 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear13",  1.0, 0.10, 0.17 , 40, 0.4, 1);
+
+
+
+
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4);
     //h_InvMass_Single_pi0 h_InvMass_data
 
@@ -686,8 +693,10 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     delete pionfile;
 }
 
-void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype) {//filename_object filenameobj,
-//)
+void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype) {
+    //filename_object filenameobj,
+    ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+
     cout <<"\n"<< "processing: " << fileName << " Histogram: " << histName << "\n" << " With Error scaled by: " << errorScaleFactor << "\n" << " Fit from " << fitRangeLow << " to " << fitRangeHigh  <<"\n";
     TFile *pionfile = new TFile(fileName, "READ"); 
     if (!pionfile || pionfile->IsZombie()) {
@@ -723,12 +732,10 @@ void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const ch
         }  
     }
     
-
-    ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
     // Fit a Gaussian to the histogram within the specified range
     TF1* gaussFit = new TF1("gaussFit", "gaus", fitRangeLow, fitRangeHigh);
     //hist1D->Fit(gaussFit, "WRQM"); // initial fit paramaters
-    hist1D->Fit(gaussFit, "RM"); // 
+    hist1D->Fit(gaussFit, "R"); // what does M do? Improve algorithm of tminuit. E is error est by Minos technique L log likelihood
 
     // Create a canvas to draw the histogram and fit
     TString canvasname = Form("%s_PeakFit_%d_Thousandths_escale_%f",histName, Esmearfactor ,errorScaleFactor); 
