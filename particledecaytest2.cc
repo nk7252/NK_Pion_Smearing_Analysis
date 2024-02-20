@@ -43,7 +43,7 @@ int main(){
 
 
 	//-----------------------------------set weighting method
-	//int weightmethod = 3;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
+	int weightmethod = 2;//0=exp,1=power,2=wshp, 3=hagedorn(not implemented)
 	std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP","HAGEDORN"};
 	//-----------------------------------
 	//cuts
@@ -75,26 +75,26 @@ int main(){
 	float smeared_upper_bin_limit = 0.4;
 	float smear_factor_a = 0;
 	float smear_factor_d = 0.0;  // 0.02;// test trying to include the beam momentum resolution.. will set to zero for now
-	float smear_factor_c = 0.02; // first parameter in test beam parameterization? 2.8 in test beam.
+	//float smear_factor_c = 0.02; // first parameter in test beam parameterization? 2.8 in test beam.
 	float posit_smearingFactor = 2.8; // Example smearing factor for position. use half of phnx pos res(simplified) try 2.8 mm. can set the scale to whatever I want, so I will use mm.
 
 	//std::cout << "Processing: " << WeightNames[weightmethod] << std::endl;
 	//----------------------pion spectrum function for clusteroverlay
 	// reserve a TF1 for the chosen function just in case
 	TF1 *myFunc;
-	myFunc=ChooseSpectrumFunction(2, PT_Min, PT_Max);
+	myFunc=ChooseSpectrumFunction(weightmethod, PT_Min, PT_Max);
 
-	for (int smear_factor_itt = 0; smear_factor_itt < 5 + 1; smear_factor_itt++)
+	for (int smear_factor_itt = 0; smear_factor_itt < 15 + 1; smear_factor_itt++)
 	{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 	// only want .155
-		float smear_factor_basevalue = 0.21; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
+		float smear_factor_basevalue = 2.0; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
-		float smear_factor_b =smear_factor_basevalue+ 0.001 * smear_factor_itt;//smear_factor_basevalue +
-		//float smear_factor_b = 0.03;
+		float smear_factor_c =smear_factor_basevalue + 0.01 * smear_factor_itt;//constant term
+		float smear_factor_b = 0.154;//sqrt(E) term
 		//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 		//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
 
-		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f.root", smear_factor_b), "recreate");//
+		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_sqrte_%f_const.root", smear_factor_b, smear_factor_c), "recreate");//
 
 		//TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s_ac%i_co%i.root", smear_factor_b, WeightNames[weightmethod].c_str(), asymcut, clusteroverlay), "recreate");//
 		TTree *tree = new TTree("tree", "tree");
