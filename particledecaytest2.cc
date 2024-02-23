@@ -87,14 +87,13 @@ int main(){
 	for (int smear_factor_itt = 0; smear_factor_itt < 15 + 1; smear_factor_itt++)
 	{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 	// only want .155
-		float smear_factor_basevalue = 2.0; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
+		float smear_factor_basevalue = 0.02; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
 		float smear_factor_c =smear_factor_basevalue + 0.01 * smear_factor_itt;//constant term
 		float smear_factor_b = 0.154;//sqrt(E) term
 		//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 		//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
-
-		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_sqrte_%f_const.root", smear_factor_b, smear_factor_c), "recreate");//
+		TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_sqrte_%f_const.root", smear_factor_b , smear_factor_c ), "recreate");//
 
 		//TFile *output = new TFile(Form("pioncode/rootfiles/Pi0FastMC_%f_%s_ac%i_co%i.root", smear_factor_b, WeightNames[weightmethod].c_str(), asymcut, clusteroverlay), "recreate");//
 		TTree *tree = new TTree("tree", "tree");

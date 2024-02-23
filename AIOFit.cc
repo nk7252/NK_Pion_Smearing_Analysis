@@ -50,7 +50,7 @@ void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const ch
 void AIOFit() {
 
 ///*
-    const char* destinationfile="pioncode/rootfiles/Pi0FastMC_0.211000.root";
+    const char* destinationfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.060000_const.root";
 
     //transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", destinationfile, "h_InvMass_data");
 
@@ -77,7 +77,7 @@ void AIOFit() {
     //OverlaySigmaOverMean(choosenfilenameobj);
     //plotOverlayedHistograms(choosenfilenameobj, "h12");//accepts 1d hist?//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
 
-    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.211000.root";
+    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";
 //*
     //SliceAndFit(choosenfilenameobj, "h18_2", sourcehistfile);// smeared
     //SliceAndFit(choosenfilenameobj, "h34_2", sourcehistfile);// position res
@@ -88,13 +88,14 @@ void AIOFit() {
 
     //SliceAndFit(choosenfilenameobj, "h100_2", sourcehistfile);// cuts + pos + occupancy
 //*/
+    //extractNumber(sourcehistfile)
     //void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype)
     //int histtype= 0=fastmc, 1=geant, 2=data?
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
+    ScaleHistogramErrorsAndFit(154000, sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear12_5",  1.0, 0.10, 0.18 , 40, 0.4, 1);
 
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_weighted",  1.0, 0.10, 0.18 , 40, 0.4, 1);
+   // ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_weighted",  1.0, 0.10, 0.18 , 40, 0.4, 1);
 
 
 
