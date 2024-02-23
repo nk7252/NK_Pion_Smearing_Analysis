@@ -97,16 +97,11 @@ void AIOFit() {
 
    // ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_weighted",  1.0, 0.10, 0.18 , 40, 0.4, 1);
 
-
-
-
-
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4);
-    //h_InvMass_Single_pi0 h_InvMass_data
+    
+    //ProcessTH3IntoGraphs("your_file.root", "your_th3_name", 10, "results.pdf");
 
-    //ScaleHistogramErrorsAndFit(233, "pioncode/rootfiles/Pi0FastMC_0.233000.root", "h100_1d_2",  1.1, 0.09, 0.23 , 40, 0.4)
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
-
     // Code to exit ROOT after running the macro
     //gApplication->Terminate(0);
 }    
@@ -564,6 +559,103 @@ TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int fir
     return hist1D;
 }
 
+void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype) {
+    //filename_object filenameobj,
+    ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+
+    cout <<"\n"<< "processing: " << fileName << " Histogram: " << histName << "\n" << " With Error scaled by: " << errorScaleFactor << "\n" << " Fit from " << fitRangeLow << " to " << fitRangeHigh  <<"\n";
+    TFile *pionfile = new TFile(fileName, "READ"); 
+    if (!pionfile || pionfile->IsZombie()) {
+        std::cerr << "Error opening file." << std::endl;
+        // Handle error or return
+    }
+    //TH2F* hist2D = dynamic_cast<TH2F*>(pionfile->Get(histName));
+    TH1F *hist1D = (TH1F *)pionfile->Get(histName);
+    if (!hist1D) {
+        std::cerr << "Histogram not found." << std::endl;
+        // Handle error or return
+    }
+    // Rebin the histogram to have 'numBins' bins
+    // First, calculate the rebin factor assuming the histogram's range is 0 to maxXRange
+    int currentNumBins = hist1D->GetNbinsX();
+    double currentXMax = hist1D->GetXaxis()->GetXmax();
+    int rebinFactor = currentNumBins / numBins;
+    if (rebinFactor > 1) { // Only rebin if the factor is greater than 1
+        std::cout << "rebin by: " << rebinFactor << std::endl;
+        hist1D->Rebin(rebinFactor);
+    }
+    
+    // Set the maximum range on the x-axis to maxXRange
+    // Note: This should be done after rebinning to maintain consistent bin widths
+    hist1D->GetXaxis()->SetRangeUser(hist1D->GetXaxis()->GetXmin(), maxXRange);
+
+    // Scale the error bars
+    if(errorScaleFactor>1){
+    std::cout << "rescaling error bars by: " << errorScaleFactor << std::endl;
+        for (int i = 1; i <= hist1D->GetNbinsX(); ++i) {
+            double originalError = hist1D->GetBinError(i);
+            hist1D->SetBinError(i, originalError * errorScaleFactor);
+        }  
+    }
+    
+    // Fit a Gaussian to the histogram within the specified range
+    TF1* gaussFit = new TF1("gaussFit", "gaus", fitRangeLow, fitRangeHigh);
+    //hist1D->Fit(gaussFit, "WRQM"); // initial fit paramaters
+    hist1D->Fit(gaussFit, "R"); // what does M do? Improve algorithm of tminuit. E is error est by Minos technique L log likelihood
+
+    // Create a canvas to draw the histogram and fit
+    TString canvasname = Form("%s_PeakFit_%d_Thousandths_escale_%f",histName, Esmearfactor ,errorScaleFactor); 
+    TCanvas* c1 = new TCanvas(canvasname, canvasname, 800, 600);
+    hist1D->SetMinimum(0.0);
+    hist1D->Draw("E"); // Draw histogram with error bars
+    gaussFit->Draw("SAME"); // Draw the fit on the same canvas
+    gPad->Modified();
+    gPad->Update();
+    std::cout << "Chi-squared: " << gaussFit->GetChisquare() << std::endl;
+    std::cout << "Number of Degrees of Freedom: " << gaussFit->GetNDF() << std::endl;
+    std::cout << "Chi-squared/NDF: " << gaussFit->GetChisquare()/gaussFit->GetNDF() << std::endl;
+    std::cout << "Relative Width: " << gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1) << std::endl;
+
+    //const char *pdfname = canvasname;
+    // Print the canvas to a file
+    c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", canvasname.Data()));
+
+
+    // Second canvas: Custom list of fit results
+    TCanvas* c2 = new TCanvas("canvas2", "Fit Parameters", 800, 600);
+    c2->cd();
+
+    TPaveText* pt = new TPaveText(0.1, 0.1, 0.9, 0.9, "blNDC"); // blNDC: borderless, normalized coordinates
+    pt->SetTextAlign(12); // Align text to the left
+    pt->SetFillColor(0); // Transparent background
+
+    // Adding custom text entries
+    pt->AddText(Form("Hist = %s", histName));
+    pt->AddText("Fit Parameters:");
+    pt->AddText(Form("Fit Range = %f to %f", fitRangeLow, fitRangeHigh));
+    pt->AddText(Form("Mean = %f +/- %f", gaussFit->GetParameter(1), gaussFit->GetParError(1)));
+    pt->AddText(Form("Sigma = %f +/- %f", gaussFit->GetParameter(2), gaussFit->GetParError(2)));
+    pt->AddText(Form("Relative Width: %f",gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1)));   
+    pt->AddText(Form("Chi2/NDF = %f / %d= %f", gaussFit->GetChisquare(), gaussFit->GetNDF(),gaussFit->GetChisquare()/gaussFit->GetNDF()));
+    if(histtype==0){
+        pt->AddText("smearing details:");
+        pt->AddText(Form("E smear = %.1f percent", Esmearfactor/10.f ));
+        pt->AddText("Pos res = 2.8 mm ");
+        pt->AddText("Cluster prob=off for h31,\n 1 percent for h100");
+    }
+    if(histtype==0 ||histtype==1) pt->AddText("Pions Generated from 0.2-10 GeV");
+
+    // You can add more custom lines as needed
+    // pt->AddText("Additional Info: ...");
+
+    pt->Draw();
+    c2->SaveAs(Form("pioncode/canvas_pdf/FitInfo_%s.pdf", canvasname.Data()));
+
+    // Clean up
+    delete c1; // Automatically deletes gaussFit as well since it's drawn on the canvas
+    delete c2; // Automatically deletes gaussFit as well since it's drawn on the canvas
+}
+
 // 2d hist fitting and metrics
 void SliceAndFit(filename_object filenameobj, const char* histName, const char* fileName){
     //ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
@@ -697,101 +789,76 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     delete pionfile;
 }
 
-void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype) {
-    //filename_object filenameobj,
-    ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+// 3d hist fitting functions
 
-    cout <<"\n"<< "processing: " << fileName << " Histogram: " << histName << "\n" << " With Error scaled by: " << errorScaleFactor << "\n" << " Fit from " << fitRangeLow << " to " << fitRangeHigh  <<"\n";
-    TFile *pionfile = new TFile(fileName, "READ"); 
-    if (!pionfile || pionfile->IsZombie()) {
-        std::cerr << "Error opening file." << std::endl;
-        // Handle error or return
+void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histName, int nSlices, const std::string& pdfName) {
+    // Step 1: Slice the TH3 histogram
+    auto slices = SliceTH3(fileName, histName, nSlices);
+    if (slices.empty()) {
+        std::cerr << "Failed to slice the TH3 histogram or file/histogram not found." << std::endl;
+        return;
     }
-    //TH2F* hist2D = dynamic_cast<TH2F*>(pionfile->Get(histName));
-    TH1F *hist1D = (TH1F *)pionfile->Get(histName);
-    if (!hist1D) {
-        std::cerr << "Histogram not found." << std::endl;
-        // Handle error or return
+
+    // Prepare a canvas for drawing
+    TCanvas canvas("canvas", "Canvas", 800, 600);
+    canvas.Print((pdfName + "[").c_str()); // Open the PDF
+
+    // Step 2: Fit and Generate Graphs
+    std::vector<TGraphErrors*> graphs;
+    for (size_t i = 0; i < slices.size(); ++i) {
+        TGraphErrors* graph = FitAndGenerateGraph(slices[i], i);
+        graphs.push_back(graph);
+
+        // Optionally draw the slice and the graph for visualization
+        slices[i]->Draw("COLZ");
+        graph->Draw("PSAME");
+        canvas.Print(pdfName.c_str());
     }
-    // Rebin the histogram to have 'numBins' bins
-    // First, calculate the rebin factor assuming the histogram's range is 0 to maxXRange
-    int currentNumBins = hist1D->GetNbinsX();
-    double currentXMax = hist1D->GetXaxis()->GetXmax();
-    int rebinFactor = currentNumBins / numBins;
-    if (rebinFactor > 1) { // Only rebin if the factor is greater than 1
-        std::cout << "rebin by: " << rebinFactor << std::endl;
-        hist1D->Rebin(rebinFactor);
+
+    canvas.Print((pdfName + "]").c_str()); // Close the PDF
+
+    // Cleanup
+    for (auto* slice : slices) delete slice;
+    for (auto* graph : graphs) delete graph;
+}
+
+TGraphErrors* FitAndGenerateGraph(TH2* slice, int index) {
+    int ptBins = slice->GetNbinsX();
+    double* x = new double[ptBins];
+    double* y = new double[ptBins];
+    double* ex = new double[ptBins]; // Error in x, could be set to zero if not needed
+    double* ey = new double[ptBins]; // Error in y
+
+    for (int i = 1; i <= ptBins; ++i) {
+        TH1D* proj = slice->ProjectionY("_py", i, i, "e");
+        if (proj->GetEntries() > 0) {
+            TF1* fitFunc = new TF1("fitFunc", "gaus", proj->GetXaxis()->GetXmin(), proj->GetXaxis()->GetXmax());
+            proj->Fit(fitFunc, "Q");
+
+            x[i-1] = slice->GetXaxis()->GetBinCenter(i);
+            y[i-1] = fitFunc->GetParameter(1); // Mean of the Gaussian
+            ex[i-1] = 0; // Assuming constant bin width, this could be ignored or set to bin width / 2
+            ey[i-1] = fitFunc->GetParError(1); // Error on the mean
+
+            delete fitFunc;
+        }
+        delete proj;
     }
-    
-    // Set the maximum range on the x-axis to maxXRange
-    // Note: This should be done after rebinning to maintain consistent bin widths
-    hist1D->GetXaxis()->SetRangeUser(hist1D->GetXaxis()->GetXmin(), maxXRange);
 
-    // Scale the error bars
-    if(errorScaleFactor>1){
-    std::cout << "rescaling error bars by: " << errorScaleFactor << std::endl;
-        for (int i = 1; i <= hist1D->GetNbinsX(); ++i) {
-            double originalError = hist1D->GetBinError(i);
-            hist1D->SetBinError(i, originalError * errorScaleFactor);
-        }  
-    }
-    
-    // Fit a Gaussian to the histogram within the specified range
-    TF1* gaussFit = new TF1("gaussFit", "gaus", fitRangeLow, fitRangeHigh);
-    //hist1D->Fit(gaussFit, "WRQM"); // initial fit paramaters
-    hist1D->Fit(gaussFit, "R"); // what does M do? Improve algorithm of tminuit. E is error est by Minos technique L log likelihood
+    TGraphErrors* graph = new TGraphErrors(ptBins, x, y, ex, ey);
+    std::string graphName = "FittedMeansGraph_" + std::to_string(index);
+    graph->SetName(graphName.c_str());
+    graph->SetTitle(graphName.c_str());
+    graph->SetMarkerStyle(20);
+    graph->SetMarkerColor(kBlue + index); // Differentiate each graph
 
-    // Create a canvas to draw the histogram and fit
-    TString canvasname = Form("%s_PeakFit_%d_Thousandths_escale_%f",histName, Esmearfactor ,errorScaleFactor); 
-    TCanvas* c1 = new TCanvas(canvasname, canvasname, 800, 600);
-    hist1D->SetMinimum(0.0);
-    hist1D->Draw("E"); // Draw histogram with error bars
-    gaussFit->Draw("SAME"); // Draw the fit on the same canvas
-    gPad->Modified();
-    gPad->Update();
-    std::cout << "Chi-squared: " << gaussFit->GetChisquare() << std::endl;
-    std::cout << "Number of Degrees of Freedom: " << gaussFit->GetNDF() << std::endl;
-    std::cout << "Chi-squared/NDF: " << gaussFit->GetChisquare()/gaussFit->GetNDF() << std::endl;
-    std::cout << "Relative Width: " << gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1) << std::endl;
+    // Cleanup
+    delete[] x;
+    delete[] y;
+    delete[] ex;
+    delete[] ey;
 
-    //const char *pdfname = canvasname;
-    // Print the canvas to a file
-    c1->SaveAs(Form("pioncode/canvas_pdf/%s.pdf", canvasname.Data()));
-
-
-    // Second canvas: Custom list of fit results
-    TCanvas* c2 = new TCanvas("canvas2", "Fit Parameters", 800, 600);
-    c2->cd();
-
-    TPaveText* pt = new TPaveText(0.1, 0.1, 0.9, 0.9, "blNDC"); // blNDC: borderless, normalized coordinates
-    pt->SetTextAlign(12); // Align text to the left
-    pt->SetFillColor(0); // Transparent background
-
-    // Adding custom text entries
-    pt->AddText(Form("Hist = %s", histName));
-    pt->AddText("Fit Parameters:");
-    pt->AddText(Form("Fit Range = %f to %f", fitRangeLow, fitRangeHigh));
-    pt->AddText(Form("Mean = %f +/- %f", gaussFit->GetParameter(1), gaussFit->GetParError(1)));
-    pt->AddText(Form("Sigma = %f +/- %f", gaussFit->GetParameter(2), gaussFit->GetParError(2)));
-    pt->AddText(Form("Relative Width: %f",gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1)));   
-    pt->AddText(Form("Chi2/NDF = %f / %d= %f", gaussFit->GetChisquare(), gaussFit->GetNDF(),gaussFit->GetChisquare()/gaussFit->GetNDF()));
-    if(histtype==0){
-        pt->AddText("smearing details:");
-        pt->AddText(Form("E smear = %.1f percent", Esmearfactor/10.f ));
-        pt->AddText("Pos res = 2.8 mm ");
-        pt->AddText("Cluster prob=off for h31,\n 1 percent for h100");
-    }
-    if(histtype==0 ||histtype==1) pt->AddText("Pions Generated from 0.2-10 GeV");
-
-    // You can add more custom lines as needed
-    // pt->AddText("Additional Info: ...");
-
-    pt->Draw();
-    c2->SaveAs(Form("pioncode/canvas_pdf/FitInfo_%s.pdf", canvasname.Data()));
-
-    // Clean up
-    delete c1; // Automatically deletes gaussFit as well since it's drawn on the canvas
-    delete c2; // Automatically deletes gaussFit as well since it's drawn on the canvas
+    return graph;
 }
 
 //misc operations
