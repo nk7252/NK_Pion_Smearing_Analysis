@@ -95,14 +95,15 @@ void AIOFit() {
     //void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype)
     //int histtype= 0=fastmc, 1=geant, 2=data?
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
-    ScaleHistogramErrorsAndFit(154000, sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
+    
+    //ScaleHistogramErrorsAndFit(154000, sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear12_5",  1.0, 0.10, 0.18 , 40, 0.4, 1);
 
     // ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_weighted",  1.0, 0.10, 0.18 , 40, 0.4, 1);
 
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4);
     
-    //ProcessTH3IntoGraphs("pioncode/rootfiles/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results.pdf");
+    ProcessTH3IntoGraphs("pioncode/rootfiles/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results.pdf");
 
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
     // Code to exit ROOT after running the macro
