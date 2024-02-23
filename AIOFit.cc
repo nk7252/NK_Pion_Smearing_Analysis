@@ -43,6 +43,9 @@ TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int fir
 void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName, const char* NewhistogramName);
 void SliceAndFit(filename_object filenameobj, const char* histName, const char* fileName);
 void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype);
+void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histName, int nSlices, const std::string& pdfName, int sliceSize = -1);
+std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histName, int nSlices, int sliceSize = -1);
+TGraphErrors* FitAndGenerateGraph(TH2* slice, int index);
 
 
 
@@ -95,11 +98,11 @@ void AIOFit() {
     ScaleHistogramErrorsAndFit(154000, sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear12_5",  1.0, 0.10, 0.18 , 40, 0.4, 1);
 
-   // ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_weighted",  1.0, 0.10, 0.18 , 40, 0.4, 1);
+    // ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_weighted",  1.0, 0.10, 0.18 , 40, 0.4, 1);
 
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4);
     
-    //ProcessTH3IntoGraphs("your_file.root", "your_th3_name", 10, "results.pdf");
+    //ProcessTH3IntoGraphs("pioncode/rootfiles/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results.pdf");
 
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
     // Code to exit ROOT after running the macro
@@ -791,9 +794,67 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 
 // 3d hist fitting functions
 
-void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histName, int nSlices, const std::string& pdfName) {
+std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histName, int nSlices, int sliceSize = -1) {
+    TFile* file = TFile::Open(fileName.c_str());
+    if (!file || file->IsZombie()) {
+        std::cerr << "Error opening file: " << fileName << std::endl;
+        return {}; // Return an empty vector in case of failure
+    }
+
+    TH3* th3 = nullptr;
+    file->GetObject(histName.c_str(), th3);
+    if (!th3) {
+        std::cerr << "Histogram " << histName << " not found in file " << fileName << std::endl;
+        file->Close();
+        delete file;
+        return {}; // Return an empty vector in case of failure
+    }
+
+    std::vector<TH2*> slices;
+    int yBins = th3->GetNbinsY();
+    int nSlices = std::ceil(static_cast<double>(yBins) / sliceSize);
+    int remainder = yBins % sliceSize;
+    
+    // Check if slice size evenly divides the number of bins
+    if (remainder != 0) {
+        int lowerAdjustment = remainder;
+        int upperAdjustment = sliceSize - remainder;
+        int lowerSliceSize = sliceSize - lowerAdjustment;
+        int upperSliceSize = sliceSize + upperAdjustment;
+
+        std::cerr << "Error: The specified slice size does not evenly divide the total number of bins." << std::endl;
+        std::cerr << "Total number of bins: " << yBins << ", specified slice size: " << sliceSize << std::endl;
+        std::cerr << "Consider using a slice size of " << lowerSliceSize << " or increase it to " << upperSliceSize << " for an even division." << std::endl;
+        std::cerr << "Alternatively, consider using " << nSlices << " slices." << std::endl;
+
+        // Cleanup and return empty vector since this is an error case
+        file->Close();
+        delete file;
+        return {};
+    }
+
+    // Proceed with slicing
+    for (int i = 0; i < nSlices; ++i) {
+        int yStart = i * sliceSize + 1;
+        int yEnd = std::min((i + 1) * sliceSize, yBins); // Ensure it doesn't exceed yBins
+
+        th3->GetYaxis()->SetRange(yStart, yEnd);
+        std::string sliceName = histName + "_slice_" + std::to_string(i);
+        TH2* slice = dynamic_cast<TH2*>(th3->Project3D("zx")->Clone(sliceName.c_str()));
+        slices.push_back(slice);
+    }
+
+    // Reset the range to include all bins again and cleanup
+    th3->GetYaxis()->SetRange(1, yBins);
+    file->Close();
+    delete file;
+
+    return slices;
+}
+
+void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histName, int nSlices, const std::string& pdfName, int sliceSize = -1) {
     // Step 1: Slice the TH3 histogram
-    auto slices = SliceTH3(fileName, histName, nSlices);
+    auto slices = SliceTH3(fileName, histName, nSlices);//, sliceSize
     if (slices.empty()) {
         std::cerr << "Failed to slice the TH3 histogram or file/histogram not found." << std::endl;
         return;
