@@ -912,7 +912,7 @@ TGraphErrors* FitAndGenerateGraph(TH2* slice, int index) {
     graph->SetName(graphName.c_str());
     graph->SetTitle(graphName.c_str());
     graph->SetMarkerStyle(20);
-    graph->SetMarkerColor(kBlue + index); // Differentiate each graph
+    //graph->SetMarkerColor(kBlue + index); // Differentiate each graph
 
     // Cleanup
     delete[] x;
