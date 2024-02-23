@@ -813,7 +813,7 @@ std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histN
 
     std::vector<TH2*> slices;
     int yBins = th3->GetNbinsY();
-    int nSlices = std::ceil(static_cast<double>(yBins) / sliceSize);
+    int nSlicescap = std::ceil(static_cast<double>(yBins) / sliceSize);
     int remainder = yBins % sliceSize;
     
     // Check if slice size evenly divides the number of bins
@@ -826,7 +826,7 @@ std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histN
         std::cerr << "Error: The specified slice size does not evenly divide the total number of bins." << std::endl;
         std::cerr << "Total number of bins: " << yBins << ", specified slice size: " << sliceSize << std::endl;
         std::cerr << "Consider using a slice size of " << lowerSliceSize << " or increase it to " << upperSliceSize << " for an even division." << std::endl;
-        std::cerr << "Alternatively, consider using " << nSlices << " slices." << std::endl;
+        std::cerr << "Alternatively, consider using " << nSlicescap << " slices." << std::endl;
 
         // Cleanup and return empty vector since this is an error case
         file->Close();
