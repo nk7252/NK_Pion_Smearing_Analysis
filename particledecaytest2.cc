@@ -31,7 +31,7 @@ int main(){
 	timer.Start();
 	int NPions = 1 * 1000000;//
 	// int n_bins=1+ceil(log2(Nevents));
-	int PT_Max = 64; // 64 normally, [0.2,10] to compare to geant sim
+	int PT_Max = 10; // 64 normally, [0.2,10] to compare to geant sim
 	float PT_Min = 0.2;	 // cross check to elimate power law problems
 	double PT_ratio = PT_Min / PT_Max;
 	int MassNBins =40;
@@ -84,12 +84,11 @@ int main(){
 	TF1 *myFunc;
 	myFunc=ChooseSpectrumFunction(weightmethod, PT_Min, PT_Max);
 
-	for (int smear_factor_itt = 0; smear_factor_itt < 15 + 1; smear_factor_itt++)
-	{// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
-	// only want .155
-		float smear_factor_basevalue = 0.02; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
+	for (int smear_factor_itt = 0; smear_factor_itt < 5 + 1; smear_factor_itt++){// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
+		// only want .155
+		float smear_factor_basevalue = 0.125; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
-		float smear_factor_c =smear_factor_basevalue + 0.01 * smear_factor_itt;//constant term
+		float smear_factor_c =smear_factor_basevalue + 0.001 * smear_factor_itt;//constant term
 		float smear_factor_b = 0.154;//sqrt(E) term
 		//////////////////////New//0.155 loop from twice test beam data paramaterization to half? this is 15.5% from https://arxiv.org/pdf/1704.01461.pdf fig 24b so going from 6.5% to 30.5%// need 24 steps for 1% diff each
 		//////////////////////OLD//0.127 loop from twice test beam data paramaterization to half? this is 12.7% from https://arxiv.org/pdf/1704.01461.pdf fig 22b so going from 6.35% to 25.4%
@@ -138,6 +137,7 @@ int main(){
 
 		std::vector<TH2F*> h31(WeightNames.size());
 		std::vector<TH1F*> h31_1d(WeightNames.size());
+		std::vector<TH1F*> h31_pionspectrum(WeightNames.size());
 
 		//std::vector<TH2F*> h32(WeightNames.size());//empty
 		//std::vector<TH2F*> h33(WeightNames.size());//empty
@@ -171,7 +171,7 @@ int main(){
 
 			h31[p] = new TH2F(Form("h31_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Blair's cuts+pos res:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, 0, smeared_upper_bin_limit);
 			h31_1d[p] = new TH1F(Form("h31_1d_%i",p), Form("Smeared Inv Mass, weighted. Blair's cuts+pos res:%s",WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
-
+			h31_pionspectrum[p] = new TH1F(Form("h31_ps_%i",p),Form("Cuts+pos res, Smeared Pion PT, weighted:%s",WeightNames[p].c_str()) , 100, PT_Min, PT_Max);
 
 			h34[p] = new TH2F(Form("h34_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), n_bins, 0, PT_Max, 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
 			h34_1d[p] = new TH1F(Form("h34_1d_%i",p), Form("Smeared Pion Pt vs Smeared Inv Mass, weighted. Position Smearing:%s",WeightNames[p].c_str()), 100, smeared_lower_bin_limit,  smeared_upper_bin_limit);
@@ -279,7 +279,7 @@ int main(){
 			WeightScale[3]=1e+14;
 			inv_yield[3] = WeightScale[3]* Pt * weight_function[3];
 
-		//double inv_yield = WeightScale* Pt * weight_function;
+			//double inv_yield = WeightScale* Pt * weight_function;
 			
 
 			//std::cout << inv_yield <<std::endl;
@@ -513,6 +513,7 @@ int main(){
 							if(DeltaRcut(gamma_Blair_position[0], gamma_Blair_position[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_position[0], pt1cut)==true && pTCut(gamma_Blair_position[1], pt2cut)==true  && nclus_ptCut<gamma_Blair_position[0].pT()<ptMaxCut && nclus_ptCut<gamma_Blair_position[1].pT()<ptMaxCut && gamma_Blair_position[2].pT()>1.22*(pt1cut+pt2cut)){
 								h31[p]->Fill(gamma_Blair_position[2].pT(), gamma_Blair_position[2].mCalc(), inv_yield[p]);// data+mc cuts,  pos res on ,no occupancy
 								h31_1d[p]->Fill(gamma_Blair_position[2].mCalc(), inv_yield[p]);
+								h31_pionspectrum[p]->Fill(gamma_Blair_position[2].pT(), inv_yield[p]);
 							}
 							if(DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX)==false && pTCut(gamma_Blair_Cuts[0], pt1cut)==true && pTCut(gamma_Blair_Cuts[1], pt2cut)==true  && nclus_ptCut<gamma_Blair_Cuts[0].pT()<ptMaxCut && nclus_ptCut<gamma_Blair_Cuts[1].pT()<ptMaxCut && gamma_Blair_Cuts[2].pT()>1.22*(pt1cut+pt2cut)){
 								h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);// data+mc cuts,  pos res off , occupancy on

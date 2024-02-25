@@ -33,7 +33,7 @@ class filename_object {//object to hold my file names and related strings. thing
     int binres;
 };
 // declarations
-int extractNumber(const std::string& filepath);
+int extractNumber(const std::string& filepath, int option);
 filename_object choosecomparisontype(int choosetype);
 TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
 TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend);
@@ -42,7 +42,7 @@ void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& file
 TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int firstxbin, int lastxbin);
 void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName, const char* NewhistogramName);
 void SliceAndFit(filename_object filenameobj, const char* histName, const char* fileName);
-void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype);
+void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype);
 void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histName, int nSlices, const std::string& pdfName, int sliceSize = -1);
 std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histName, int nSlices, int sliceSize = -1);
 TGraphErrors* FitAndGenerateGraph(TH2* slice, int index);
@@ -52,36 +52,33 @@ TGraphErrors* FitAndGenerateGraph(TH2* slice, int index);
 
 void AIOFit() {
 
-///*
-    const char* destinationfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.060000_const.root";
+    ///*
+    //const char* destinationfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";
+    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";//using the source for functions later as source here 
 
-    //transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", destinationfile, "h_InvMass_data");
+    //transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", sourcehistfile, "h_InvMass_data");
 
-    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", destinationfile, "h_InvMass_Single_pi0_smear12_5");
+    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_smear12_5");
 
-    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_weighted", destinationfile, "h_InvMass_Single_pi0_weighted");
+    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
-//*/
+    //*/
 
     // 0=weight type
     int fileset = 0;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
     //std::vector<std::string> HistList={"h18_","h27_","h29_","h28_"};
     //std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. cluster","Smeared Pion pT vs Inv Mass. asymm cut","Smeared Pion pT vs Inv Mass. clust+asymm"};
-
-//*
     std::vector<std::string> HistList={"h30_","h35_","h31_","h100_"};
     std::vector<std::string> HistLegend={"Cuts","Cuts+Cluster","Cuts+Pos_Res","Cuts+CL+PR"};
-
     //GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
-//*/    
+    //*/    
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
     //plotOverlayedHistograms(choosenfilenameobj, "h12");//accepts 1d hist?//h12 is smeared pion pT, Weighted. h3 is unsmeared pion pT, weighted
 
-    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";
-//*
+    //*
     //SliceAndFit(choosenfilenameobj, "h18_2", sourcehistfile);// smeared
     //SliceAndFit(choosenfilenameobj, "h34_2", sourcehistfile);// position res
     
@@ -90,53 +87,69 @@ void AIOFit() {
     //SliceAndFit(choosenfilenameobj, "h35_2", sourcehistfile);// cuts + occupancy
 
     //SliceAndFit(choosenfilenameobj, "h100_2", sourcehistfile);// cuts + pos + occupancy
-//*/
-    //extractNumber(sourcehistfile)
+    //*/
     //void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype)
     //int histtype= 0=fastmc, 1=geant, 2=data?
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
-    
+
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.17 , 40, 0.4, 0);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.19 , 40, 0.4, 0);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.18 , 40, 0.4, 0);
+
+
+
     //ScaleHistogramErrorsAndFit(154000, sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_smear12_5",  1.0, 0.10, 0.18 , 40, 0.4, 1);
 
-    // ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_Single_pi0_weighted",  1.0, 0.10, 0.18 , 40, 0.4, 1);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1), extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_smear12_5",  1.0, 0.10, 0.18 , 40, 0.4, 1);//if error for this and not the next one, you probably have a file where the smearing isn't applied.
 
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted",  1.0, 0.10, 0.2 , 40, 0.4, 1);
+
+
+
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4, 2);
     
-    ProcessTH3IntoGraphs("pioncode/rootfiles/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results.pdf");
+    //ProcessTH3IntoGraphs("pioncode/rootfiles/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results.pdf");
 
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
     // Code to exit ROOT after running the macro
     //gApplication->Terminate(0);
 }    
 
-int extractNumber(const std::string& filepath) {
-     // Find the start of the decimal part
-    size_t startPos = filepath.find(".") + 1;
-    if (startPos == 0 || startPos >= filepath.length()) {
-        std::cerr << "Error: '.' not found in the filepath or at the end" << std::endl;
-        return -1; // or handle error differently
+int extractNumber(const std::string& filepath, int option) {
+    // file format
+    //  pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root
+     // Validate the option (must be positive)
+    if (option < 1) {
+        std::cerr << "Error: Option must be a positive integer." << std::endl;
+        return -1;
     }
 
-    // Find the end of the number (assuming .root at the end)
-    size_t endPos = filepath.rfind(".root");
-    if (endPos == std::string::npos) {
-        std::cerr << "Error: '.root' not found in the filepath" << std::endl;
-        return -1; // or handle error differently
+    // Extract the filename from the filepath
+    std::string filename = filepath.substr(filepath.find_last_of("/\\") + 1);
+    
+    // Split the filename at every period
+    std::vector<std::string> segments;
+    std::stringstream ss(filename);
+    std::string item;
+    while (std::getline(ss, item, '.')) {
+        segments.push_back(item);
     }
 
-    // Extract the substring containing the decimal part of the number
-    std::string decimalStr = filepath.substr(startPos, endPos - startPos);
+    // Check if there are enough segments to meet the requested option
+    // Since we're interested in segments after periods, the option should be less than the size of segments
+    if (option >= segments.size()) {
+        std::cerr << "Error: The specified option exceeds the number of available numbers in the filepath." << std::endl;
+        return -1;
+    }
 
-    // Remove trailing zeros
-    decimalStr.erase(decimalStr.find_last_not_of('0') + 1, std::string::npos);
-
-    // Convert the string to an integer
+    // Attempt to convert the specified segment into a number
     try {
-        int number = std::stoi(decimalStr);
+        int number = std::stoi(segments[option]); // Directly access the segment based on option
         return number;
     } catch (const std::invalid_argument& e) {
-        std::cerr << "Error: Invalid number in the filepath" << std::endl;
+        std::cerr << "Error: Invalid number format in the specified segment." << std::endl;
+        return -1; // or handle error differently
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Error: Number out of range." << std::endl;
         return -1; // or handle error differently
     }
 }
@@ -157,7 +170,7 @@ filename_object choosecomparisontype(int choosetype){
         filename_object1.binres=2;
     }
     for(size_t i=0; i < filename_object1.fileNames.size(); i++){
-        filename_object1.sqrtEsmearing.push_back(extractNumber(filename_object1.fileNames[i]));
+        filename_object1.sqrtEsmearing.push_back(extractNumber(filename_object1.fileNames[i],1));
     }
 return filename_object1;
 }
@@ -563,7 +576,7 @@ TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int fir
     return hist1D;
 }
 
-void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype) {
+void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype) {
     //filename_object filenameobj,
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 
@@ -585,8 +598,9 @@ void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const ch
     double currentXMax = hist1D->GetXaxis()->GetXmax();
     int rebinFactor = currentNumBins / numBins;
     if (rebinFactor > 1) { // Only rebin if the factor is greater than 1
-        std::cout << "rebin by: " << rebinFactor << std::endl;
+        std::cout << "current nbins: " << currentNumBins <<" requested nbins: " << numBins << " rebin by: " << rebinFactor << std::endl;
         hist1D->Rebin(rebinFactor);
+        std::cout << "new nbin check: " << hist1D->GetNbinsX() << std::endl;
     }
     
     // Set the maximum range on the x-axis to maxXRange
@@ -605,10 +619,10 @@ void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const ch
     // Fit a Gaussian to the histogram within the specified range
     TF1* gaussFit = new TF1("gaussFit", "gaus", fitRangeLow, fitRangeHigh);
     //hist1D->Fit(gaussFit, "WRQM"); // initial fit paramaters
-    hist1D->Fit(gaussFit, "R"); // what does M do? Improve algorithm of tminuit. E is error est by Minos technique L log likelihood
+    hist1D->Fit(gaussFit, "RM"); //ML what does M do? Improve algorithm of tminuit. E is error est by Minos technique L log likelihood
 
     // Create a canvas to draw the histogram and fit
-    TString canvasname = Form("%s_PeakFit_%d_Thousandths_escale_%f",histName, Esmearfactor ,errorScaleFactor); 
+    TString canvasname = Form("%s_PeakFit_SmearB_%d_A_%d_Thousandths_escale_%f",histName, EsmearfactorB/1000,EsmearfactorA/1000 ,errorScaleFactor); 
     TCanvas* c1 = new TCanvas(canvasname, canvasname, 800, 600);
     hist1D->SetMinimum(0.0);
     hist1D->Draw("E"); // Draw histogram with error bars
@@ -641,13 +655,15 @@ void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const ch
     pt->AddText(Form("Sigma = %f +/- %f", gaussFit->GetParameter(2), gaussFit->GetParError(2)));
     pt->AddText(Form("Relative Width: %f",gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1)));   
     pt->AddText(Form("Chi2/NDF = %f / %d= %f", gaussFit->GetChisquare(), gaussFit->GetNDF(),gaussFit->GetChisquare()/gaussFit->GetNDF()));
-    if(histtype==0){
+    if(histtype==0){//fastmc
         pt->AddText("smearing details:");
-        pt->AddText(Form("E smear = %.1f percent", Esmearfactor/10.f ));
+        pt->AddText(Form("E smear B/sqrt(E) = %.1f percent", EsmearfactorB/10000.f ));
+        pt->AddText(Form("E smear A = %.1f percent", EsmearfactorA/10000.f ));
         pt->AddText("Pos res = 2.8 mm ");
         pt->AddText("Cluster prob=off for h31,\n 1 percent for h100");
     }
-    if(histtype==0 ||histtype==1) pt->AddText("Pions Generated from 0.2-10 GeV");
+    if(histtype==0 ||histtype==1) pt->AddText("Pions Generated from 0.2-10 GeV");//fastmc and spmc
+
 
     // You can add more custom lines as needed
     // pt->AddText("Additional Info: ...");
@@ -849,7 +865,7 @@ std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histN
     th3->GetYaxis()->SetRange(1, yBins);
     file->Close();
     delete file;
-
+    std::cout << "debug test: end of FitTH3" << std::endl; // debug line
     return slices;
 }
 
@@ -867,8 +883,10 @@ void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histNa
 
     // Step 2: Fit and Generate Graphs
     std::vector<TGraphErrors*> graphs;
+    std::cout << "debug test: begin  fitting and creating graphs" << std::endl; // debug line
     for (size_t i = 0; i < slices.size(); ++i) {
         TGraphErrors* graph = FitAndGenerateGraph(slices[i], i);
+        //add error line if function fails
         graphs.push_back(graph);
 
         // Optionally draw the slice and the graph for visualization
@@ -885,18 +903,22 @@ void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histNa
 }
 
 TGraphErrors* FitAndGenerateGraph(TH2* slice, int index) {
+    
+    std::cout << "debug test: begin  fitting specific slice" << std::endl; // debug line
     int ptBins = slice->GetNbinsX();
     double* x = new double[ptBins];
     double* y = new double[ptBins];
     double* ex = new double[ptBins]; // Error in x, could be set to zero if not needed
     double* ey = new double[ptBins]; // Error in y
-
+    
+    std::cout << "debug test: slice debug 1" << std::endl; // debug line
     for (int i = 1; i <= ptBins; ++i) {
         TH1D* proj = slice->ProjectionY("_py", i, i, "e");
         if (proj->GetEntries() > 0) {
             TF1* fitFunc = new TF1("fitFunc", "gaus", proj->GetXaxis()->GetXmin(), proj->GetXaxis()->GetXmax());
             proj->Fit(fitFunc, "Q");
-
+            
+            std::cout << "debug test: slice debug loop over projections" << std::endl; // debug line
             x[i-1] = slice->GetXaxis()->GetBinCenter(i);
             y[i-1] = fitFunc->GetParameter(1); // Mean of the Gaussian
             ex[i-1] = 0; // Assuming constant bin width, this could be ignored or set to bin width / 2
@@ -920,6 +942,8 @@ TGraphErrors* FitAndGenerateGraph(TH2* slice, int index) {
     delete[] ex;
     delete[] ey;
 
+    
+    std::cout << "debug test: end  fitting specific slice" << std::endl; // debug line
     return graph;
 }
 
