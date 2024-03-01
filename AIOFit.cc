@@ -4,6 +4,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <functional>
+#include <utility>
 #include <TFile.h>
 #include <TH1D.h>
 #include <TH2F.h>
@@ -60,9 +61,16 @@ void AIOFit() {
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_smear12_5");
 
-    //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted");
+    //transferHistogram("pioncode/rootfiles/geant_smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_noposcor_smear125");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
+
+    //transferHistogram("pioncode/rootfiles/geant/smear_132_cutson_poscorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_132", sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_smear132");//13% with poscor
+
+    //transferHistogram("pioncode/rootfiles/geant/nosmear_poscorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_nosmear");//no smear with poscor
+    
+    //transferHistogram("pioncode/rootfiles/geant/nclus37/smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_smear125_nclus37");//12.5 smear with noposcor, nclus<37
+
     //*/
 
     // 0=weight type
@@ -91,13 +99,21 @@ void AIOFit() {
     //void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype)
     //int histtype= 0=fastmc, 1=geant, 2=data?
 
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.17 , 40, 0.4, 0);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.19 , 40, 0.4, 0);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.18 , 40, 0.4, 0);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.17 , 40, 0.4, 0);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.19 , 40, 0.4, 0);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.18 , 40, 0.4, 0);
 
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_noposcor_smear125",  1.0, 0.12, 0.18 , 40, 0.4, 0);   
 
+    //.09-.17 ~5
+    float start_point=0.09;
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_smear132",  1.0, start_point, 0.171 , 40, 0.4, 1);
 
-    //ScaleHistogramErrorsAndFit(154000, sourcehistfile, "h100_1d_2",  1.0, 0.12, 0.17 , 40, 0.4, 0);
+    
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_nosmear",  1.0, 0.10, 0.17 , 40, 0.4, 1);
+
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_smear125_nclus37",  1.0, 0.10, 0.18 , 40, 0.4, 1);
+
 
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1), extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_smear12_5",  1.0, 0.10, 0.18 , 40, 0.4, 1);//if error for this and not the next one, you probably have a file where the smearing isn't applied.
 
@@ -106,8 +122,8 @@ void AIOFit() {
 
 
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4, 2);
-    
-    //ProcessTH3IntoGraphs("pioncode/rootfiles/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results.pdf");
+
+    ProcessTH3IntoGraphs("pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results");
 
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
     // Code to exit ROOT after running the macro
@@ -619,7 +635,7 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     // Fit a Gaussian to the histogram within the specified range
     TF1* gaussFit = new TF1("gaussFit", "gaus", fitRangeLow, fitRangeHigh);
     //hist1D->Fit(gaussFit, "WRQM"); // initial fit paramaters
-    hist1D->Fit(gaussFit, "RM"); //ML what does M do? Improve algorithm of tminuit. E is error est by Minos technique L log likelihood
+    hist1D->Fit(gaussFit, "R"); //ML what does M do? Improve algorithm of tminuit. E is error est by Minos technique, L log likelihood
 
     // Create a canvas to draw the histogram and fit
     TString canvasname = Form("%s_PeakFit_SmearB_%d_A_%d_Thousandths_escale_%f",histName, EsmearfactorB/1000,EsmearfactorA/1000 ,errorScaleFactor); 
@@ -863,9 +879,13 @@ std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histN
 
     // Reset the range to include all bins again and cleanup
     th3->GetYaxis()->SetRange(1, yBins);
+
+    // Detach the histogram from the source file
+    //th3->SetDirectory(0);
+
     file->Close();
     delete file;
-    std::cout << "debug test: end of FitTH3" << std::endl; // debug line
+    std::cout << "debug test: end of SliceTH3" << std::endl; // debug line
     return slices;
 }
 
@@ -878,58 +898,66 @@ void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histNa
     }
 
     // Prepare a canvas for drawing
-    TCanvas canvas("canvas", "Canvas", 800, 600);
-    canvas.Print((pdfName + "[").c_str()); // Open the PDF
+    TCanvas *c3 = new  TCanvas("c3", "Canvas", 800, 600);
+    //canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf]",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+    //c3->Print((pdfName + "[").c_str()); // Open the PDF
+    c3->Print(Form("pioncode/canvas_pdf/%s_.pdf[", pdfName.c_str()));
 
     // Step 2: Fit and Generate Graphs
     std::vector<TGraphErrors*> graphs;
     std::cout << "debug test: begin  fitting and creating graphs" << std::endl; // debug line
     for (size_t i = 0; i < slices.size(); ++i) {
-        TGraphErrors* graph = FitAndGenerateGraph(slices[i], i);
+        //TGraphErrors* graph = FitAndGenerateGraph(slices[i], i);
         //add error line if function fails
-        graphs.push_back(graph);
+        //graphs.push_back(graph);
 
         // Optionally draw the slice and the graph for visualization
+        if (!slices[i]) {
+            std::cerr << "Warning: Slice " << i << " is null." << std::endl;
+            continue; // Skip this iteration
+        }
         slices[i]->Draw("COLZ");
-        graph->Draw("PSAME");
-        canvas.Print(pdfName.c_str());
+        //graph->Draw("PSAME");
+        c3->Print(Form("pioncode/canvas_pdf/%s_.pdf", pdfName.c_str()));
+        //c3->Print(pdfName.c_str());
     }
 
-    canvas.Print((pdfName + "]").c_str()); // Close the PDF
+    //c3->Print((pdfName + "]").c_str()); // Close the PDF
+    c3->Print(Form("pioncode/canvas_pdf/%s_.pdf]", pdfName.c_str()));
 
     // Cleanup
-    for (auto* slice : slices) delete slice;
-    for (auto* graph : graphs) delete graph;
+    //for (auto* slice : slices) delete slice;
+    //for (auto* graph : graphs) delete graph;
 }
 
 TGraphErrors* FitAndGenerateGraph(TH2* slice, int index) {
     
     std::cout << "debug test: begin  fitting specific slice" << std::endl; // debug line
     int ptBins = slice->GetNbinsX();
-    double* x = new double[ptBins];
-    double* y = new double[ptBins];
-    double* ex = new double[ptBins]; // Error in x, could be set to zero if not needed
-    double* ey = new double[ptBins]; // Error in y
+    std::vector<double> x(ptBins);
+    std::vector<double> y(ptBins);
+    std::vector<double> ex(ptBins); // Error in x, could be set to zero if not needed
+    std::vector<double> ey(ptBins); // Error in y
     
     std::cout << "debug test: slice debug 1" << std::endl; // debug line
-    for (int i = 1; i <= ptBins; ++i) {
-        TH1D* proj = slice->ProjectionY("_py", i, i, "e");
+    for (int i = 0; i < ptBins; ++i) {
+        TH1D* proj = slice->ProjectionY("_py", i+1, i+1, "e");
         if (proj->GetEntries() > 0) {
             TF1* fitFunc = new TF1("fitFunc", "gaus", proj->GetXaxis()->GetXmin(), proj->GetXaxis()->GetXmax());
             proj->Fit(fitFunc, "Q");
             
             std::cout << "debug test: slice debug loop over projections" << std::endl; // debug line
-            x[i-1] = slice->GetXaxis()->GetBinCenter(i);
-            y[i-1] = fitFunc->GetParameter(1); // Mean of the Gaussian
-            ex[i-1] = 0; // Assuming constant bin width, this could be ignored or set to bin width / 2
-            ey[i-1] = fitFunc->GetParError(1); // Error on the mean
+            x[i]=slice->GetXaxis()->GetBinCenter(i+1);
+            y[i]=fitFunc->GetParameter(1); // Mean of the Gaussian
+            ex[i]=0; // Assuming constant bin width, this could be ignored or set to bin width / 2
+            ey[i]=fitFunc->GetParError(1); // Error on the mean
 
             delete fitFunc;
         }
         delete proj;
     }
 
-    TGraphErrors* graph = new TGraphErrors(ptBins, x, y, ex, ey);
+    TGraphErrors* graph = new TGraphErrors(ptBins, x.data(), y.data(), ex.data(), ey.data());
     std::string graphName = "FittedMeansGraph_" + std::to_string(index);
     graph->SetName(graphName.c_str());
     graph->SetTitle(graphName.c_str());
@@ -937,10 +965,10 @@ TGraphErrors* FitAndGenerateGraph(TH2* slice, int index) {
     //graph->SetMarkerColor(kBlue + index); // Differentiate each graph
 
     // Cleanup
-    delete[] x;
-    delete[] y;
-    delete[] ex;
-    delete[] ey;
+    //delete x;
+    //delete y;
+    //delete ex;
+    //delete ey;
 
     
     std::cout << "debug test: end  fitting specific slice" << std::endl; // debug line
