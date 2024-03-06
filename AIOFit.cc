@@ -827,67 +827,6 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
 
 // 3d hist fitting functions
 
-std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histName, int nSlices, int sliceSize = -1) {
-    TFile* file = TFile::Open(fileName.c_str());
-    if (!file || file->IsZombie()) {
-        std::cerr << "Error opening file: " << fileName << std::endl;
-        return {}; // Return an empty vector in case of failure
-    }
-
-    TH3* th3 = nullptr;
-    file->GetObject(histName.c_str(), th3);
-    if (!th3) {
-        std::cerr << "Histogram " << histName << " not found in file " << fileName << std::endl;
-        file->Close();
-        delete file;
-        return {}; // Return an empty vector in case of failure
-    }
-
-    std::vector<TH2*> slices;
-    int yBins = th3->GetNbinsY();
-    int nSlicescap = std::ceil(static_cast<double>(yBins) / sliceSize);
-    int remainder = yBins % sliceSize;
-    
-    // Check if slice size evenly divides the number of bins
-    if (remainder != 0) {
-        int lowerAdjustment = remainder;
-        int upperAdjustment = sliceSize - remainder;
-        int lowerSliceSize = sliceSize - lowerAdjustment;
-        int upperSliceSize = sliceSize + upperAdjustment;
-
-        std::cerr << "Error: The specified slice size does not evenly divide the total number of bins." << std::endl;
-        std::cerr << "Total number of bins: " << yBins << ", specified slice size: " << sliceSize << std::endl;
-        std::cerr << "Consider using a slice size of " << lowerSliceSize << " or increase it to " << upperSliceSize << " for an even division." << std::endl;
-        std::cerr << "Alternatively, consider using " << nSlicescap << " slices." << std::endl;
-
-        // Cleanup and return empty vector since this is an error case
-        file->Close();
-        delete file;
-        return {};
-    }
-
-    // Proceed with slicing
-    for (int i = 0; i < nSlices; ++i) {
-        int yStart = i * sliceSize + 1;
-        int yEnd = std::min((i + 1) * sliceSize, yBins); // Ensure it doesn't exceed yBins
-
-        th3->GetYaxis()->SetRange(yStart, yEnd);
-        std::string sliceName = histName + "_slice_" + std::to_string(i);
-        TH2* slice = dynamic_cast<TH2*>(th3->Project3D("zx")->Clone(sliceName.c_str()));
-        slices.push_back(slice);
-    }
-
-    // Reset the range to include all bins again and cleanup
-    th3->GetYaxis()->SetRange(1, yBins);
-
-    // Detach the histogram from the source file
-    //th3->SetDirectory(0);
-
-    file->Close();
-    delete file;
-    std::cout << "debug test: end of SliceTH3" << std::endl; // debug line
-    return slices;
-}
 
 void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histName, int nSlices, const std::string& pdfName, int sliceSize = -1) {
     // Step 1: Slice the TH3 histogram
@@ -930,50 +869,6 @@ void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histNa
     //for (auto* graph : graphs) delete graph;
 }
 
-TGraphErrors* FitAndGenerateGraph(TH2* slice, int index) {
-    
-    std::cout << "debug test: begin  fitting specific slice" << std::endl; // debug line
-    int ptBins = slice->GetNbinsX();
-    std::vector<double> x(ptBins);
-    std::vector<double> y(ptBins);
-    std::vector<double> ex(ptBins); // Error in x, could be set to zero if not needed
-    std::vector<double> ey(ptBins); // Error in y
-    
-    std::cout << "debug test: slice debug 1" << std::endl; // debug line
-    for (int i = 0; i < ptBins; ++i) {
-        TH1D* proj = slice->ProjectionY("_py", i+1, i+1, "e");
-        if (proj->GetEntries() > 0) {
-            TF1* fitFunc = new TF1("fitFunc", "gaus", proj->GetXaxis()->GetXmin(), proj->GetXaxis()->GetXmax());
-            proj->Fit(fitFunc, "Q");
-            
-            std::cout << "debug test: slice debug loop over projections" << std::endl; // debug line
-            x[i]=slice->GetXaxis()->GetBinCenter(i+1);
-            y[i]=fitFunc->GetParameter(1); // Mean of the Gaussian
-            ex[i]=0; // Assuming constant bin width, this could be ignored or set to bin width / 2
-            ey[i]=fitFunc->GetParError(1); // Error on the mean
-
-            delete fitFunc;
-        }
-        delete proj;
-    }
-
-    TGraphErrors* graph = new TGraphErrors(ptBins, x.data(), y.data(), ex.data(), ey.data());
-    std::string graphName = "FittedMeansGraph_" + std::to_string(index);
-    graph->SetName(graphName.c_str());
-    graph->SetTitle(graphName.c_str());
-    graph->SetMarkerStyle(20);
-    //graph->SetMarkerColor(kBlue + index); // Differentiate each graph
-
-    // Cleanup
-    //delete x;
-    //delete y;
-    //delete ex;
-    //delete ey;
-
-    
-    std::cout << "debug test: end  fitting specific slice" << std::endl; // debug line
-    return graph;
-}
 
 //misc operations
 void transferHistogram(const char* sourceFileName, const char* histogramName, const char* targetFileName, const char* NewhistogramName) {
