@@ -12,7 +12,11 @@ struct FitConfig {
     int xBinStart, xBinEnd, yBinStart, yBinEnd;
     double minInvMass, maxInvMass;
 
-    // Serialize the configuration for CSV output
+    // Constructor
+    FitConfig(int xs, int xe, int ys, int ye, double minM, double maxM)
+        : xBinStart(xs), xBinEnd(xe), yBinStart(ys), yBinEnd(ye), minInvMass(minM), maxInvMass(maxM) {}
+
+    // The serialize and deserialize methods remain unchanged
     std::string serialize() const {
         std::stringstream ss;
         ss << xBinStart << "," << xBinEnd << ","
@@ -21,7 +25,6 @@ struct FitConfig {
         return ss.str();
     }
 
-    // Deserialize the configuration from CSV input
     static FitConfig deserialize(const std::string& line) {
         std::stringstream ss(line);
         std::vector<std::string> result;
@@ -35,6 +38,7 @@ struct FitConfig {
                 std::stod(result[4]), std::stod(result[5])};
     }
 };
+
 
 
 //declarations
