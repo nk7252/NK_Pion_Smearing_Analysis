@@ -51,7 +51,6 @@ void TH3Fitter(){
 std::string rootFileName="pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root";
 std::string histName= "h_pipT_Nclus_mass";
 
-
 AnalyzeAndFit(rootFileName, histName);
 
 }
@@ -63,23 +62,25 @@ std::vector<FitConfig> LoadOrCreateConfig(const std::string& configFile) {
     std::string line;
 
     if (file) {
+        // Skip the first line which contains the header
+        std::getline(file, line);
+
         // Load configurations
-        while (getline(file, line)) {
+        while (std::getline(file, line)) {
             configs.push_back(FitConfig::deserialize(line));
         }
     } else {
-        // Create default configuration
+        // Create default configuration with header
+        std::ofstream outFile(configFile);
+        // Write the header line first
+        outFile << "pTBinStart,pTBinEnd,nclusBinStart,nclusBinEnd,minInvMass,maxInvMass\n";
+
         // Example: Assuming 10 bins in X and Y, and invariant mass range [0.1, 1.0]
         for (int xBinStart = 1; xBinStart <= 10; xBinStart += 2) {
             for (int yBinStart = 1; yBinStart <= 10; yBinStart += 2) {
-                configs.emplace_back(xBinStart, xBinStart + 1, yBinStart, yBinStart + 1, 0.1, 1.0);
+                FitConfig config(xBinStart, xBinStart + 1, yBinStart, yBinStart + 1, 0.1, 0.3);
+                outFile << config.serialize() << std::endl;
             }
-        }
-
-        // Save to file
-        std::ofstream outFile(configFile);
-        for (const auto& config : configs) {
-            outFile << config.serialize() << std::endl;
         }
     }
     return configs;
@@ -92,6 +93,8 @@ void FitAndSaveProjection(TH3* h3, const FitConfig& config, const std::string& o
     TF1* fitFunc = new TF1("fitFunc", "gaus", config.minInvMass, config.maxInvMass);
     hProjZ->Fit(fitFunc, "RQ"); // "RQ" option for Range and Quiet
 
+
+    hProjZ->SetTitle("Pion Inv. Mass for: nclus ,pT ;Pion Inv. Mass GeV;Counts");
     // Extract and print fit parameters
     double mean = fitFunc->GetParameter(1);
     double sigma = fitFunc->GetParameter(2);
@@ -100,9 +103,7 @@ void FitAndSaveProjection(TH3* h3, const FitConfig& config, const std::string& o
     double resolution = 100 * sigma / mean;
 
     // Append fit results to CSV
-    csvFile << config.xBinStart << "," << config.xBinEnd << ","
-            << config.yBinStart << "," << config.yBinEnd << ","
-            << mean << "," << sigma << "," << resolution << "," << chi2/ndf << std::endl;
+    csvFile << config.xBinStart << "," << config.xBinEnd << "," << config.yBinStart << "," << config.yBinEnd << "," << mean << "," << sigma << "," << resolution << "," << chi2/ndf << std::endl;
 
     // Draw and save to PDF
     TCanvas c;
@@ -113,9 +114,9 @@ void FitAndSaveProjection(TH3* h3, const FitConfig& config, const std::string& o
 // Main analysis function
 void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName) {
     // Prepare file paths
-    std::string configFilePath = "fitConfig.csv";
-    std::string outputPDFPath = "fitResults.pdf";
-    std::string outputCSVPath = "fitResults.csv";
+    std::string configFilePath = "pioncode/csvfiles/fitConfig.csv";
+    std::string outputPDFPath = "pioncode/canvas_pdf/fitResults.pdf";
+    std::string outputCSVPath = "pioncode/csvfiles/fitResults.csv";
 
     // Open the ROOT file and retrieve the histogram
     TFile* file = TFile::Open(rootFileName.c_str(), "READ");
@@ -129,13 +130,12 @@ void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName)
         file->Close();
         return;
     }
-
     // Load or create the configuration
     auto configs = LoadOrCreateConfig(configFilePath);
 
     // Setup output files
     std::ofstream csvFile(outputCSVPath);
-    csvFile << "XBinStart,XBinEnd,YBinStart,YBinEnd,Mean,Sigma,Resolution,Chi2/NDF\n";
+    csvFile << "pTBinStart,pTBinEnd,NclusBinStart,NclusBinEnd,Mean,Sigma,Resolution,Chi2/NDF\n";
     TCanvas* c3 = new TCanvas("c3", "Fits", 800, 600);
     std::string pdfName = outputPDFPath;
     c3->Print((pdfName + "[").c_str()); // Open the PDF document
