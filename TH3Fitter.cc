@@ -142,6 +142,13 @@ void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName)
 
     // Perform fits and save results
     for (const auto& config : configs) {
+          std::cout << "Fitting with config: "
+              << "xBinStart=" << config.xBinStart << ", "
+              << "xBinEnd=" << config.xBinEnd << ", "
+              << "yBinStart=" << config.yBinStart << ", "
+              << "yBinEnd=" << config.yBinEnd << ", "
+              << "minInvMass=" << config.minInvMass << ", "
+              << "maxInvMass=" << config.maxInvMass << std::endl;
         FitAndSaveProjection(h3, config, pdfName, csvFile);
     }
 
