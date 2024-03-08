@@ -44,11 +44,11 @@ void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName)
 
 
 void TH3Fitter(){
-std::string rootFileName ="pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root";
-std::string histName = "h_pipT_Nclus_mass";
+std::string rootFileName="pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root";
+std::string histName= "h_pipT_Nclus_mass";
 
 
-AnalyzeAndFit(sourcehistfile, histname);
+AnalyzeAndFit(rootFileName, histName);
 
 }
 
