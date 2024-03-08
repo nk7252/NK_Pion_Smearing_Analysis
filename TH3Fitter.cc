@@ -1,11 +1,12 @@
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <sstream>
+#include <TH1.h>
 #include <TH3.h>
 #include <TF1.h>
-#include <TCanvas.h>
 #include <TFile.h>
+#include <TCanvas.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <sstream>
 
 struct FitConfig {
     int xBinStart, xBinEnd, yBinStart, yBinEnd;
@@ -35,15 +36,22 @@ struct FitConfig {
     }
 };
 
+
 //declarations
 std::vector<FitConfig> LoadOrCreateConfig(const std::string& configFile);
 void FitAndSaveProjection(TH3* h3, const FitConfig& config, const std::string& outputPDF, std::ofstream& csvFile);
-void AnalyzeAndFit(TH3* h3, const std::string& configFilePath, const std::string& outputPDF, const std::string& outputCSV);
+void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName);
+
 
 void TH3Fitter(){
-const char* sourcehistfile="pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root";
-const char* histname= "h_pipT_Nclus_mass";
+std::string rootFileName ="pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root";
+std::string histName = "h_pipT_Nclus_mass";
+
+
+AnalyzeAndFit(sourcehistfile, histname);
+
 }
+
 
 std::vector<FitConfig> LoadOrCreateConfig(const std::string& configFile) {
     std::vector<FitConfig> configs;
@@ -99,23 +107,45 @@ void FitAndSaveProjection(TH3* h3, const FitConfig& config, const std::string& o
 }
 
 // Main analysis function
-void AnalyzeAndFit(TH3* h3, const std::string& configFilePath, const std::string& outputPDF, const std::string& outputCSV) {
-    auto configs = LoadOrCreateConfig(configFilePath);
+void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName) {
+    // Prepare file paths
+    std::string configFilePath = "fitConfig.csv";
+    std::string outputPDFPath = "fitResults.pdf";
+    std::string outputCSVPath = "fitResults.csv";
 
-    // Open CSV file for output
-    std::ofstream csvFile(outputCSV);
-    csvFile << "XBinStart,XBinEnd,YBinStart,YBinEnd,Mean,Sigma,Resolution,Chi2/NDF\n"; // Header
-
-    // Initialize PDF
-    TCanvas* c = new TCanvas();
-    c->Print((outputPDF + "[").c_str()); // Open PDF
-
-    for (const auto& config : configs) {
-        FitAndSaveProjection(h3, config, outputPDF, csvFile);
+    // Open the ROOT file and retrieve the histogram
+    TFile* file = TFile::Open(rootFileName.c_str(), "READ");
+    if (!file || file->IsZombie()) {
+        std::cerr << "Error opening file: " << rootFileName << std::endl;
+        return;
+    }
+    TH3* h3 = dynamic_cast<TH3*>(file->Get(histName.c_str()));
+    if (!h3) {
+        std::cerr << "Histogram " << histName << " not found in file." << std::endl;
+        file->Close();
+        return;
     }
 
-    c->Print((outputPDF + "]").c_str()); // Close PDF
-    delete c; // Clean up
+    // Load or create the configuration
+    auto configs = LoadOrCreateConfig(configFilePath);
+
+    // Setup output files
+    std::ofstream csvFile(outputCSVPath);
+    csvFile << "XBinStart,XBinEnd,YBinStart,YBinEnd,Mean,Sigma,Resolution,Chi2/NDF\n";
+    TCanvas* c3 = new TCanvas("c3", "Fits", 800, 600);
+    std::string pdfName = outputPDFPath;
+    c3->Print((pdfName + "[").c_str()); // Open the PDF document
+
+    // Perform fits and save results
+    for (const auto& config : configs) {
+        FitAndSaveProjection(h3, config, pdfName, csvFile);
+    }
+
+    // Finalize PDF and clean up
+    c3->Print((pdfName + "]").c_str()); // Close the PDF document
+    delete c3; // Clean up the canvas
+    file->Close(); // Close the ROOT file
 }
+
 
 
