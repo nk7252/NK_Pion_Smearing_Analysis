@@ -249,8 +249,8 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     //double chi2ndf_s = chi2_s / ndf_s;
 
 
-    //append // Append fit parameters to text file
-    appendtextfile(gausFit, "Combined Fit");
+    //append // Append fit results to text file
+    appendtextfile(gausFit, "gausFit");
     appendtextfile(combinedFit, "Combined Fit");
     appendtextfile(gausFit2, "subpgaus fit");
 
@@ -295,7 +295,7 @@ void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yB
             double chi2NDF = fitresults[2];// chi2/ndf
             
 
-            if (chi2NDF >= 0 && chi2NDF < bestChi2NDF) {
+            if (chi2NDF >= 0.9 && chi2NDF < bestChi2NDF) {
                 bestChi2NDF = chi2NDF;
                 bestMinMass = minMass;
                 bestMaxMass = maxMass;
@@ -378,7 +378,7 @@ void appendtextfile(TF1* fitFunc, const std::string& fitName){//, Double_t scale
 
         if (size == 0) {
             // File is new, write header
-            outfile << "Fit Name          Scale Factor          Mean          Sigma          Sigma/Mean          chi2          NDF           chi2/NDF" << std::endl;
+            outfile << "Fit Name          Mean          Sigma          Sigma/Mean          chi2          NDF           chi2/NDF" << std::endl;
         }
 
         // Write the parameters to the file
