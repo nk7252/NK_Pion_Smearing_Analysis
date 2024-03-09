@@ -226,7 +226,7 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
     //try to improve the fit.
-    hProjZ->Fit(combinedFit, "RQ");//L//M
+    hProjZ->Fit(combinedFit, "RQL");//L//M
     //-------------------------------------------show the poly4 part seperately
     // Create a new function for just the polynomial part
     TF1 *polyPart = new TF1("polyPart", "pol4", minMass, maxMass);
