@@ -216,7 +216,7 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     gLeftRightPoly = &polyFunc; // Point the global pointer to your instance
     TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, 0, 0.5, 5);
 
-    hProjZ->Fit(leftRightFit, "RQ0");// "RQ" option for Range and Quiet
+    hProjZ->Fit(leftRightFit, "RQ0");// "RQ" option for Range and Quiet, 0 for do not display fit on canvas.
     // Fit Gaussian in the specified range
     TF1 *gausFit = new TF1("gausFit", "gaus", minMass, maxMass);//leftpolylim, rightpolylim
     hProjZ->Fit(gausFit, "RQ0");
