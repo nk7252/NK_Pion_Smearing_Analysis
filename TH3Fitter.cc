@@ -45,13 +45,17 @@ struct FitConfig {
 std::vector<FitConfig> LoadOrCreateConfig(const std::string& configFile);
 void FitAndSaveProjection(TH3* h3, const FitConfig& config, const std::string& outputPDF, std::ofstream& csvFile);
 void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName);
+double FitAndGetChi2NDF(TH1D* hProjZ, double minMass, double maxMass);
+void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yBinEnd);
+void OptimizeHistogramFit(const std::string& rootFileName, const std::string& histogramName);
 
 
 void TH3Fitter(){
 std::string rootFileName="pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root";
 std::string histName= "h_pipT_Nclus_mass";
 
-AnalyzeAndFit(rootFileName, histName);
+//AnalyzeAndFit(rootFileName, histName);
+OptimizeHistogramFit(rootFileName, histName);
 
 }
 
@@ -157,6 +161,78 @@ void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName)
     delete c3; // Clean up the canvas
     file->Close(); // Close the ROOT file
 }
+
+// Function to perform the Gaussian fit and return chi^2/NDF
+double FitAndGetChi2NDF(TH1D* hProjZ, double minMass, double maxMass) {
+    TF1* fitFunc = new TF1("fitFunc", "gaus", minMass, maxMass);
+    hProjZ->Fit(fitFunc, "RQ"); // "RQ" option for Range and Quiet
+
+    double chi2 = fitFunc->GetChisquare();
+    double ndf = fitFunc->GetNDF();
+    double chi2ndf = (ndf > 0) ? chi2 / ndf : -1; // Avoid division by zero
+
+    delete fitFunc; // Clean up
+    return chi2ndf;
+}
+
+// Main function to explore fit ranges and find optimal parameters
+void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yBinEnd) {
+    TH1D* hProjZ = h3->ProjectionZ("projZ", xBinStart, xBinEnd, yBinStart, yBinEnd);
+
+    double bestChi2NDF = TMath::Infinity();
+    double bestMinMass = 0, bestMaxMass = 0;
+
+    double startMass = 0.1; // Example start of mass range
+    double endMass = 1.0; // Example end of mass range
+    double step = 0.01; // Example step size
+
+    for (double minMass = startMass; minMass < endMass; minMass += step) {
+        for (double maxMass = minMass + step; maxMass <= endMass; maxMass += step) {
+            double chi2NDF = FitAndGetChi2NDF(hProjZ, minMass, maxMass);
+
+            if (chi2NDF >= 0 && chi2NDF < bestChi2NDF) {
+                bestChi2NDF = chi2NDF;
+                bestMinMass = minMass;
+                bestMaxMass = maxMass;
+            }
+        }
+    }
+
+    // Output the best fit range and chi^2/NDF
+    std::cout << "Best Fit Range: [" << bestMinMass << ", " << bestMaxMass << "] with chi^2/NDF = " << bestChi2NDF << std::endl;
+
+    // Optionally, perform and visualize the final fit with the best parameters
+    FitAndGetChi2NDF(hProjZ, bestMinMass, bestMaxMass); // This will also draw the fit
+}
+
+void OptimizeHistogramFit(const std::string& rootFileName, const std::string& histogramName) {
+    // Open the ROOT file
+    TFile* file = TFile::Open(rootFileName.c_str(), "READ");
+    if (!file || file->IsZombie()) {
+        std::cerr << "Error opening file: " << rootFileName << std::endl;
+        return;
+    }
+
+    // Load the histogram
+    TH3* h3 = dynamic_cast<TH3*>(file->Get(histogramName.c_str()));
+    if (!h3) {
+        std::cerr << "Histogram " << histogramName << " not found in file " << rootFileName << std::endl;
+        file->Close();
+        delete file;
+        return;
+    }
+
+    // Call the function to optimize the fit range (assuming it's defined as before)
+    // You might need to adjust the bin ranges according to your histogram
+    int xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();
+    int yBinStart = 1, yBinEnd = h3->GetYaxis()->GetNbins();
+    OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
+
+    // Close the ROOT file
+    file->Close();
+    delete file;
+}
+
 
 
 
