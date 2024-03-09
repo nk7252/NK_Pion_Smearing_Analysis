@@ -182,21 +182,22 @@ void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yB
     double bestChi2NDF = TMath::Infinity();
     double bestMinMass = 0, bestMaxMass = 0;
 
-    double startMass = 0.1; // Example start of mass range
-    double endMass = 1.0; // Example end of mass range
-    double step = 0.01; // Example step size
+    double startMass = 0.09; // start of mass range
+    double endMass = 0.3; // end of mass range
+    double step = 0.01; // step size
 
     for (double minMass = startMass; minMass < endMass; minMass += step) {
         for (double maxMass = minMass + step; maxMass <= endMass; maxMass += step) {
             double chi2NDF = FitAndGetChi2NDF(hProjZ, minMass, maxMass);
 
-            if (chi2NDF >= 0 && chi2NDF < bestChi2NDF) {
+            if (chi2NDF >= 0.9 && chi2NDF < bestChi2NDF) {
                 bestChi2NDF = chi2NDF;
                 bestMinMass = minMass;
                 bestMaxMass = maxMass;
             }
         }
     }
+
 
     // Output the best fit range and chi^2/NDF
     std::cout << "Best Fit Range: [" << bestMinMass << ", " << bestMaxMass << "] with chi^2/NDF = " << bestChi2NDF << std::endl;
@@ -225,7 +226,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     // Call the function to optimize the fit range (assuming it's defined as before)
     // You might need to adjust the bin ranges according to your histogram
     int xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();
-    int yBinStart = 1, yBinEnd = h3->GetYaxis()->GetNbins();
+    int yBinStart = 1, yBinEnd =1;//yBinEnd = h3->GetYaxis()->GetNbins();
     OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
 
     // Close the ROOT file
