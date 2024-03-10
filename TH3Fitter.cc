@@ -449,7 +449,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     }
     TF1 *gausFit2 = new TF1("gausFit2", "gaus", minMass, maxMass);//leftmost_limit, 0.25
     for (int i = 0; i < 3; ++i) gausFit2->SetParameter(i, combinedFit->GetParameter(i));
-    histSubtracted->Fit(gausFit2, "R");
+    histSubtracted->Fit(gausFit2, "RL");
     //double chi2_s = gausFit2->GetChisquare();
     //double ndf_s = gausFit2->GetNDF();
     //double chi2ndf_s = chi2_s / ndf_s;
@@ -508,7 +508,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
-    histSubtracted->Draw();
+    histSubtracted->Draw("E");
     histSubtracted->SetMinimum(0.0);
 
 
