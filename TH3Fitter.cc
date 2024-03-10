@@ -355,13 +355,13 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
 
     for (int i=0;i<canvases3.size();i++){
         canvases3[i]->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%d_%d_NClus_%d_%d.pdf",histogramName.c_str(), xBinStart, xBinEnd,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
-        delete canvases[i];
+        delete canvases3[i];
     }
     //close pdf
     canvas->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%d_%d_NClus_%d_%d.pdf]",histogramName.c_str(), xBinStart, xBinEnd,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
 
     delete canvas;
-    canvases.clear();
+    canvases3.clear();
     // Close the ROOT file
     file->Close();
     delete file;
