@@ -497,26 +497,20 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     
     // Create a histogram for residuals
-    TH1F* residuals1 = (TH1F*)hProjZ->Clone("residuals");
-    residuals1->SetTitle("Residuals;X;Data-Fit");
-    TH1F* residuals2 = (TH1F*)hProjZ->Clone("residuals");
-    residuals2->SetTitle("Residuals;X;Data-Fit");
+    TGraph *residuals1 = new TGraph(hProjZ->GetNbinsX());
+    TGraph *residuals2 = new TGraph(hProjZ->GetNbinsX());
 
-    for (int i = 1; i <= hProjZ->GetNbinsX(); ++i) {
-        //residuals for combinedfit
+    for (int i = 0; i < hProjZ->GetNbinsX(); ++i) {
         // Get the bin center
         double bincenter1 = hProjZ->GetBinCenter(i);
         // Calculate the residual (Data - Fit)
         double residual1 = hProjZ->GetBinContent(i) - combinedFit->Eval(bincenter1);
-        residuals1->SetBinContent(i, residual1);
-        // Set the bin error for the residual as the error of the original histogram
-        residuals1->SetBinError(i, hProjZ->GetBinError(i));
-
-        // residual for gausfit2
+        residuals1->SetPoint(i, xres1, residual1); // Set the point in the residuals graph
+        //
         double bincenter2 = hProjZ->GetBinCenter(i);
-        double residual2 = hProjZ->GetBinContent(i) - gausFit2->Eval(bincenter2);
-        residuals2->SetBinContent(i, residual2);
-        residuals2->SetBinError(i, hProjZ->GetBinError(i));
+        double residual2 = hProjZ->GetBinContent(i) - gausFit2->Eval(bincenter1);
+        residuals2->SetPoint(i, xres2, residual2); // Set the point in the residuals graph
+
     }
 
 
@@ -591,9 +585,15 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     canvases.push_back(c3);
     //c3->SaveAs("FitInfo.pdf");
     TCanvas* c4 = new TCanvas("c4", "CombinedFit Residuals", 800, 600);
-    residuals1->Draw();
+    c4->cd();
+    residuals1->Draw("AP");
+    TLine *line = new TLine(gr->GetXaxis()->GetXmin(), 0, gr->GetXaxis()->GetXmax(), 0);
+    line->SetLineColor(kRed);
+    line->Draw("same");
     TCanvas* c5 = new TCanvas("c5", "Background Subtracted Peak Residuals", 800, 600);
-    residuals2->Draw();
+    c5->cd();
+    residuals2->Draw("AP");
+    line->Draw("same");
     canvases.push_back(c4);
     canvases.push_back(c5);
 
