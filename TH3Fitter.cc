@@ -496,7 +496,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     leg->AddEntry(combinedFit, "Combined Fit");
     leg->Draw();
 
-    //canvases.push_back(c1);
+    canvases.push_back(c1);
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
