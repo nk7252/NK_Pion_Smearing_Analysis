@@ -514,7 +514,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     leg->AddEntry(combinedFit, "Combined Fit");
     leg->Draw();
 
-    canvases.push_back(c1);
+    //canvases.push_back(c1);
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
@@ -522,7 +522,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     histSubtracted->SetMinimum(0.0);
 
 
-    canvases.push_back(c2);
+    //canvases.push_back(c2);
 
     // Second canvas: Custom list of fit results
     TCanvas* c3 = new TCanvas("canvas2", "Fit Parameters", 800, 600);
@@ -545,7 +545,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     pt->AddText(Form("Chi2/NDF = %f / %d= %f", gausFit2->GetChisquare(), gausFit2->GetNDF(),gausFit2->GetChisquare()/gausFit2->GetNDF()));
     pt->Draw();
 
-    canvases.push_back(c3);
+    //canvases.push_back(c3);
 
 
 
@@ -562,6 +562,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     delete combinedFit;
     delete leg;
     
-    return canvases;
+    //return canvases;
+    return nullptr;
 }
 //*/
