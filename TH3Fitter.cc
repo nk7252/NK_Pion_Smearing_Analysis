@@ -319,6 +319,7 @@ std::vector<TCanvas*> OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int 
     // Optionally, perform and visualize the final fit with the best parameters
     std::vector<TCanvas*> canvases2;
     canvases2=DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass);
+    canvases2[0]->SaveAs("combined_fits_test.pdf");
     return canvases2;
 }
 
@@ -531,7 +532,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     leg->Draw();
 
     canvases.push_back(c1);
-    //c1->SaveAs("combined_fits.pdf");
+    c1->SaveAs("combined_fits.pdf");
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
