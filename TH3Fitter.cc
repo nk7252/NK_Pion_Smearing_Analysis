@@ -356,9 +356,10 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     pt0->SetFillColor(0); // Transparent background
 
     // Adding custom text entries
-    pt0->AddText(Form("Fits to File = %s", histogramName.c_str()));
-    pt0->AddText(Form("For pT (GeV) = %.1f - %.1f ",(xBinStart-1)*pTbinwidth ,xBinEnd));
-    pt0->AddText(Form("For nClusters = %.1d - %.1d",(yBinStart-1)*nclusbinwidth ,yBinEnd));
+    //pt0->AddText(Form("Fits to File = %s", histogramName.c_str()));
+    pt0->AddText(Form("Fits to Histogram = %s", histogramName.c_str()));
+    pt0->AddText(Form("For pT (GeV) = %.1f - %.1f ",(xBinStart-1)*pTbinwidth ,xBinEnd*pTbinwidth));
+    pt0->AddText(Form("For nClusters = %.1d - %.1d",(yBinStart-1)*nclusbinwidth ,yBinEnd*nclusbinwidth));
     pt0->Draw();
     textCanvas->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
     delete textCanvas;
