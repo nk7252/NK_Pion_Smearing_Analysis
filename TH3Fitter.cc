@@ -71,7 +71,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
 Double_t combinedFunction(Double_t *x, Double_t *par);
 double LeftRightPolynomialBridge(double *x, double *par);
 void appendtextfile(TF1* fitFunc, const std::string& fitName);
-//void DrawBestHistogram( float leftmost_gauslimit, float rightmost_gauslimit);
+std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass);
 
 
 
@@ -221,7 +221,7 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     TF1 *gausFit = new TF1("gausFit", "gaus", minMass, maxMass);//leftpolylim, rightpolylim
     hProjZ->Fit(gausFit, "RQ0");
     // Combined Gaussian + Polynomial fit
-    TF1 *combinedFit = new TF1("combinedFit", combinedFunction, minMass, maxMass, 8);
+    TF1 *combinedFit = new TF1("combinedFit", combinedFunction, 0, 0.5, 8);
     // Set initial parameters from previous fits
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
@@ -229,7 +229,7 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     hProjZ->Fit(combinedFit, "RQL0");//L//M
     //-------------------------------------------show the poly4 part seperately
     // Create a new function for just the polynomial part
-    TF1 *polyPart = new TF1("polyPart", "pol4", minMass, maxMass);
+    TF1 *polyPart = new TF1("polyPart", "pol4", 0, 0.5);
     // Set the parameters of polyPart to those from the combined fit
     // Assuming the first 5 parameters of combinedFit are for the polynomial
     for (int i = 0; i < 5; ++i) polyPart->SetParameter(i, combinedFit->GetParameter(i+3));
@@ -311,11 +311,7 @@ void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yB
     std::cout << "Best Fit Range: [" << bestMinMass << ", " << bestMaxMass << "] with chi^2/NDF = " << bestChi2NDF << std::endl;
 
     // Optionally, perform and visualize the final fit with the best parameters
-    //std::cout << "Chi-squared: " << gaussFit->GetChisquare() << std::endl;
-    //std::cout << "Number of Degrees of Freedom: " << gaussFit->GetNDF() << std::endl;
-    //std::cout << "Chi-squared/NDF: " << gaussFit->GetChisquare()/gaussFit->GetNDF() << std::endl;
-    //std::cout << "Relative Width: " << gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1) << std::endl;
-    //FitAndGetParams(hProjZ, bestMinMass, bestMaxMass); // This will also draw the fit
+    DrawBestHistogram(hProjZ, minMass, maxMass);
 }
 
 void OptimizeHistogramFit(const std::string& rootFileName, const std::string& histogramName) {
@@ -390,21 +386,15 @@ void appendtextfile(TF1* fitFunc, const std::string& fitName){//, Double_t scale
     }
 }
 
-/*
-void DrawBestHistogram( float leftmost_gauslimit, float rightmost_gauslimit) {
+///*
+std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass) {
     // more thorough minimizer for fit
     //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     // Set the global fit strategy
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 
-    
-    // Open the ROOT file and get the histogram
-    //old file->cluster dependent cuts. sig fraction implement that cut. cut on centrality? 
-    //TFile *file = new TFile("diClusMass_23726_23746_nomPi0CalibCuts.root");
-    //new file. cluster dependent cut removed.
-    TFile *file = new TFile("diClusMass_allruns_peripheral.root");
-    TH1F *hist = (TH1F*)file->Get("h_InvMass");
-    
+
+    /*
     // Rebin the histogram to have 'numBins' bins
     // First, calculate the rebin factor assuming the histogram's range is 0 to maxXRange
     int numBins= 120;
@@ -415,51 +405,42 @@ void DrawBestHistogram( float leftmost_gauslimit, float rightmost_gauslimit) {
         std::cout << "current nbins: " << currentNumBins <<" requested nbins: " << numBins << " rebin by: " << rebinFactor << std::endl;
         hist->Rebin(rebinFactor);
         std::cout << "new nbin check: " << hist->GetNbinsX() << std::endl;
-    }
+    }*/
 
-    // overall limits
-    float rightmost_limit= 0.3;// fit range limit
-    float leftmost_limit= 0.05; // fit range limit. normally 0.05
-    //float rightmost_limit= 0.257;// fit range limit
-    //float leftmost_limit= 0.07; // fit range limit
-    // limits on gauss and poly
-    float leftpolylim = 0.11;
-    float rightpolylim = 0.19;
-    hist->GetXaxis()->SetRangeUser(0, 0.4);
-    //Double_t scale_factor = 2.5; // Replace with the factor by which you want to scale the errors
-    //Double_t error_replace= 0.1;
-    scale_histogram_errors(hist, scale_factor);
-    //replace_histogram_errors(hist, error_replace);
 
-    // Fit left and right regions with a polynomial, excluding Gaussian region
-    TF1 *leftRightFit = new TF1("leftRightFit", leftRightPolynomial, leftmost_limit, rightmost_limit, 5);
-    hist->Fit(leftRightFit, "R");
+    //hist->GetXaxis()->SetRangeUser(0, 0.4);
+
+    LeftRightPolynomial polyFunc(minMass, maxMass); //exclusion range
+    gLeftRightPoly = &polyFunc; // Point the global pointer to your instance
+    TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, 0, 0.5, 5);
+
+    hProjZ->Fit(leftRightFit, "R");
 
     // Fit Gaussian in the specified range
-    TF1 *gausFit = new TF1("gausFit", "gaus", leftpolylim, rightpolylim);//leftpolylim, rightpolylim
-    hist->Fit(gausFit, "R");
+    TF1 *gausFit = new TF1("gausFit", "gaus", minMass, maxMass);//leftpolylim, rightpolylim
+    hProjZ->Fit(gausFit, "R");
 
 
     // Combined Gaussian + Polynomial fit
-    TF1 *combinedFit = new TF1("combinedFit", combinedFunction, leftmost_limit, rightmost_limit, 8);
+    TF1 *combinedFit = new TF1("combinedFit", combinedFunction, 0, 0.5, 8);
     // Set initial parameters from previous fits
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
     //try to improve the fit.
-    hist->Fit(combinedFit, "RL");//M
-    double chi2 = combinedFit->GetChisquare();
-    double ndf = combinedFit->GetNDF();
-    double chi2ndf = chi2 / ndf;
+    hProjZ->Fit(combinedFit, "RL");//M
+    //double chi2 = combinedFit->GetChisquare();
+    //double ndf = combinedFit->GetNDF();
+    //double chi2ndf = chi2 / ndf;
 
-    std::cout << "Chi-squared: " << chi2 << std::endl;
-    std::cout << "Number of Degrees of Freedom: " << ndf << std::endl;
-    std::cout << "Chi-squared/NDF: " << chi2ndf << std::endl;
+    //std::cout << "Chi-squared: " << chi2 << std::endl;
+    //std::cout << "Number of Degrees of Freedom: " << ndf << std::endl;
+    //std::cout << "Chi-squared/NDF: " << chi2ndf << std::endl;
 
     //-------------------------------------------show the poly4 part seperately
 
 
     // Create a new function for just the polynomial part
-    TF1 *polyPart = new TF1("polyPart", "pol4", leftmost_limit, rightmost_limit);
+    TF1 *polyPart = new TF1("polyPart", "pol4", 0, 0.5);
 
     // Set the parameters of polyPart to those from the combined fit
     // Assuming the first 5 parameters of combinedFit are for the polynomial
@@ -467,42 +448,43 @@ void DrawBestHistogram( float leftmost_gauslimit, float rightmost_gauslimit) {
     
     
     // Create a new histogram to store the subtracted data
-    TH1F *histSubtracted = (TH1F*)hist->Clone("histSubtracted");
+    TH1F *histSubtracted = (TH1F*)hProjZ->Clone("histSubtracted");
 
     // Subtract the polynomial part
-    for (int i = 1; i <= hist->GetNbinsX(); ++i) {
-        double x = hist->GetBinCenter(i);
-        double y = hist->GetBinContent(i) - polyPart->Eval(x);
+    for (int i = 1; i <= hProjZ->GetNbinsX(); ++i) {
+        double x = hProjZ->GetBinCenter(i);
+        double y = hProjZ->GetBinContent(i) - polyPart->Eval(x);
         histSubtracted->SetBinContent(i, y);
     }
-    TF1 *gausFit2 = new TF1("gausFit2", "gaus", leftmost_gauslimit, rightmost_gauslimit);//leftmost_limit, 0.25
+    TF1 *gausFit2 = new TF1("gausFit2", "gaus", minMass, maxMass);//leftmost_limit, 0.25
     for (int i = 0; i < 3; ++i) gausFit2->SetParameter(i, combinedFit->GetParameter(i));
     histSubtracted->Fit(gausFit2, "R");
-    double chi2_s = gausFit2->GetChisquare();
-    double ndf_s = gausFit2->GetNDF();
-    double chi2ndf_s = chi2_s / ndf_s;
+    //double chi2_s = gausFit2->GetChisquare();
+    //double ndf_s = gausFit2->GetNDF();
+    //double chi2ndf_s = chi2_s / ndf_s;
 
-    std::cout << "Chi-squared: " << chi2_s << std::endl;
-    std::cout << "Number of Degrees of Freedom: " << ndf_s  << std::endl;
-    std::cout << "Chi-squared/NDF: " << chi2ndf_s  << std::endl;
-    std::cout << "Relative Width: " << 100*gausFit2->GetParameter(2)/gausFit2->GetParameter(1)  << " %" << std::endl;
+    //std::cout << "Chi-squared: " << chi2_s << std::endl;
+    //std::cout << "Number of Degrees of Freedom: " << ndf_s  << std::endl;
+    //std::cout << "Chi-squared/NDF: " << chi2ndf_s  << std::endl;
+    //std::cout << "Relative Width: " << 100*gausFit2->GetParameter(2)/gausFit2->GetParameter(1)  << " %" << std::endl;
 
     //store 2 separate functions for visualization
-    TF1 *fleft = new TF1("fleft",leftRightPolynomial, leftmost_limit, leftpolylim, 5);
+    TF1 *fleft = new TF1("fleft",leftRightFit, 0, minMass, 5);
     fleft->SetParameters(leftRightFit->GetParameters());
     //hist->GetListOfFunctions()->Add(fleft);
     //gROOT->GetListOfFunctions()->Remove(fleft);
-    TF1 *fright = new TF1("fright",leftRightPolynomial, rightpolylim, rightmost_limit, 5);
+    TF1 *fright = new TF1("fright",leftRightFit, maxMass, 0.5, 5);
     fright->SetParameters(leftRightFit->GetParameters());
     //hist->GetListOfFunctions()->Add(fright);
     //gROOT->GetListOfFunctions()->Remove(fright);
 
 
 
-    // Draw everything
+    // Draw everything and add canvases to vector of canvases
+    std::vector<TCanvas*> canvases;
     //-------------------------------------------------------------------------------------------canvas 1
     TCanvas *c1 = new TCanvas("c1", "Fits", 800, 600);
-    hist->Draw("E");
+    hProjZ->Draw("E");
 
     //gausFit->SetLineColor(kRed);
     //gausFit->Draw("SAME");// draw the gaussian fit
@@ -529,19 +511,17 @@ void DrawBestHistogram( float leftmost_gauslimit, float rightmost_gauslimit) {
     leg->AddEntry(combinedFit, "Combined Fit");
     leg->Draw();
 
-    // Save the canvas
-    c1->SaveAs("combined_fits.pdf");
+    canvases.push_back(c1);
+
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
     histSubtracted->Draw();
     histSubtracted->SetMinimum(0.0);
-    c2->SaveAs("Subtracted_Peak.pdf");
 
-    //append // Append fit parameters to text file
-    appendtextfile(combinedFit, "Combined Fit",scale_factor);
-    appendtextfile(gausFit2, "subpgaus fit",scale_factor);
 
-// Second canvas: Custom list of fit results
+    canvases.push_back(c2);
+
+    // Second canvas: Custom list of fit results
     TCanvas* c3 = new TCanvas("canvas2", "Fit Parameters", 800, 600);
     c3->cd();
 
@@ -560,16 +540,16 @@ void DrawBestHistogram( float leftmost_gauslimit, float rightmost_gauslimit) {
     pt->AddText(Form("Sigma = %f +/- %f", gausFit2->GetParameter(2), gausFit2->GetParError(2)));
     pt->AddText(Form("Relative Width: %f",gausFit2->GetParameter(2)* 100.0f / gausFit2->GetParameter(1)));   
     pt->AddText(Form("Chi2/NDF = %f / %d= %f", gausFit2->GetChisquare(), gausFit2->GetNDF(),gausFit2->GetChisquare()/gausFit2->GetNDF()));
-
     pt->Draw();
-    c3->SaveAs("FitInfo.pdf");
+
+    canvases.push_back(c3);
 
 
 
-    delete file;
-    delete c1;
-    delete c2;
-    delete c3;
+
+
+
+    //clean up
     delete gausFit;
     delete gausFit2;
     delete polyPart;
@@ -579,4 +559,6 @@ void DrawBestHistogram( float leftmost_gauslimit, float rightmost_gauslimit) {
     delete combinedFit;
     delete leg;
     
-}*/
+    return canvases;
+}
+//*/
