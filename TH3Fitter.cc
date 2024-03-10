@@ -288,7 +288,7 @@ void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yB
     double bestChi2NDF = TMath::Infinity();
     double bestMinMass = 0, bestMaxMass = 0;
 
-    double startMass = 0.05; // start of mass range
+    double startMass = 0.1; // start of mass range
     double endMass = 0.25; // end of mass range
     double step = 0.005; // step size
 
