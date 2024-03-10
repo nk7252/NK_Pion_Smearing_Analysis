@@ -454,11 +454,11 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //std::cout << "Relative Width: " << 100*gausFit2->GetParameter(2)/gausFit2->GetParameter(1)  << " %" << std::endl;
 
     //store 2 separate functions for visualization
-    TF1 *fleft = new TF1("fleft",leftRightFit, 0, minMass, 5);
+    TF1 *fleft = new TF1("fleft",LeftRightPolynomialBridge, 0, minMass, 5);
     fleft->SetParameters(leftRightFit->GetParameters());
     //hist->GetListOfFunctions()->Add(fleft);
     //gROOT->GetListOfFunctions()->Remove(fleft);
-    TF1 *fright = new TF1("fright",leftRightFit, maxMass, 0.5, 5);
+    TF1 *fright = new TF1("fright",LeftRightPolynomialBridge, maxMass, 0.5, 5);
     fright->SetParameters(leftRightFit->GetParameters());
     //hist->GetListOfFunctions()->Add(fright);
     //gROOT->GetListOfFunctions()->Remove(fright);
