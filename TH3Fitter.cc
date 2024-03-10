@@ -343,7 +343,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     // You might need to adjust the bin ranges according to your histogram
     int xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();
     int yBinStart = 1, yBinEnd =1;//yBinEnd = h3->GetYaxis()->GetNbins();
-    int nclusbinwidth= h3->GetYaxis()->GetBinWidth(1)///h3->GetYaxis()->GetNbins();
+    int nclusbinwidth= h3->GetYaxis()->GetBinWidth(1);///h3->GetYaxis()->GetNbins();
 
     TCanvas *canvas = new TCanvas("canvas", "Canvas", 800, 600);
 
@@ -353,14 +353,14 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     std::vector<TCanvas*> canvases3;
     canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
 
-    for (i=0;i<canvases3.size();i++){
+    for (int i=0;i<canvases3.size();i++){
         canvases3[i]->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%d_%d_NClus_%d_%d.pdf",histogramName.c_str(), xBinStart, xBinEnd,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
     }
     //close pdf
     canvas->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%d_%d_NClus_%d_%d.pdf]",histogramName.c_str(), xBinStart, xBinEnd,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
 
     delete canvas;
-    delete canvases3[];
+    delete canvases3;
     // Close the ROOT file
     file->Close();
     delete file;
