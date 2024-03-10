@@ -208,20 +208,23 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     }
     */
 
+    float leftlimit =0.05;
+    float rightlimit =0.45;
+
     //hProjZ->GetXaxis()->SetRangeUser(0, 0.4);
 
     // Fit left and right regions with a polynomial, excluding Gaussian region
 
     LeftRightPolynomial polyFunc(minMass, maxMass); //exclusion range
     gLeftRightPoly = &polyFunc; // Point the global pointer to your instance
-    TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, 0, 0.5, 5);
+    TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, leftlimit, rightlimit, 5);
 
     hProjZ->Fit(leftRightFit, "RQ0");// "RQ" option for Range and Quiet, 0 for do not display fit on canvas.
     // Fit Gaussian in the specified range
     TF1 *gausFit = new TF1("gausFit", "gaus", minMass, maxMass);//leftpolylim, rightpolylim
     hProjZ->Fit(gausFit, "RQ0");
     // Combined Gaussian + Polynomial fit
-    TF1 *combinedFit = new TF1("combinedFit", combinedFunction, 0, 0.5, 8);
+    TF1 *combinedFit = new TF1("combinedFit", combinedFunction, leftlimit, rightlimit, 8);
     // Set initial parameters from previous fits
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
@@ -229,7 +232,7 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     hProjZ->Fit(combinedFit, "RQL0");//L//M
     //-------------------------------------------show the poly4 part seperately
     // Create a new function for just the polynomial part
-    TF1 *polyPart = new TF1("polyPart", "pol4", 0, 0.5);
+    TF1 *polyPart = new TF1("polyPart", "pol4", leftlimit, rightlimit);
     // Set the parameters of polyPart to those from the combined fit
     // Assuming the first 5 parameters of combinedFit are for the polynomial
     for (int i = 0; i < 5; ++i) polyPart->SetParameter(i, combinedFit->GetParameter(i+3));
@@ -397,7 +400,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     LeftRightPolynomial polyFunc(minMass, maxMass); //exclusion range
     gLeftRightPoly = &polyFunc; // Point the global pointer to your instance
-    TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, 0, 0.5, 5);
+    TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, leftlimit, rightlimit, 5);
 
     hProjZ->Fit(leftRightFit, "R");
 
@@ -407,7 +410,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
 
     // Combined Gaussian + Polynomial fit
-    TF1 *combinedFit = new TF1("combinedFit", combinedFunction, 0, 0.5, 8);
+    TF1 *combinedFit = new TF1("combinedFit", combinedFunction, leftlimit, rightlimit, 8);
     // Set initial parameters from previous fits
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
@@ -454,11 +457,11 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //std::cout << "Relative Width: " << 100*gausFit2->GetParameter(2)/gausFit2->GetParameter(1)  << " %" << std::endl;
 
     //store 2 separate functions for visualization
-    TF1 *fleft = new TF1("fleft",LeftRightPolynomialBridge, 0, minMass, 5);
+    TF1 *fleft = new TF1("fleft",LeftRightPolynomialBridge, leftlimit, minMass, 5);
     fleft->SetParameters(leftRightFit->GetParameters());
     //hist->GetListOfFunctions()->Add(fleft);
     //gROOT->GetListOfFunctions()->Remove(fleft);
-    TF1 *fright = new TF1("fright",LeftRightPolynomialBridge, maxMass, 0.5, 5);
+    TF1 *fright = new TF1("fright",LeftRightPolynomialBridge, maxMass, rightlimit, 5);
     fright->SetParameters(leftRightFit->GetParameters());
     //hist->GetListOfFunctions()->Add(fright);
     //gROOT->GetListOfFunctions()->Remove(fright);
