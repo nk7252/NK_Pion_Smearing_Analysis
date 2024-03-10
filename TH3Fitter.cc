@@ -192,6 +192,7 @@ void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName)
 
 // Function to perform the Gaussian fit and return chi^2/NDF
 std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass) {
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 
     // Rebin the histogram to have 'numBins' bins
@@ -392,7 +393,7 @@ void appendtextfile(TF1* fitFunc, const std::string& fitName){//, Double_t scale
 
 std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass) {
     // more thorough minimizer for fit
-    //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     // Set the global fit strategy
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 
