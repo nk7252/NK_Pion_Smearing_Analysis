@@ -396,6 +396,9 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     // Set the global fit strategy
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 
+
+    float leftlimit =0.05;
+    float rightlimit =0.45;
     //hist->GetXaxis()->SetRangeUser(0, 0.4);
 
     LeftRightPolynomial polyFunc(minMass, maxMass); //exclusion range
