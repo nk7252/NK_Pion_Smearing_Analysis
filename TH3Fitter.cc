@@ -386,7 +386,7 @@ void appendtextfile(TF1* fitFunc, const std::string& fitName){//, Double_t scale
     }
 }
 
-///*
+
 std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass) {
     // more thorough minimizer for fit
     //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
@@ -405,9 +405,10 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
         std::cout << "current nbins: " << currentNumBins <<" requested nbins: " << numBins << " rebin by: " << rebinFactor << std::endl;
         hist->Rebin(rebinFactor);
         std::cout << "new nbin check: " << hist->GetNbinsX() << std::endl;
-    }*/
+    }
+    */
 
-
+    /*
     //hist->GetXaxis()->SetRangeUser(0, 0.4);
 
     LeftRightPolynomial polyFunc(minMass, maxMass); //exclusion range
@@ -479,10 +480,11 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //gROOT->GetListOfFunctions()->Remove(fright);
 
 
-
+*/
     // Draw everything and add canvases to vector of canvases
     std::vector<TCanvas*> canvases;
-    //-------------------------------------------------------------------------------------------canvas 1
+    //--------------------------------------------------------------canvas 1
+    /*
     TCanvas *c1 = new TCanvas("c1", "Fits", 800, 600);
     hProjZ->Draw("E");
 
@@ -558,7 +560,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     delete fright;
     delete combinedFit;
     delete leg;
-    
+    */
     return canvases;
 }
-//*/
+
+
