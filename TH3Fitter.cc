@@ -388,6 +388,30 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
             canvases3.clear();
        // }
     }
+    TCanvas *textCanvas = new TCanvas("textCanvas", "Canvas Info", 800, 600);
+    textCanvas->cd();
+    TPaveText* pt0 = new TPaveText(0.1, 0.1, 0.9, 0.9, "blNDC"); // blNDC: borderless, normalized coordinates
+    pt0->SetTextAlign(12); // Align text to the left
+    pt0->SetFillColor(0); // Transparent background
+
+    // Adding custom text entries
+    //pt0->AddText(Form("Fits to File = %s", histogramName.c_str()));
+    pt0->AddText(Form("Fits to Histogram = %s", histogramName.c_str()));
+    pt0->AddText(Form("For pT (GeV) = %.1f - %.1f ",(xBinStart-1)*pTbinwidth ,xBinEnd*pTbinwidth));
+    pt0->AddText(Form("For nClusters = %.1d - %.1d",(1-1)*nclusbinwidth ,20*nclusbinwidth));
+    pt0->Draw();
+    textCanvas->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
+    delete textCanvas;
+    delete pt0;
+
+    std::vector<TCanvas*> canvases3;
+    canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, 1, 20);
+
+    for (auto* canvascol : canvases3) {//(int i=0;i<canvases3.size();i++){
+        canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
+        delete canvascol;
+    }
+    canvases3.clear();
     
 
 
