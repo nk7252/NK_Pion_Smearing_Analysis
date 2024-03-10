@@ -532,7 +532,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     // Adding custom text entries
     pt->AddText("Data Fit");
     pt->AddText("Fit Parameters:");
-    pt->AddText(Form("Combined Fit Range = %f to %f", 0, 0.5));
+    pt->AddText(Form("Combined Fit Range = %f to %f", 0.0, 0.5));
     pt->AddText(Form("Peak Mean = %f +/- %f", combinedFit->GetParameter(1), combinedFit->GetParError(1)));
     pt->AddText(Form("Peak Sigma = %f +/- %f", combinedFit->GetParameter(2), combinedFit->GetParError(2)));
     pt->AddText(Form("Background Subtracted Peak Fit = %f to %f", minMass, maxMass));
