@@ -587,8 +587,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TCanvas* c4 = new TCanvas("c4", "CombinedFit Residuals", 800, 600);
     c4->cd();
     residuals1->Draw("AP");
-    residuals1->SetMarkerSize(3); // Increase the marker size
-    residuals1->SetMarkerStyle(20); // Increase the marker size
+    residuals1->SetMarkerSize(1); // Increase the marker size
+    residuals1->SetMarkerStyle(27); // Increase the marker size
     TLine *line = new TLine(leftlimit, 0, rightlimit, 0);
     line->SetLineColor(kRed);
     line->Draw("same");
@@ -598,11 +598,11 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TCanvas* c5 = new TCanvas("c5", "Background Subtracted Peak Residuals", 800, 600);
     c5->cd();
     residuals2->Draw("AP");
-    residuals2->SetMarkerSize(3); // Increase the marker size
-    residuals1->SetMarkerStyle(21); // Increase the marker size
+    residuals2->SetMarkerSize(1); // Increase the marker size
+    residuals2->SetMarkerStyle(28); // Increase the marker size
     line->Draw("same");
     c5->Update();
-    
+
     canvases.push_back(c4);
     canvases.push_back(c5);
 
