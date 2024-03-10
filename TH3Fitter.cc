@@ -360,7 +360,8 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
 
     // look at ncluster ranges(bins of width 20 nclus)
     for(int yBinEnd=1; yBinEnd<=h3->GetYaxis()->GetNbins(); yBinEnd++){
-        for(int yBinStart=1; yBinStart<=yBinEnd; yBinStart++){
+        int yBinStart=yBinEnd;
+        //for(int yBinStart=1; yBinStart<=yBinEnd; yBinStart++){
             TCanvas *textCanvas = new TCanvas("textCanvas", "Canvas Info", 800, 600);
             textCanvas->cd();
             TPaveText* pt0 = new TPaveText(0.1, 0.1, 0.9, 0.9, "blNDC"); // blNDC: borderless, normalized coordinates
@@ -385,7 +386,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
                 delete canvascol;
             }
             canvases3.clear();
-        }
+       // }
     }
     
 
