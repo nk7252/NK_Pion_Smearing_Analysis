@@ -393,22 +393,6 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     // Set the global fit strategy
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 
-
-    /*
-    // Rebin the histogram to have 'numBins' bins
-    // First, calculate the rebin factor assuming the histogram's range is 0 to maxXRange
-    int numBins= 120;
-    int currentNumBins = hist->GetNbinsX();
-    double currentXMax = hist->GetXaxis()->GetXmax();
-    int rebinFactor = currentNumBins / numBins;
-    if (rebinFactor > 1) { // Only rebin if the factor is greater than 1
-        std::cout << "current nbins: " << currentNumBins <<" requested nbins: " << numBins << " rebin by: " << rebinFactor << std::endl;
-        hist->Rebin(rebinFactor);
-        std::cout << "new nbin check: " << hist->GetNbinsX() << std::endl;
-    }
-    */
-
-    /*
     //hist->GetXaxis()->SetRangeUser(0, 0.4);
 
     LeftRightPolynomial polyFunc(minMass, maxMass); //exclusion range
@@ -480,11 +464,10 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //gROOT->GetListOfFunctions()->Remove(fright);
 
 
-*/
+
     // Draw everything and add canvases to vector of canvases
     std::vector<TCanvas*> canvases;
-    //--------------------------------------------------------------canvas 1
-    /*
+    //-------------------------------------------------------------------------------------------canvas 1
     TCanvas *c1 = new TCanvas("c1", "Fits", 800, 600);
     hProjZ->Draw("E");
 
@@ -560,7 +543,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     delete fright;
     delete combinedFit;
     delete leg;
-    */
+    
     return canvases;
 }
 
