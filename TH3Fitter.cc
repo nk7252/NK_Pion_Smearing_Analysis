@@ -531,7 +531,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     leg->Draw();
 
     canvases.push_back(c1);
-    c1->SaveAs("combined_fits.pdf");
+    //c1->SaveAs("combined_fits.pdf");
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
@@ -540,7 +540,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
 
     canvases.push_back(c2);
-    c2->SaveAs("Subtracted_Peak.pdf");
+    //c2->SaveAs("Subtracted_Peak.pdf");
 
     // Second canvas: Custom list of fit results
     TCanvas* c3 = new TCanvas("c3", "Fit Parameters", 800, 600);
@@ -566,7 +566,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     pt->Draw();
 
     canvases.push_back(c3);
-    c3->SaveAs("FitInfo.pdf");
+    //c3->SaveAs("FitInfo.pdf");
 
 
 
