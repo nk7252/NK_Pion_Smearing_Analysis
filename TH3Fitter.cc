@@ -509,7 +509,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
         //
         double bincenter2 = histSubtracted->GetBinCenter(i);
         double residual2 = histSubtracted->GetBinContent(i) - gausFit2->Eval(bincenter1);
-        histSubtracted->SetPoint(i, bincenter2, residual2); // Set the point in the residuals graph
+        residuals2->SetPoint(i, bincenter2, residual2); // Set the point in the residuals graph
 
     }
 
