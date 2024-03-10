@@ -3,6 +3,10 @@
 #include <TF1.h>
 #include <TFile.h>
 #include <TCanvas.h>
+//#include <TH1F.h>
+#include <TLegend.h>
+#include <Math/MinimizerOptions.h>
+
 #include <iostream>
 #include <fstream>
 #include <vector>
