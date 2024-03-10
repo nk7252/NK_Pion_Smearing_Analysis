@@ -507,14 +507,14 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
         // Get the bin center
         double bincenter1 = hProjZ->GetBinCenter(i);
         // Calculate the residual (Data - Fit)
-        double residual1 = hProjZ->GetBinContent(i) - combinedFit->Eval(x);
+        double residual1 = hProjZ->GetBinContent(i) - combinedFit->Eval(bincenter1);
         residuals1->SetBinContent(i, residual1);
         // Set the bin error for the residual as the error of the original histogram
         residuals1->SetBinError(i, hProjZ->GetBinError(i));
 
         // residual for gausfit2
         double bincenter2 = hProjZ->GetBinCenter(i);
-        double residual2 = hProjZ->GetBinContent(i) - gausFit2->Eval(x);
+        double residual2 = hProjZ->GetBinContent(i) - gausFit2->Eval(bincenter2);
         residuals2->SetBinContent(i, residual2);
         residuals2->SetBinError(i, hProjZ->GetBinError(i));
     }
