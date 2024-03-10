@@ -340,7 +340,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     }
 
     // Call the function to optimize the fit range 
-    int xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();
+    float xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();
     int yBinStart = 1, yBinEnd =1;
     int nclusbinwidth= h3->GetYaxis()->GetBinWidth(1);///h3->GetYaxis()->GetNbins();
     float pTbinwidth= h3->GetXaxis()->GetBinWidth(1);
@@ -358,7 +358,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     // Adding custom text entries
     pt0->AddText(Form("Fits to File = %s", histogramName.c_str()));
     pt0->AddText(Form("For pT (GeV) = %.1f - %.1f ",(xBinStart-1)*pTbinwidth ,xBinEnd));
-    pt0->AddText(Form("For nClusters = %.1f - %.1f",(yBinStart-1)*nclusbinwidth ,yBinEnd));
+    pt0->AddText(Form("For nClusters = %.1d - %.1d",(yBinStart-1)*nclusbinwidth ,yBinEnd));
     pt0->Draw();
     textCanvas->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
     delete textCanvas;
