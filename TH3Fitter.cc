@@ -496,6 +496,29 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //hist->GetListOfFunctions()->Add(fright);
     //gROOT->GetListOfFunctions()->Remove(fright);
 
+    
+    // Create a histogram for residuals
+    TH1F* residuals1 = (TH1F*)hProjZ->Clone("residuals");
+    residuals1->SetTitle("Residuals;X;Data-Fit");
+    TH1F* residuals2 = (TH1F*)hProjZ->Clone("residuals");
+    residuals2->SetTitle("Residuals;X;Data-Fit");
+
+    for (int i = 1; i <= hProjZ->GetNbinsX(); ++i) {
+        //residuals for combinedfit
+        // Get the bin center
+        double x = hProjZ->GetBinCenter(i);
+        // Calculate the residual (Data - Fit)
+        double residual1 = hProjZ->GetBinContent(i) - fitFunc->Eval(x);
+        residuals1->SetBinContent(i, residual1);
+        // Set the bin error for the residual as the error of the original histogram
+        residuals1->SetBinError(i, hProjZ->GetBinError(i));
+
+        // residual for gausfit2
+        double x = hProjZ->GetBinCenter(i);
+        double residual2 = hProjZ->GetBinContent(i) - fitFunc->Eval(x);
+        residuals2->SetBinContent(i, residual2);
+        residuals2->SetBinError(i, hProjZ->GetBinError(i));
+    }
 
 
     // Draw everything and add canvases to vector of canvases
@@ -568,8 +591,12 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     canvases.push_back(c3);
     //c3->SaveAs("FitInfo.pdf");
-
-
+    TCanvas* c4 = new TCanvas("c4", "CombinedFit Residuals", 800, 600);
+    residuals1->Draw();
+    TCanvas* c5 = new TCanvas("c5", "Background Subtracted Peak Residuals", 800, 600);
+    residuals2->Draw();
+    canvases.push_back(c4);
+    canvases.push_back(c5);
 
 
 
