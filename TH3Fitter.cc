@@ -587,7 +587,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TCanvas* c4 = new TCanvas("c4", "CombinedFit Residuals", 800, 600);
     c4->cd();
     residuals1->Draw("AP");
-    TLine *line = new TLine(gr->GetXaxis()->GetXmin(), 0, gr->GetXaxis()->GetXmax(), 0);
+    TLine *line = new TLine(leftlimit, 0, rightlimit, 0);
     line->SetLineColor(kRed);
     line->Draw("same");
     TCanvas* c5 = new TCanvas("c5", "Background Subtracted Peak Residuals", 800, 600);
