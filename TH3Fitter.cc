@@ -208,9 +208,6 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     }
     */
 
-    // limits on gauss and poly
-    //float leftpolylim = 0.11;
-    //float rightpolylim = 0.19;
     //hProjZ->GetXaxis()->SetRangeUser(0, 0.4);
 
     // Fit left and right regions with a polynomial, excluding Gaussian region
@@ -314,7 +311,7 @@ void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yB
     std::cout << "Best Fit Range: [" << bestMinMass << ", " << bestMaxMass << "] with chi^2/NDF = " << bestChi2NDF << std::endl;
 
     // Optionally, perform and visualize the final fit with the best parameters
-    DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass);
+    //DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass);
 }
 
 void OptimizeHistogramFit(const std::string& rootFileName, const std::string& histogramName) {
@@ -499,7 +496,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     fleft->SetLineColor(kBlue);
     fright->SetLineColor(kBlue);
 
-    fleft->Draw("SAME");
+    //fleft->Draw("SAME");
     //fright->Draw("SAME");// turn off to see the inflection better.
     //leftRightFit->Draw("SAME"); // Draw the left and right polynomial fits
 
@@ -510,7 +507,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TLegend *leg = new TLegend(0.1, 0.7, 0.3, 0.9);//bot left x, bot left y, top right x, top right y 
     leg->AddEntry(gausFit, "Gaussian Fit");
     //leg->AddEntry(leftRightFit, "Left & Right Polynomial Fit");
-    leg->AddEntry(fleft, "Left & Right Polynomial Fit");
+    //leg->AddEntry(fleft, "Left & Right Polynomial Fit");
     leg->AddEntry(combinedFit, "Combined Fit");
     leg->Draw();
 
