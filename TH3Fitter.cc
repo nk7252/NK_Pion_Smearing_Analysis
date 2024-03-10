@@ -485,8 +485,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     gausFit->Draw("SAME");// draw the gaussian fit
     polyPart->SetLineColor(kRed);
     polyPart->Draw("SAME");
-    GaussPart->SetLineColor(kGreen);
-    GaussPart->Draw("SAME");
+    //GaussPart->SetLineColor(kGreen);
+    //GaussPart->Draw("SAME");
 
     //leftRightFit->SetLineColor(kBlue);
     fleft->SetLineColor(kBlue);
