@@ -589,9 +589,11 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     residuals1->Draw("AP");
     TLine *line = new TLine(leftlimit, 0, rightlimit, 0);
     line->SetLineColor(kRed);
+    residuals1->SetMarkerSize(3); // Increase the marker size
     line->Draw("same");
     TCanvas* c5 = new TCanvas("c5", "Background Subtracted Peak Residuals", 800, 600);
     c5->cd();
+    residuals2->SetMarkerSize(3); // Increase the marker size
     residuals2->Draw("AP");
     line->Draw("same");
     canvases.push_back(c4);
