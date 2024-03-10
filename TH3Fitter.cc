@@ -344,22 +344,22 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     int xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();
     int yBinStart = 1, yBinEnd =1;//yBinEnd = h3->GetYaxis()->GetNbins();
     int nclusbinwidth= h3->GetYaxis()->GetBinWidth(1);///h3->GetYaxis()->GetNbins();
-    int pTbinwidth= h3->GetXaxis()->GetBinWidth(1);
+    float pTbinwidth= h3->GetXaxis()->GetBinWidth(1);
 
     TCanvas *canvas = new TCanvas("canvas", "Canvas", 800, 600);
 
     //open pdf
-    canvas->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%.1d_%.1d_NClus_%d_%d.pdf[",histogramName.c_str(), xBinStart*pTbinwidth, xBinEnd*pTbinwidth,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
+    canvas->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%.1f_%.1f_NClus_%d_%d.pdf[",histogramName.c_str(), xBinStart*pTbinwidth, xBinEnd*pTbinwidth,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
     
     std::vector<TCanvas*> canvases3;
     canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
 
     for (int i=0;i<canvases3.size();i++){
-        canvases3[i]->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%.1d_%.1d_NClus_%d_%d.pdf",histogramName.c_str(), xBinStart*pTbinwidth, xBinEnd*pTbinwidth, yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
+        canvases3[i]->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%.1f_%.1f_NClus_%d_%d.pdf",histogramName.c_str(), xBinStart*pTbinwidth, xBinEnd*pTbinwidth, yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
         delete canvases3[i];
     }
     //close pdf
-    canvas->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%.1d_%.1d_NClus_%d_%d.pdf]",histogramName.c_str(), xBinStart*pTbinwidth, xBinEnd*pTbinwidth,(yBinStart-1)*nclusbinwidth,yBinEnd*nclusbinwidth));
+    canvas->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%.1f_%.1f_NClus_%d_%d.pdf]",histogramName.c_str(), xBinStart*pTbinwidth, xBinEnd*pTbinwidth,(yBinStart-1)*nclusbinwidth,yBinEnd*nclusbinwidth));
 
     delete canvas;
     canvases3.clear();
