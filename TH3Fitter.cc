@@ -500,16 +500,16 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TGraph *residuals1 = new TGraph(hProjZ->GetNbinsX());
     TGraph *residuals2 = new TGraph(hProjZ->GetNbinsX());
 
-    for (int i = 0; i < hProjZ->GetNbinsX(); ++i) {
+    for (int i = 1; i < hProjZ->GetNbinsX(); ++i) {
         // Get the bin center
         double bincenter1 = hProjZ->GetBinCenter(i);
         // Calculate the residual (Data - Fit)
         double residual1 = hProjZ->GetBinContent(i) - combinedFit->Eval(bincenter1);
         residuals1->SetPoint(i, bincenter1, residual1); // Set the point in the residuals graph
         //
-        double bincenter2 = hProjZ->GetBinCenter(i);
-        double residual2 = hProjZ->GetBinContent(i) - gausFit2->Eval(bincenter1);
-        residuals2->SetPoint(i, bincenter2, residual2); // Set the point in the residuals graph
+        double bincenter2 = histSubtracted->GetBinCenter(i);
+        double residual2 = histSubtracted->GetBinContent(i) - gausFit2->Eval(bincenter1);
+        histSubtracted->SetPoint(i, bincenter2, residual2); // Set the point in the residuals graph
 
     }
 
