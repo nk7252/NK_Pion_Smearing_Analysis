@@ -288,7 +288,7 @@ void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yB
     double bestMinMass = 0, bestMaxMass = 0;
 
     double startMass = 0.05; // start of mass range
-    double endMass = 0.4; // end of mass range
+    double endMass = 0.25; // end of mass range
     double step = 0.005; // step size
 
     for (double minMass = startMass; minMass < endMass; minMass += step) {
@@ -498,8 +498,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     // Add a legend
     TLegend *leg = new TLegend(0.1, 0.7, 0.3, 0.9);//bot left x, bot left y, top right x, top right y 
     leg->AddEntry(gausFit, "Gaussian Fit");
-    //leg->AddEntry(leftRightFit, "Left & Right Polynomial Fit");
-    //leg->AddEntry(fleft, "Left & Right Polynomial Fit");
+    leg->AddEntry(polyPart, "Polynomial Fit");
+    leg->AddEntry(fleft, "Left & Right Polynomial Fit");
     leg->AddEntry(combinedFit, "Combined Fit");
     leg->Draw();
 
