@@ -67,8 +67,9 @@ static LeftRightPolynomial* gLeftRightPoly = nullptr;
 std::vector<FitConfig> LoadOrCreateConfig(const std::string& configFile);
 void FitAndSaveProjection(TH3* h3, const FitConfig& config, const std::string& outputPDF, std::ofstream& csvFile);
 void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName);
+// automated fitting
 std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass);
-void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yBinEnd);
+std::vector<TCanvas*> OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yBinEnd);
 void OptimizeHistogramFit(const std::string& rootFileName, const std::string& histogramName);
 //for fitting gaus+poly4
 Double_t combinedFunction(Double_t *x, Double_t *par);
@@ -192,8 +193,9 @@ void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName)
 
 // Function to perform the Gaussian fit and return chi^2/NDF
 std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass) {
-    //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+
 
     // Rebin the histogram to have 'numBins' bins
     // First, calculate the rebin factor assuming the histogram's range is 0 to maxXRange
@@ -282,7 +284,7 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
 }
 
 // Main function to explore fit ranges and find optimal parameters
-void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yBinEnd) {
+std::vector<TCanvas*> OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yBinEnd) {
     TH1D* hProjZ = h3->ProjectionZ("projZ", xBinStart, xBinEnd, yBinStart, yBinEnd);
 
     double bestChi2NDF = TMath::Infinity();
@@ -315,7 +317,9 @@ void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yB
     std::cout << "Best Fit Range: [" << bestMinMass << ", " << bestMaxMass << "] with chi^2/NDF = " << bestChi2NDF << std::endl;
 
     // Optionally, perform and visualize the final fit with the best parameters
-    DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass);
+    std::vector<TCanvas*> canvases2;
+    canvases2=DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass);
+    return canvases2;
 }
 
 void OptimizeHistogramFit(const std::string& rootFileName, const std::string& histogramName) {
@@ -339,8 +343,24 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     // You might need to adjust the bin ranges according to your histogram
     int xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();
     int yBinStart = 1, yBinEnd =1;//yBinEnd = h3->GetYaxis()->GetNbins();
-    OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
+    int nclusbinwidth= h3->GetYaxis()->GetBinWidth(1)///h3->GetYaxis()->GetNbins();
 
+    TCanvas *canvas = new TCanvas("canvas", "Canvas", 800, 600);
+
+    //open pdf
+    canvas->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%d_%d_NClus_%d_%d.pdf[",histogramName.c_str(), xBinStart, xBinEnd,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
+    
+    std::vector<TCanvas*> canvases3;
+    canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
+
+    for (i=0;i<canvases3.size();i++){
+        canvases3[i]->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%d_%d_NClus_%d_%d.pdf",histogramName.c_str(), xBinStart, xBinEnd,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
+    }
+    //close pdf
+    canvas->Print(Form("pioncode/canvas_pdf/%s_Fit_pT_%d_%d_NClus_%d_%d.pdf]",histogramName.c_str(), xBinStart, xBinEnd,yBinStart*nclusbinwidth,yBinEnd*nclusbinwidth));
+
+    delete canvas;
+    delete canvases3[];
     // Close the ROOT file
     file->Close();
     delete file;
@@ -393,7 +413,7 @@ void appendtextfile(TF1* fitFunc, const std::string& fitName){//, Double_t scale
 
 std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass) {
     // more thorough minimizer for fit
-    //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     // Set the global fit strategy
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
 
