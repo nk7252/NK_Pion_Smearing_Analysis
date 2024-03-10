@@ -311,7 +311,7 @@ void OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yB
     std::cout << "Best Fit Range: [" << bestMinMass << ", " << bestMaxMass << "] with chi^2/NDF = " << bestChi2NDF << std::endl;
 
     // Optionally, perform and visualize the final fit with the best parameters
-    DrawBestHistogram(hProjZ, minMass, maxMass);
+    DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass);
 }
 
 void OptimizeHistogramFit(const std::string& rootFileName, const std::string& histogramName) {
