@@ -590,6 +590,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //c3->SaveAs("FitInfo.pdf");
     TCanvas* c4 = new TCanvas("c4", "CombinedFit Residuals", 800, 600);
     c4->cd();
+    residuals1->SetTitle("Residuals for Combined Fit (Gaus+Poly4); Inv. Mass (GeV); Residual Counts");
     residuals1->Draw("AP");
     residuals1->SetMarkerSize(1); // Increase the marker size
     residuals1->SetMarkerStyle(27); // Increase the marker size
@@ -601,6 +602,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     TCanvas* c5 = new TCanvas("c5", "Background Subtracted Peak Residuals", 800, 600);
     c5->cd();
+    residuals2->SetTitle("Residuals for Peak after Background Subtraction; Inv. Mass (GeV); Residual Counts");
     residuals2->Draw("AP");
     residuals2->SetMarkerSize(1); // Increase the marker size
     residuals2->SetMarkerStyle(28); // Increase the marker size
