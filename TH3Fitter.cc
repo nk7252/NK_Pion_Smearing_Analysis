@@ -10,6 +10,7 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <chrono>
 
 struct FitConfig {
     int xBinStart, xBinEnd, yBinStart, yBinEnd;
@@ -80,12 +81,19 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
 
 void TH3Fitter(){
-std::string rootFileName="pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root";
-std::string histName= "h_pipT_Nclus_mass";
+    
+    auto start = std::chrono::high_resolution_clock::now();// Start timer
+    std::string rootFileName="pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root";
+    std::string histName= "h_pipT_Nclus_mass";
 
-//AnalyzeAndFit(rootFileName, histName);
-OptimizeHistogramFit(rootFileName, histName);
+    //AnalyzeAndFit(rootFileName, histName);
+    OptimizeHistogramFit(rootFileName, histName);
 
+    auto stop = std::chrono::high_resolution_clock::now();// Stop timer
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);// Calculate duration
+
+    std::cout << "Time taken by function: " << duration.count() << " milliseconds" << std::endl;// Output the time taken
 }
 
 
@@ -376,6 +384,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
                 canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
                 delete canvascol;
             }
+            canvases3.clear();
         }
     }
     
@@ -385,7 +394,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     canvas->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf]",histogramName.c_str()));
 
     delete canvas;
-    canvases3.clear();
+    //canvases3.clear();
     // Close the ROOT file
     file->Close();
     delete file;
