@@ -432,11 +432,14 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     // Create a new function for just the polynomial part
     TF1 *polyPart = new TF1("polyPart", "pol4", 0, 0.5);
+    //same for gaussian part
+    TF1 *GaussPart = new TF1("polyPart", "pol4", minMass, maxMass);
 
     // Set the parameters of polyPart to those from the combined fit
-    // Assuming the first 5 parameters of combinedFit are for the polynomial
+    // Assuming the last 5 parameters of combinedFit are for the polynomial
     for (int i = 0; i < 5; ++i) polyPart->SetParameter(i, combinedFit->GetParameter(i+3));
-    
+
+    for (int i = 0; i < 3; ++i) GaussPart->SetParameter(i, combinedFit->GetParameter(i));
     
     // Create a new histogram to store the subtracted data
     TH1F *histSubtracted = (TH1F*)hProjZ->Clone("histSubtracted");
@@ -482,7 +485,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     gausFit->Draw("SAME");// draw the gaussian fit
     polyPart->SetLineColor(kRed);
     polyPart->Draw("SAME");
-
+    GaussPart->SetLineColor(kYellow);
+    GaussPart->Draw("SAME");
 
     //leftRightFit->SetLineColor(kBlue);
     fleft->SetLineColor(kBlue);
