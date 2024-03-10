@@ -496,7 +496,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //gROOT->GetListOfFunctions()->Remove(fright);
 
     
-    // Create a histogram for residuals
+    // Create graphs for residuals
     TGraph *residuals1 = new TGraph(hProjZ->GetNbinsX());
     TGraph *residuals2 = new TGraph(hProjZ->GetNbinsX());
 
@@ -508,7 +508,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
         residuals1->SetPoint(i, bincenter1, residual1); // Set the point in the residuals graph
         //
         double bincenter2 = histSubtracted->GetBinCenter(i);
-        double residual2 = histSubtracted->GetBinContent(i) - gausFit2->Eval(bincenter1);
+        double residual2 = histSubtracted->GetBinContent(i) - gausFit2->Eval(bincenter2);
         residuals2->SetPoint(i, bincenter2, residual2); // Set the point in the residuals graph
 
     }
@@ -519,6 +519,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     //-------------------------------------------------------------------------------------------canvas 1
     TCanvas *c1 = new TCanvas("c1", "Fits", 800, 600);
+    hProjZ->SetTitle("Combined Fit (Gaus+Poly4); Inv. Mass (GeV); Counts");
     hProjZ->Draw("E");
 
     gausFit->SetLineColor(kGreen);
@@ -552,6 +553,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
+    histSubtracted->SetTitle("Peak after Background Subtraction; Inv. Mass (GeV); Counts");
     histSubtracted->Draw("E");
     histSubtracted->SetMinimum(0.0);
 
