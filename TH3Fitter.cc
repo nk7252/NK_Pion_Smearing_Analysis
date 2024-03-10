@@ -433,7 +433,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     // Create a new function for just the polynomial part
     TF1 *polyPart = new TF1("polyPart", "pol4", 0, 0.5);
     //same for gaussian part
-    TF1 *GaussPart = new TF1("polyPart", "pol4", minMass, maxMass);
+    TF1 *GaussPart = new TF1("GaussPart", "gaus", minMass, maxMass);
 
     // Set the parameters of polyPart to those from the combined fit
     // Assuming the last 5 parameters of combinedFit are for the polynomial
@@ -485,7 +485,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     gausFit->Draw("SAME");// draw the gaussian fit
     polyPart->SetLineColor(kRed);
     polyPart->Draw("SAME");
-    GaussPart->SetLineColor(kYellow);
+    GaussPart->SetLineColor(kGreen);
     GaussPart->Draw("SAME");
 
     //leftRightFit->SetLineColor(kBlue);
