@@ -520,6 +520,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //-------------------------------------------------------------------------------------------canvas 1
     TCanvas *c1 = new TCanvas("c1", "Fits", 800, 600);
     hProjZ->SetTitle("Combined Fit (Gaus+Poly4); Inv. Mass (GeV); Counts");
+    hProjZ->SetStats(0); // Turn off stat box
     hProjZ->Draw("E");
 
     gausFit->SetLineColor(kGreen);
@@ -554,6 +555,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
     histSubtracted->SetTitle("Peak after Background Subtraction; Inv. Mass (GeV); Counts");
+    histSubtracted->SetStats(0); // Turn off stat box
     histSubtracted->Draw("E");
     histSubtracted->SetMinimum(0.0);
 
