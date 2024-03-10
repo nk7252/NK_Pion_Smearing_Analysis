@@ -341,7 +341,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
 
     // Call the function to optimize the fit range 
     float xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();
-    int yBinStart = 1, yBinEnd =1;
+    //int yBinStart = 1, yBinEnd =1;
     int nclusbinwidth= h3->GetYaxis()->GetBinWidth(1);///h3->GetYaxis()->GetNbins();
     float pTbinwidth= h3->GetXaxis()->GetBinWidth(1);
 
@@ -349,29 +349,38 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
 
     //open pdf
     canvas->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf[",histogramName.c_str()));
-    TCanvas *textCanvas = new TCanvas("textCanvas", "Canvas Info", 800, 600);
-    textCanvas->cd();
-    TPaveText* pt0 = new TPaveText(0.1, 0.1, 0.9, 0.9, "blNDC"); // blNDC: borderless, normalized coordinates
-    pt0->SetTextAlign(12); // Align text to the left
-    pt0->SetFillColor(0); // Transparent background
 
-    // Adding custom text entries
-    //pt0->AddText(Form("Fits to File = %s", histogramName.c_str()));
-    pt0->AddText(Form("Fits to Histogram = %s", histogramName.c_str()));
-    pt0->AddText(Form("For pT (GeV) = %.1f - %.1f ",(xBinStart-1)*pTbinwidth ,xBinEnd*pTbinwidth));
-    pt0->AddText(Form("For nClusters = %.1d - %.1d",(yBinStart-1)*nclusbinwidth ,yBinEnd*nclusbinwidth));
-    pt0->Draw();
-    textCanvas->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
-    delete textCanvas;
-    delete pt0;
+    // look at ncluster ranges(bins of width 20 nclus)
+    for(int yBinEnd=1; yBinEnd<=h3->GetYaxis()->GetNbins(); yBinEnd++){
+        for(int yBinStart=1; yBinStart<=yBinEnd; yBinStart++){
+            TCanvas *textCanvas = new TCanvas("textCanvas", "Canvas Info", 800, 600);
+            textCanvas->cd();
+            TPaveText* pt0 = new TPaveText(0.1, 0.1, 0.9, 0.9, "blNDC"); // blNDC: borderless, normalized coordinates
+            pt0->SetTextAlign(12); // Align text to the left
+            pt0->SetFillColor(0); // Transparent background
 
-    std::vector<TCanvas*> canvases3;
-    canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
+            // Adding custom text entries
+            //pt0->AddText(Form("Fits to File = %s", histogramName.c_str()));
+            pt0->AddText(Form("Fits to Histogram = %s", histogramName.c_str()));
+            pt0->AddText(Form("For pT (GeV) = %.1f - %.1f ",(xBinStart-1)*pTbinwidth ,xBinEnd*pTbinwidth));
+            pt0->AddText(Form("For nClusters = %.1d - %.1d",(yBinStart-1)*nclusbinwidth ,yBinEnd*nclusbinwidth));
+            pt0->Draw();
+            textCanvas->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
+            delete textCanvas;
+            delete pt0;
 
-    for (auto* canvascol : canvases3) {//(int i=0;i<canvases3.size();i++){
-        canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
-        delete canvascol;
+            std::vector<TCanvas*> canvases3;
+            canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
+
+            for (auto* canvascol : canvases3) {//(int i=0;i<canvases3.size();i++){
+                canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
+                delete canvascol;
+            }
+        }
     }
+    
+
+
     //close pdf
     canvas->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf]",histogramName.c_str()));
 
@@ -534,7 +543,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //-------------------------------------------------------------------------------------------canvas 1
     TCanvas *c1 = new TCanvas("c1", "Fits", 800, 600);
     hProjZ->SetTitle("Combined Fit (Gaus+Poly4); Inv. Mass (GeV); Counts");
-    hProjZ->SetStats(0); // Turn off stat box
+    //hProjZ->SetStats(0); // Turn off stat box
     hProjZ->Draw("E");
 
     gausFit->SetLineColor(kGreen);
