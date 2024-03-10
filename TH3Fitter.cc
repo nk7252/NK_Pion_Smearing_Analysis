@@ -485,6 +485,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     // Draw everything and add canvases to vector of canvases
     std::vector<TCanvas*> canvases;
+    canvases=nullptr;
     //-------------------------------------------------------------------------------------------canvas 1
     TCanvas *c1 = new TCanvas("c1", "Fits", 800, 600);
     hProjZ->Draw("E");
@@ -562,7 +563,6 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     delete combinedFit;
     delete leg;
     
-    //return canvases;
-    return nullptr;
+    return canvases;
 }
 //*/
