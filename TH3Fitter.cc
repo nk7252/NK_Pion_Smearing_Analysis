@@ -475,8 +475,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TCanvas *c1 = new TCanvas("c1", "Fits", 800, 600);
     hProjZ->Draw("E");
 
-    //gausFit->SetLineColor(kRed);
-    //gausFit->Draw("SAME");// draw the gaussian fit
+    gausFit->SetLineColor(kGreen);
+    gausFit->Draw("SAME");// draw the gaussian fit
     polyPart->SetLineColor(kRed);
     polyPart->Draw("SAME");
 
@@ -485,8 +485,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     fleft->SetLineColor(kBlue);
     fright->SetLineColor(kBlue);
 
-    //fleft->Draw("SAME");
-    //fright->Draw("SAME");// turn off to see the inflection better.
+    fleft->Draw("SAME");
+    fright->Draw("SAME");// turn off to see the inflection better.
     //leftRightFit->Draw("SAME"); // Draw the left and right polynomial fits
 
     combinedFit->SetLineColor(kBlack);
