@@ -348,7 +348,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     }
 
     // Call the function to optimize the fit range 
-    float xBinStart = 12, xBinEnd = h3->GetXaxis()->GetNbins();//;10
+    float xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();//;10
     //int yBinStart = 1, yBinEnd =1;
     int nclusbinwidth= h3->GetYaxis()->GetBinWidth(1);///h3->GetYaxis()->GetNbins();
     float pTbinwidth= h3->GetXaxis()->GetBinWidth(1);

@@ -18,7 +18,8 @@
 #include <TMultiGraph.h>
 #include <TGraphMultiErrors.h>
 #include <TPad.h>
-#include <TImage.h>
+#include "sPhenixStyle.h"
+#include "sPhenixStyle.C"
 
 class filename_object {//object to hold my file names and related strings. things like settings for the files are contained here.
     public:
@@ -57,11 +58,13 @@ void AIOFit() {
     //const char* destinationfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";
     const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";//using the source for functions later as source here 
 
-    //transferHistogram("pioncode/rootfiles/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", sourcehistfile, "h_InvMass_data");
+    //transferHistogram("pioncode/rootfiles/data/Data_from_Blair_original/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", sourcehistfile, "h_InvMass_data");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_smear12_5");
 
-    //transferHistogram("pioncode/rootfiles/geant_smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_noposcor_smear125");
+    transferHistogram("pioncode/rootfiles/geant/nclus75/smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125");
+
+    transferHistogram("pioncode/rootfiles/geant/nclus75/nosmear_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
 
@@ -106,8 +109,10 @@ void AIOFit() {
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_noposcor_smear125",  1.0, 0.12, 0.18 , 40, 0.4, 0);   
 
     //.09-.17 ~5
-    float start_point=0.09;
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_smear132",  1.0, start_point, 0.171 , 40, 0.4, 1);
+    //float start_point=0.09;
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125",  1.0, 0.1, 0.18 , 40, 0.4, 1);
+
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.1, 0.2 , 40, 0.4, 1);
 
     
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_nosmear",  1.0, 0.10, 0.17 , 40, 0.4, 1);
@@ -121,9 +126,9 @@ void AIOFit() {
 
 
 
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_data",  1.0, 0.12, 0.17 , 40, 0.4, 2);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_data",  1.0, 0.05, 0.3 , 40, 0.4, 2);
 
-    ProcessTH3IntoGraphs("pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results");
+    //ProcessTH3IntoGraphs("pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results");
 
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
     // Code to exit ROOT after running the macro
@@ -595,6 +600,7 @@ TH1D* getYProjectionof2DHist(const char* fileName, const char* histName, int fir
 void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype) {
     //filename_object filenameobj,
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+    SetsPhenixStyle();
 
     cout <<"\n"<< "processing: " << fileName << " Histogram: " << histName << "\n" << " With Error scaled by: " << errorScaleFactor << "\n" << " Fit from " << fitRangeLow << " to " << fitRangeHigh  <<"\n";
     TFile *pionfile = new TFile(fileName, "READ"); 
@@ -641,6 +647,8 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     TString canvasname = Form("%s_PeakFit_SmearB_%d_A_%d_Thousandths_escale_%f",histName, EsmearfactorB/1000,EsmearfactorA/1000 ,errorScaleFactor); 
     TCanvas* c1 = new TCanvas(canvasname, canvasname, 800, 600);
     hist1D->SetMinimum(0.0);
+    hist1D->SetTitle(Form("%s;Inv. Mass (GeV); Counts",histName));
+    hist1D->GetYaxis()->SetTitleOffset(1.5);
     hist1D->Draw("E"); // Draw histogram with error bars
     gaussFit->Draw("SAME"); // Draw the fit on the same canvas
     gPad->Modified();
@@ -823,50 +831,6 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     aSlices.Delete();
     pionfile->Close();
     delete pionfile;
-}
-
-// 3d hist fitting functions
-
-
-void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histName, int nSlices, const std::string& pdfName, int sliceSize = -1) {
-    // Step 1: Slice the TH3 histogram
-    auto slices = SliceTH3(fileName, histName, nSlices);//, sliceSize
-    if (slices.empty()) {
-        std::cerr << "Failed to slice the TH3 histogram or file/histogram not found." << std::endl;
-        return;
-    }
-
-    // Prepare a canvas for drawing
-    TCanvas *c3 = new  TCanvas("c3", "Canvas", 800, 600);
-    //canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf]",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
-    //c3->Print((pdfName + "[").c_str()); // Open the PDF
-    c3->Print(Form("pioncode/canvas_pdf/%s_.pdf[", pdfName.c_str()));
-
-    // Step 2: Fit and Generate Graphs
-    std::vector<TGraphErrors*> graphs;
-    std::cout << "debug test: begin  fitting and creating graphs" << std::endl; // debug line
-    for (size_t i = 0; i < slices.size(); ++i) {
-        //TGraphErrors* graph = FitAndGenerateGraph(slices[i], i);
-        //add error line if function fails
-        //graphs.push_back(graph);
-
-        // Optionally draw the slice and the graph for visualization
-        if (!slices[i]) {
-            std::cerr << "Warning: Slice " << i << " is null." << std::endl;
-            continue; // Skip this iteration
-        }
-        slices[i]->Draw("COLZ");
-        //graph->Draw("PSAME");
-        c3->Print(Form("pioncode/canvas_pdf/%s_.pdf", pdfName.c_str()));
-        //c3->Print(pdfName.c_str());
-    }
-
-    //c3->Print((pdfName + "]").c_str()); // Close the PDF
-    c3->Print(Form("pioncode/canvas_pdf/%s_.pdf]", pdfName.c_str()));
-
-    // Cleanup
-    //for (auto* slice : slices) delete slice;
-    //for (auto* graph : graphs) delete graph;
 }
 
 

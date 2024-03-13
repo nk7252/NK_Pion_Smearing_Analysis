@@ -51,3 +51,9 @@ particledecaytest2
 #folders
 pioncode/
 
+sPHENIXplots.C
+sPHENIXplots.CZone.Identifier
+sPhenixStyle.C
+sPhenixStyle.CZone.Identifier
+sPhenixStyle.h
+sPhenixStyle.hZone.Identifier
