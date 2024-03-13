@@ -126,7 +126,7 @@ void AIOFit() {
 
 
 
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_data",  1.0, 0.05, 0.3 , 40, 0.4, 2);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_data",  1.0, 0.05, 0.3 , 40, 0.4, 2);
 
     //ProcessTH3IntoGraphs("pioncode/rootfiles/data/pt_nclus_differential_data/pt05pt05.root", "h_pipT_Nclus_mass", 20, "results");
 
