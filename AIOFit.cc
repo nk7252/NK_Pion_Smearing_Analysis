@@ -649,8 +649,15 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     hist1D->SetMinimum(0.0);
     hist1D->SetTitle(Form("%s;Inv. Mass (GeV); Counts",histName));
     hist1D->GetYaxis()->SetTitleOffset(1.5);
+    TLegend *leg = new TLegend(.12, .70, .4, .82); // SetX1, SetY1, SetX2, SetY2; 1:bottom-left corner of legend, 2: top-right corner
+    // The coordinates are in the range from 0 to 1, where (0, 0) is the bottom-left corner and (1, 1) is the top-right corner of the pad.
+    leg->SetFillStyle(0);
+    leg->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+    hist1D->SetStats(0); // Turn off stat box
+    //leg->AddEntry("", "Work In Progress", "");
     hist1D->Draw("E"); // Draw histogram with error bars
     gaussFit->Draw("SAME"); // Draw the fit on the same canvas
+    leg->Draw("SAME");
     gPad->Modified();
     gPad->Update();
     std::cout << "Chi-squared: " << gaussFit->GetChisquare() << std::endl;
