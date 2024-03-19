@@ -56,15 +56,15 @@ void AIOFit() {
 
     ///*
     //const char* destinationfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";
-    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";//using the source for functions later as source here 
+    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.060000_const.root";//using the source for functions later as source here 
 
     //transferHistogram("pioncode/rootfiles/data/Data_from_Blair_original/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", sourcehistfile, "h_InvMass_data");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_smear12_5");
 
-    transferHistogram("pioncode/rootfiles/geant/nclus75/smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125");
+    //transferHistogram("pioncode/rootfiles/geant/nclus75/smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125");
 
-    transferHistogram("pioncode/rootfiles/geant/nclus75/nosmear_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear");
+    //transferHistogram("pioncode/rootfiles/geant/nclus75/nosmear_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
 
@@ -102,7 +102,7 @@ void AIOFit() {
     //void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype)
     //int histtype= 0=fastmc, 1=geant, 2=data?
 
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.17 , 40, 0.4, 0);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.16 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.19 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.18 , 40, 0.4, 0);
 
@@ -110,9 +110,9 @@ void AIOFit() {
 
     //.09-.17 ~5
     //float start_point=0.09;
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125",  1.0, 0.1, 0.18 , 40, 0.4, 1);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125",  1.0, 0.1, 0.18 , 40, 0.4, 1);
 
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.1, 0.2 , 40, 0.4, 1);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.1, 0.2 , 40, 0.4, 1);
 
     
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_nosmear",  1.0, 0.10, 0.17 , 40, 0.4, 1);

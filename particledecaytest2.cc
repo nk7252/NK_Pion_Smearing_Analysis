@@ -86,7 +86,7 @@ int main(){
 
 	for (int smear_factor_itt = 0; smear_factor_itt < 5 + 1; smear_factor_itt++){// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 		// only want .155
-		float smear_factor_basevalue = 0.125; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
+		float smear_factor_basevalue = 0.058; // I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
 		float smear_factor_c =smear_factor_basevalue + 0.001 * smear_factor_itt;//constant term
 		float smear_factor_b = 0.154;//sqrt(E) term
