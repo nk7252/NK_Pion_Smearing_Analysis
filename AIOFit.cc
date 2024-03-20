@@ -650,7 +650,7 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     hist1D->SetMinimum(0.0);
     hist1D->SetTitle(Form("%s;Inv. Mass (GeV); Counts",histName));
     hist1D->GetYaxis()->SetTitleOffset(1.5);
-    TLegend *leg = new TLegend(0.5, 0.8, 0.9, 0.9); // SetX1, SetY1, SetX2, SetY2; 1:bottom-left corner of legend, 2: top-right corner
+    TLegend *leg = new TLegend(0.42, 0.7, 0.9, 0.9); // SetX1, SetY1, SetX2, SetY2; 1:bottom-left corner of legend, 2: top-right corner
     // The coordinates are in the range from 0 to 1, where (0, 0) is the bottom-left corner and (1, 1) is the top-right corner of the pad.
     leg->SetFillStyle(0);
 
