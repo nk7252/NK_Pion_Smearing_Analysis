@@ -650,7 +650,11 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     hist1D->SetMinimum(0.0);
     hist1D->SetTitle(Form("%s;Inv. Mass (GeV); Counts",histName));
     hist1D->GetYaxis()->SetTitleOffset(1.5);
-    TLegend *leg = new TLegend(0.42, 0.7, 0.9, 0.9); // SetX1, SetY1, SetX2, SetY2; 1:bottom-left corner of legend, 2: top-right corner
+    float xbleft=0.42;
+    float ybleft=0.7;
+    float xtright=0.9;
+    float ytright=0.9;
+    TLegend *leg = new TLegend(xbleft, ybleft,xtright, ytright); // SetX1, SetY1, SetX2, SetY2; 1:bottom-left corner of legend, 2: top-right corner
     // The coordinates are in the range from 0 to 1, where (0, 0) is the bottom-left corner and (1, 1) is the top-right corner of the pad.
     leg->SetFillStyle(0);
 
@@ -669,6 +673,23 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     leg->Draw("SAME");
     gPad->Modified();
     gPad->Update();
+
+    // Access the Stat Box
+    TPaveStats *stats = (TPaveStats*)hist1D->FindObject("stats");
+
+    // If the legend is at 0.6, 0.7, 0.9, 0.9, position the stat box below it
+    if(stats) {
+        stats->SetX1NDC(xbleft); // Left coordinate, aligned with the legend
+        stats->SetX2NDC(xtright); // Right coordinate, aligned with the legend
+        stats->SetY2NDC(ytright); // Top coordinate, right below the legend's bottom
+        // Calculate a new bottom Y coordinate based on the height of the stat box
+        double height = stats->GetY2NDC() - stats->GetY1NDC();
+        stats->SetY1NDC(ybleft - height); // Adjust as necessary
+    }
+
+    gPad->Modified(); // Apply the changes to the pad
+
+
     std::cout << "Chi-squared: " << gaussFit->GetChisquare() << std::endl;
     std::cout << "Number of Degrees of Freedom: " << gaussFit->GetNDF() << std::endl;
     std::cout << "Chi-squared/NDF: " << gaussFit->GetChisquare()/gaussFit->GetNDF() << std::endl;
