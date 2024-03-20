@@ -678,9 +678,10 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     TPaveText *pt2 = new TPaveText(xbleft+.2, 0.5, xtright, 0.7, "NDC"); // Adjust coordinates as needed
     pt2->SetFillColor(0); // Set the fill color to 0 for transparency
     pt2->SetFillStyle(0); // Set fill style to 0 (solid) with color 0 for transparency
-    pt2->AddText(Form("#chi^{2}/NDF = %.2f", gaussFit->GetChisquare() / gaussFit->GetNDF()));
-    pt2->AddText(Form("Mean = %.2f", gaussFit->GetParameter(1)));
-    pt2->AddText(Form("Sigma = %.2f", gaussFit->GetParameter(2)));
+    pt2->AddText(Form("#chi^{2}/NDF = %.4f", gaussFit->GetChisquare() / gaussFit->GetNDF()));
+    pt2->AddText(Form("Mean = %.4f", gaussFit->GetParameter(1)));
+    pt2->AddText(Form("Sigma = %.4f", gaussFit->GetParameter(2)));
+    pt2->AddText(Form("Relative Width: %.4f",gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1))); 
     pt2->Draw("SAME");
     gPad->Modified(); // Apply the changes to the pad
 
