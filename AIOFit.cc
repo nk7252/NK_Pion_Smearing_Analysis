@@ -56,15 +56,15 @@ void AIOFit() {
 
     ///*
     //const char* destinationfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";
-    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.060000_const.root";//using the source for functions later as source here 
+    const char* sourcehistfile="pioncode/rootfiles/Pi0FastMC_0.154000_sqrte_0.130000_const.root";//using the source for functions later as source here 
 
     //transferHistogram("pioncode/rootfiles/data/Data_from_Blair_original/diClusMass_23726_23746_nomPi0CalibCuts.root", "h_InvMass", sourcehistfile, "h_InvMass_data");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_smear12_5");
 
-    //transferHistogram("pioncode/rootfiles/geant/nclus75/smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125");
+    transferHistogram("pioncode/rootfiles/geant/nclus75/smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125");
 
-    //transferHistogram("pioncode/rootfiles/geant/nclus75/nosmear_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear");
+    transferHistogram("pioncode/rootfiles/geant/nclus75/nosmear_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
 
@@ -102,7 +102,7 @@ void AIOFit() {
     //void ScaleHistogramErrorsAndFit(int Esmearfactor ,const char* fileName, const char* histName,  double errorScaleFactor, double fitRangeLow, double fitRangeHigh, int numBins, double maxXRange, int histtype)
     //int histtype= 0=fastmc, 1=geant, 2=data?
 
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.16 , 40, 0.4, 0);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.17 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.19 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.12, 0.18 , 40, 0.4, 0);
 
@@ -110,9 +110,9 @@ void AIOFit() {
 
     //.09-.17 ~5
     //float start_point=0.09;
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125",  1.0, 0.1, 0.18 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125",  1.0, 0.1, 0.18 , 40, 0.4, 1);
 
-    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.1, 0.2 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.1, 0.2 , 40, 0.4, 1);
 
     
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_nosmear",  1.0, 0.10, 0.17 , 40, 0.4, 1);
@@ -477,8 +477,6 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
     return c1;
 }
 
-
-
 void ClusterOverlayTestFunc(filename_object filenameobj, const std::string& fileName, const char* histName1,const char* histName2, const std::string& LegendName){//only works if filenames.size()=2 !!
     TCanvas* canvas1 = new TCanvas("canvas1", "Overlay Means", 800, 600);
     TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
@@ -652,7 +650,13 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     TLegend *leg = new TLegend(0.5, 0.8, 0.9, 0.9); // SetX1, SetY1, SetX2, SetY2; 1:bottom-left corner of legend, 2: top-right corner
     // The coordinates are in the range from 0 to 1, where (0, 0) is the bottom-left corner and (1, 1) is the top-right corner of the pad.
     leg->SetFillStyle(0);
+
     leg->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+    
+    if(histtype==1){//SPMC=
+        //leg->AddEntry("", "#it{#bf{sPHENIX}} Simulation, Internal", "");
+        leg->AddEntry("","Geant4, Single Particle Simulation","");
+    } 
     hist1D->SetStats(0); // Turn off stat box
     //leg->AddEntry("", "Work In Progress", "");
     hist1D->Draw("E"); // Draw histogram with error bars
