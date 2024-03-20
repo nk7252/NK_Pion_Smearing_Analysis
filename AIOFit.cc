@@ -65,7 +65,7 @@ void AIOFit() {
     //transferHistogram("pioncode/rootfiles/geant/nclus75/smear_125_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_125", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125");
     //transferHistogram("pioncode/rootfiles/geant/nclus75/smear_115_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_115", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear115");
     //transferHistogram("pioncode/rootfiles/geant/nclus75/smear_135_cutson_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_InvMass_badcalib_smear_weighted_135", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear135");
-    transferHistogram("pioncode/rootfiles/geant/nclus75/nosmear_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear");
+    //transferHistogram("pioncode/rootfiles/geant/nclus75/nosmear_noposcorr/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000_v2.root", "h_InvMass_weighted", sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear");
 
     //transferHistogram("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV-0000000013-00000.root", "h_pTdiff_InvMass", destinationhist, "h_pTdiff_InvMass_Single_pi0");
 
@@ -111,11 +111,11 @@ void AIOFit() {
 
     //.09-.17 ~5
     //float start_point=0.09;
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125",  1.0, 0.1, 0.18 , 40, 0.4, 1);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125",  1.0, 0.1, 0.18 , 40, 0.4, 1);
 
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear115",  1.0, 0.1, 0.19 , 40, 0.4, 1);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear135",  1.0, 0.1, 0.20 , 40, 0.4, 1);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.1, 0.19 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear115",  1.0, 0.09, 0.19 , 40, 0.4, 1);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear135",  1.0, 0.1, 0.20 , 40, 0.4, 1);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.13, 0.20 , 40, 0.4, 1);
     
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_nosmear",  1.0, 0.10, 0.17 , 40, 0.4, 1);
 
