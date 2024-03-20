@@ -659,12 +659,13 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     leg->SetFillStyle(0);
 
     leg->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
-    //hist1D->SetStats(0); // Turn off stat box
+    hist1D->SetStats(0); // Turn off stat box
     if(histtype==1){//SPMC=
         //leg->AddEntry("", "#it{#bf{sPHENIX}} Simulation, Internal", "");
         leg->AddEntry("","Geant4","");
         leg->AddEntry("","Single Particle Simulation","");
-        gStyle->SetOptFit(1111);
+        //gStyle->SetOptFit(112); // 1 (fit parameters) + 10 (errors) + 2 (Chi-square/ndf)
+        //gStyle->SetOptStat(0); // Turn off default statistics
     } 
     
     //leg->AddEntry("", "Work In Progress", "");
@@ -676,17 +677,11 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
 
     // Access the Stat Box
     TPaveStats *stats = (TPaveStats*)hist1D->FindObject("stats");
-
-    // If the legend is at 0.6, 0.7, 0.9, 0.9, position the stat box below it
-    if(stats) {
-        stats->SetX1NDC(xbleft); // Left coordinate, aligned with the legend
-        stats->SetX2NDC(xtright); // Right coordinate, aligned with the legend
-        stats->SetY2NDC(ytright); // Top coordinate, right below the legend's bottom
-        // Calculate a new bottom Y coordinate based on the height of the stat box
-        double height = stats->GetY2NDC() - stats->GetY1NDC();
-        stats->SetY1NDC(ybleft - height); // Adjust as necessary
-    }
-
+    TPaveText *pt2 = new TPaveText(xbleft, 0.5, xtright, 0.7, "NDC"); // Adjust coordinates as needed
+    pt2->AddText(Form("#chi^{2}/NDF = %.2f", gaussFit->GetChisquare() / gaussFit->GetNDF()));
+    pt2->AddText(Form("Mean = %.2f", gaussFit->GetParameter(1)));
+    pt2->AddText(Form("Sigma = %.2f", gaussFit->GetParameter(2)));
+    pt2->Draw("SAME");
     gPad->Modified(); // Apply the changes to the pad
 
 
