@@ -681,7 +681,7 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     pt2->AddText(Form("#chi^{2}/NDF = %.2f", gaussFit->GetChisquare() / gaussFit->GetNDF()));
     pt2->AddText(Form("Mean = %.4f", gaussFit->GetParameter(1)));
     pt2->AddText(Form("Sigma = %.4f", gaussFit->GetParameter(2)));
-    pt2->AddText(Form("Relative Width: %.2f",gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1))); 
+    pt2->AddText(Form("Relative Width: %.2f %",gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1))); 
     pt2->Draw("SAME");
     gPad->Modified(); // Apply the changes to the pad
 
