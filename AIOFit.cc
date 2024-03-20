@@ -115,7 +115,7 @@ void AIOFit() {
 
     ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear115",  1.0, 0.1, 0.19 , 40, 0.4, 1);
     ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear135",  1.0, 0.1, 0.20 , 40, 0.4, 1);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.1, 0.20 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_nosmear",  1.0, 0.1, 0.19 , 40, 0.4, 1);
     
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_nosmear",  1.0, 0.10, 0.17 , 40, 0.4, 1);
 
