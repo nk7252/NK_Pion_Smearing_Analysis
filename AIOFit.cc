@@ -655,17 +655,14 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     leg->SetFillStyle(0);
 
     leg->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
-    
+    //hist1D->SetStats(0); // Turn off stat box
     if(histtype==1){//SPMC=
         //leg->AddEntry("", "#it{#bf{sPHENIX}} Simulation, Internal", "");
         leg->AddEntry("","Geant4","");
         leg->AddEntry("","Single Particle Simulation","");
-        leg->AddEntry(Form("Mean = %f +/- %f", gaussFit->GetParameter(1), gaussFit->GetParError(1)));
-        leg->AddEntry(Form("Sigma = %f +/- %f", gaussFit->GetParameter(2), gaussFit->GetParError(2)));
-        leg->AddEntry(Form("Relative Width: %f",gaussFit->GetParameter(2)* 100.0f / gaussFit->GetParameter(1)));   
-        leg->AddEntry(Form("Chi2/NDF = %f / %d= %f", gaussFit->GetChisquare(), gaussFit->GetNDF(),gaussFit->GetChisquare()/gaussFit->GetNDF()));
+        gStyle->SetOptFit(1111);
     } 
-    hist1D->SetStats(0); // Turn off stat box
+    
     //leg->AddEntry("", "Work In Progress", "");
     hist1D->Draw("E"); // Draw histogram with error bars
     gaussFit->Draw("SAME"); // Draw the fit on the same canvas
