@@ -114,8 +114,8 @@ void AIOFit() {
     //float start_point=0.09;
     ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear125",  1.0, 0.1, 0.18 , 40, 0.4, 1);
 
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear115",  1.0, 0.1, 0.18 , 40, 0.4, 1);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear135",  1.0, 0.1, 0.18 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear115",  1.0, 0.1, 0.19 , 40, 0.4, 1);
+    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_nclus75_noposcor_smear135",  1.0, 0.1, 0.20 , 40, 0.4, 1);
 
     
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_poscor_nosmear",  1.0, 0.10, 0.17 , 40, 0.4, 1);
@@ -658,7 +658,8 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
     
     if(histtype==1){//SPMC=
         //leg->AddEntry("", "#it{#bf{sPHENIX}} Simulation, Internal", "");
-        leg->AddEntry("","Geant4, Single Particle Simulation","");
+        leg->AddEntry("","Geant4","");
+        leg->AddEntry("","Single Particle Simulation","");
     } 
     hist1D->SetStats(0); // Turn off stat box
     //leg->AddEntry("", "Work In Progress", "");
