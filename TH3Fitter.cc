@@ -11,6 +11,7 @@
 #include <vector>
 #include <sstream>
 #include <chrono>
+//#include <boost/optional.hpp>
 
 struct FitConfig {
     int xBinStart, xBinEnd, yBinStart, yBinEnd;
@@ -203,6 +204,7 @@ void AnalyzeAndFit(const std::string& rootFileName, const std::string& histName)
 std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass) {
     ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+    ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(5000);
 
 
     // Rebin the histogram to have 'numBins' bins
@@ -219,8 +221,8 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     }
     */
 
-    float leftlimit =0.0;
-    float rightlimit =0.5;
+    float leftlimit =0.08;
+    float rightlimit =0.25;
 
     //hProjZ->GetXaxis()->SetRangeUser(0, 0.4);
 
@@ -230,17 +232,17 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     gLeftRightPoly = &polyFunc; // Point the global pointer to your instance
     TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, leftlimit, rightlimit, 5);
 
-    hProjZ->Fit(leftRightFit, "RQ0");// "RQ" option for Range and Quiet, 0 for do not display fit on canvas.
+    hProjZ->Fit(leftRightFit, "RQ0ML");// "RQ" option for Range and Quiet, 0 for do not display fit on canvas.
     // Fit Gaussian in the specified range
     TF1 *gausFit = new TF1("gausFit", "gaus", minMass, maxMass);//leftpolylim, rightpolylim
-    hProjZ->Fit(gausFit, "RQ0");
+    hProjZ->Fit(gausFit, "RQ0ML");
     // Combined Gaussian + Polynomial fit
     TF1 *combinedFit = new TF1("combinedFit", combinedFunction, leftlimit, rightlimit, 8);
     // Set initial parameters from previous fits
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
     //try to improve the fit.
-    hProjZ->Fit(combinedFit, "RQ0");//L//M
+    hProjZ->Fit(combinedFit, "RQ0ML");//L//M
     //-------------------------------------------show the poly4 part seperately
     // Create a new function for just the polynomial part
     TF1 *polyPart = new TF1("polyPart", "pol4", leftlimit, rightlimit);
@@ -257,7 +259,7 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     }
     TF1 *gausFit2 = new TF1("gausFit2", "gaus", minMass, maxMass);//leftmost_limit, 0.25
     for (int i = 0; i < 3; ++i) gausFit2->SetParameter(i, combinedFit->GetParameter(i));
-    histSubtracted->Fit(gausFit2, "RQ0");//L
+    histSubtracted->Fit(gausFit2, "RQ0ML");//L
     //double chi2_s = gausFit2->GetChisquare();
     //double ndf_s = gausFit2->GetNDF();
     //double chi2ndf_s = chi2_s / ndf_s;
@@ -280,6 +282,12 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     fitparams.push_back(gausFit2->GetParameter(1));
     fitparams.push_back(gausFit2->GetParameter(2)* 100.0f / gausFit2->GetParameter(1));
 
+    //fitparams.push_back(combinedFit->GetChisquare());
+    //fitparams.push_back(combinedFit->GetNDF());
+    //fitparams.push_back(combinedFit->GetChisquare()/combinedFit->GetNDF());
+    //fitparams.push_back(combinedFit->GetParameter(2));
+    //fitparams.push_back(combinedFit->GetParameter(1));
+    //fitparams.push_back(combinedFit->GetParameter(2)* 100.0f / combinedFit->GetParameter(1));
 
     // Clean up
     delete leftRightFit;
@@ -293,15 +301,20 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
 
 // Main function to explore fit ranges and find optimal parameters
 std::vector<TCanvas*> OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int yBinStart, int yBinEnd) {
+    std::vector<TCanvas*> canvases2;
     TH1D* hProjZ = h3->ProjectionZ("projZ", xBinStart, xBinEnd, yBinStart, yBinEnd);
-
+    std::cout << "Integral Y: " << hProjZ->Integral(1,25) << std::endl;
+    if(hProjZ->Integral(1,25)<10000) {
+        std::cout << "Integral Y: " << hProjZ->Integral(1,25) << std::endl;
+        return canvases2;
+    }
     double bestChi2NDF = TMath::Infinity();
     double bestMinMass = 0, bestMaxMass = 0;
 
-    double startMass = 0.1; // start of mass range
-    double endMass = 0.25; // end of mass range
+    double startMass = 0.10; // start of mass range
+    double endMass = 0.24; // end of mass range
     double step = 0.005; // step size
-
+    
     for (double minMass = startMass; minMass < endMass; minMass += step) {
         for (double maxMass = minMass + step; maxMass <= endMass; maxMass += step) {
             std::vector<double> fitresults;
@@ -309,7 +322,7 @@ std::vector<TCanvas*> OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int 
             double chi2NDF = fitresults[2];// chi2/ndf
             
 
-            if (chi2NDF >= 0.9 && chi2NDF < bestChi2NDF) {
+            if (chi2NDF >= 1 && chi2NDF < bestChi2NDF) {
                 bestChi2NDF = chi2NDF;
                 bestMinMass = minMass;
                 bestMaxMass = maxMass;
@@ -325,7 +338,7 @@ std::vector<TCanvas*> OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int 
     std::cout << "Best Fit Range: [" << bestMinMass << ", " << bestMaxMass << "] with chi^2/NDF = " << bestChi2NDF << std::endl;
 
     // Optionally, perform and visualize the final fit with the best parameters
-    std::vector<TCanvas*> canvases2;
+    
     canvases2=DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass);
     return canvases2;
 }
@@ -348,7 +361,8 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     }
 
     // Call the function to optimize the fit range 
-    float xBinStart = 1, xBinEnd = h3->GetXaxis()->GetNbins();//;10
+    float xBinStart = 9, xBinEnd = 10;//;10 h3->GetXaxis()->GetNbins()
+    //5 is 2.5, 1 is 0
     //int yBinStart = 1, yBinEnd =1;
     int nclusbinwidth= h3->GetYaxis()->GetBinWidth(1);///h3->GetYaxis()->GetNbins();
     float pTbinwidth= h3->GetXaxis()->GetBinWidth(1);
@@ -361,6 +375,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     // look at ncluster ranges(bins of width 20 nclus)
     for(int yBinEnd=1; yBinEnd<=h3->GetYaxis()->GetNbins(); yBinEnd++){
         int yBinStart=yBinEnd;
+
         //for(int yBinStart=1; yBinStart<=yBinEnd; yBinStart++){
             TCanvas *textCanvas = new TCanvas("textCanvas", "Canvas Info", 800, 600);
             textCanvas->cd();
@@ -411,6 +426,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
         canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
         delete canvascol;
     }
+
     canvases3.clear();
     
 
@@ -475,21 +491,22 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     // Set the global fit strategy
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+    ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(5000);
 
 
-    float leftlimit =0.0;
-    float rightlimit =0.5;
+    float leftlimit =0.08;
+    float rightlimit =0.27;
     //hist->GetXaxis()->SetRangeUser(0, 0.4);
 
     LeftRightPolynomial polyFunc(minMass, maxMass); //exclusion range
     gLeftRightPoly = &polyFunc; // Point the global pointer to your instance
     TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, leftlimit, rightlimit, 5);
 
-    hProjZ->Fit(leftRightFit, "R");
+    hProjZ->Fit(leftRightFit, "RQ0ML");
 
     // Fit Gaussian in the specified range
     TF1 *gausFit = new TF1("gausFit", "gaus", minMass, maxMass);//leftpolylim, rightpolylim
-    hProjZ->Fit(gausFit, "R");
+    hProjZ->Fit(gausFit, "RQ0ML");
 
 
     // Combined Gaussian + Polynomial fit
@@ -498,7 +515,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
     //try to improve the fit.
-    hProjZ->Fit(combinedFit, "R");//M
+    hProjZ->Fit(combinedFit, "RLM");//M
     //double chi2 = combinedFit->GetChisquare();
     //double ndf = combinedFit->GetNDF();
     //double chi2ndf = chi2 / ndf;
@@ -532,7 +549,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     }
     TF1 *gausFit2 = new TF1("gausFit2", "gaus", minMass, maxMass);//leftmost_limit, 0.25
     for (int i = 0; i < 3; ++i) gausFit2->SetParameter(i, combinedFit->GetParameter(i));
-    histSubtracted->Fit(gausFit2, "R");
+    histSubtracted->Fit(gausFit2, "RQ0ML");
     //double chi2_s = gausFit2->GetChisquare();
     //double ndf_s = gausFit2->GetNDF();
     //double chi2ndf_s = chi2_s / ndf_s;
@@ -554,8 +571,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     
     // Create graphs for residuals
-    TGraph *residuals1 = new TGraph(hProjZ->GetNbinsX());
-    TGraph *residuals2 = new TGraph(hProjZ->GetNbinsX());
+    TGraphErrors *residuals1 = new TGraphErrors(hProjZ->GetNbinsX());
+    TGraphErrors *residuals2 = new TGraphErrors(hProjZ->GetNbinsX());
 
     for (int i = 1; i < hProjZ->GetNbinsX(); ++i) {
         // Get the bin center
@@ -563,10 +580,12 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
         // Calculate the residual (Data - Fit)
         double residual1 = hProjZ->GetBinContent(i) - combinedFit->Eval(bincenter1);
         residuals1->SetPoint(i, bincenter1, residual1); // Set the point in the residuals graph
+        residuals1->SetPointError(i, 0,sqrt(pow(hProjZ->GetBinError(i),2)));
         //
         double bincenter2 = histSubtracted->GetBinCenter(i);
         double residual2 = histSubtracted->GetBinContent(i) - gausFit2->Eval(bincenter2);
         residuals2->SetPoint(i, bincenter2, residual2); // Set the point in the residuals graph
+        residuals2->SetPointError(i, 0,sqrt(pow(histSubtracted->GetBinError(i),2)));
 
     }
 
@@ -648,7 +667,10 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TCanvas* c4 = new TCanvas("c4", "CombinedFit Residuals", 800, 600);
     c4->cd();
     residuals1->SetTitle("Residuals for Combined Fit (Gaus+Poly4); Inv. Mass (GeV); Residual Counts");
-    residuals1->Draw("AP");
+    residuals1->Draw("APE");
+    residuals1->SetMaximum(600);
+    residuals1->SetMinimum(-600);
+    residuals1->GetXaxis()->SetLimits(leftlimit,rightlimit);
     residuals1->SetMarkerSize(1); // Increase the marker size
     residuals1->SetMarkerStyle(27); // Increase the marker size
     TLine *line = new TLine(leftlimit, 0, rightlimit, 0);
@@ -660,7 +682,10 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TCanvas* c5 = new TCanvas("c5", "Background Subtracted Peak Residuals", 800, 600);
     c5->cd();
     residuals2->SetTitle("Residuals for Peak after Background Subtraction; Inv. Mass (GeV); Residual Counts");
-    residuals2->Draw("AP");
+    residuals2->Draw("APE");
+    residuals2->GetXaxis()->SetLimits(leftlimit,rightlimit);
+    residuals2->SetMaximum(600);
+    residuals2->SetMinimum(-600);
     residuals2->SetMarkerSize(1); // Increase the marker size
     residuals2->SetMarkerStyle(28); // Increase the marker size
     line->Draw("same");
@@ -685,4 +710,10 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     return canvases;
 }
 
-
+/*
+void nclus_Graphs(){
+    TGraphErrors meanGraph= new TGraphErrors(temphist->GetNbinsX());
+    TGraphErrors Rel_Width_Graph= new TGraphErrors(temphist->GetNbinsX());  
+    
+}
+*/
