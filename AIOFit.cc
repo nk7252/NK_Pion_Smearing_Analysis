@@ -27,7 +27,9 @@ class filename_object {//object to hold my file names and related strings. thing
     std::vector<std::string> legendnames;
     std::vector<std::string> weightnames;
     string filenamemod;
+    std::string particletype;
     string canvasnamemod;
+    std::vector<float> FitRange;
     std::vector<float> plotxlims;
     std::vector<float> plotylims;
     int pTcutoff;
@@ -48,7 +50,9 @@ void ScaleHistogramErrorsAndFit(int EsmearfactorB, int EsmearfactorA ,const char
 void ProcessTH3IntoGraphs(const std::string& fileName, const std::string& histName, int nSlices, const std::string& pdfName, int sliceSize = -1);
 std::vector<TH2*> SliceTH3(const std::string& fileName, const std::string& histName, int nSlices, int sliceSize = -1);
 TGraphErrors* FitAndGenerateGraph(TH2* slice, int index);
-
+TCanvas* CompareMeans(filename_object comparisonFilenameObj, int legendInt, const filename_object& filenameobj1, const filename_object& filenameobj2, std::vector<std::string> HistList, std::vector<std::string> HistLegend);
+void PlotHistogramsToPDF(std::vector<filename_object> filenameobjs, filename_object comparisonFilenameObj, std::vector<std::string> HistList, std::vector<std::string> HistLegend);
+TCanvas* FitAndProjectY(filename_object filenameobj, const std::string& fileName, const std::string& histName);
 
 
 
@@ -78,13 +82,30 @@ void AIOFit() {
     //*/
 
     // 0=weight type
-    int fileset = 0;
+    int fileset = 1;
     filename_object choosenfilenameobj = choosecomparisontype(fileset);
-    //std::vector<std::string> HistList={"h18_","h27_","h29_","h28_"};
-    //std::vector<std::string> HistLegend={"Smeared Pion pT vs Inv Mass","Smeared Pion pT vs Inv Mass. cluster","Smeared Pion pT vs Inv Mass. asymm cut","Smeared Pion pT vs Inv Mass. clust+asymm"};
-    std::vector<std::string> HistList={"h30_","h35_","h31_","h100_"};
-    std::vector<std::string> HistLegend={"Cuts","Cuts+Cluster","Cuts+Pos_Res","Cuts+CL+PR"};
+    std::vector<std::string> HistList={"h29_","h28_","h29_v2_","h28_v2_"};
+    std::vector<std::string> HistLegend={"Smear+Asymm","SA+Cluster","SA+Pos_Res","SA+CL+PS"};
     //GraphAndSaveToPDF(choosenfilenameobj,  HistList, HistLegend);
+
+    HistList={"h30_","h35_","h31_","h100_"};
+    HistLegend={"Cuts","Cuts+Cluster","Cuts+Pos_Res","Cuts+CL+PR"};
+    //std::vector<std::string> HistList={"h30_","h35_","h31_","h100_"};
+    //std::vector<std::string> HistLegend={"Cuts","Cuts+Cluster","Cuts+Pos_Res","Cuts+CL+PR"};
+    int fileset2 = 2;//eta
+    filename_object choosenfilenameobj2 = choosecomparisontype(fileset2);
+    GraphAndSaveToPDF(choosenfilenameobj2,  HistList, HistLegend);
+
+    int fileset0 = 0;//pion
+    filename_object choosenfilenameobj0 = choosecomparisontype(fileset0);
+    GraphAndSaveToPDF(choosenfilenameobj0,  HistList, HistLegend);
+
+    std::vector<filename_object> filenameobjs = {choosenfilenameobj0, choosenfilenameobj2}; 
+    filename_object compfilenameobj = choosecomparisontype(3);
+    //Assuming filenameobj1 and filenameobj2 are defined
+    PlotHistogramsToPDF(filenameobjs, compfilenameobj, HistList, HistLegend);
+
+
     //*/    
     //OverlayMeans(choosenfilenameobj);
     //OverlaySigmaOverMean(choosenfilenameobj);
@@ -105,7 +126,7 @@ void AIOFit() {
 
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.17 , 40, 0.4, 0);
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.13, 0.19 , 40, 0.4, 0);
-    ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.10, 0.21 , 40, 0.4, 0);
+    //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h31_1d_2",  1.0, 0.10, 0.21 , 40, 0.4, 0);
 
     //ScaleHistogramErrorsAndFit(extractNumber(sourcehistfile, 1),extractNumber(sourcehistfile, 2), sourcehistfile, "h_InvMass_Single_pi0_weighted_noposcor_smear125",  1.0, 0.12, 0.18 , 40, 0.4, 0);   
 
@@ -134,7 +155,7 @@ void AIOFit() {
 
     //ClusterOverlayTestFunc(choosenfilenameobj,"pioncode/rootfiles/Pi0FastMC_0.155000.root", "h27_2", "test");
     // Code to exit ROOT after running the macro
-    //gApplication->Terminate(0);
+    gApplication->Terminate(0);
 }    
 
 int extractNumber(const std::string& filepath, int option) {
@@ -182,15 +203,65 @@ filename_object choosecomparisontype(int choosetype){
     filename_object filename_object1;// 0=weight type, 1=ac on/off, 2=co on/off, 3=ac&co on/off
     if(choosetype==0){
         //filename_object weightfilenameobj;
-        filename_object1.fileNames={"pioncode/rootfiles/Pi0FastMC_0.211000.root"};
+        filename_object1.fileNames={"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.174000_const.root"};
+        filename_object1.particletype="Pion";
         filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.filenamemod="weightmethod_co1_ac1";
         //filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";  
+        filename_object1.FitRange={0.1,0.2};
         filename_object1.plotxlims={0.9,30};//min, max6.4
-        filename_object1.plotylims={0.13,0.17,0.0,0.25,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
-        filename_object1.pTcutoff=6;
-        filename_object1.binres=2;
+        filename_object1.plotylims={0.14,0.155,0.05,0.2,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
+        filename_object1.pTcutoff=30;
+        filename_object1.binres=1;
+    }
+    if(choosetype==1){
+        //filename_object weightfilenameobj;
+        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.174000_const.root"};
+        filename_object1.particletype="Eta";
+        filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
+        filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
+        //filename_object1.legendnames={"WSHP"};
+        //filename_object1.weightnames={"WSHP"};
+        filename_object1.filenamemod="weightmethod_co1_ac1";
+        //filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";  
+        filename_object1.FitRange={0.4,0.8};
+        filename_object1.plotxlims={0,30};//min, max6.4
+        filename_object1.plotylims={0.58,0.605,0.08,0.16,0.0,2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
+        filename_object1.pTcutoff=30;
+        filename_object1.binres=1;
+    }
+    if(choosetype==2){
+        //filename_object weightfilenameobj;
+        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.174000_const.root"};
+        filename_object1.particletype="Eta";
+        filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
+        filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
+        //filename_object1.legendnames={"WSHP"};
+        //filename_object1.weightnames={"WSHP"};
+        filename_object1.filenamemod="weightmethod_co1_ac1";
+        //filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";  
+        filename_object1.FitRange={0.4,0.8};
+        filename_object1.plotxlims={0.9,30};//min, max6.4
+        filename_object1.plotylims={0.57,0.595,0.08,0.11,0.0,2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
+        filename_object1.pTcutoff=30;
+        filename_object1.binres=1;
+    }
+    if(choosetype==3){
+        //filename_object weightfilenameobj;
+        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.174000_const.root"};
+        filename_object1.particletype="Pion&Eta";
+        filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
+        filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
+        //filename_object1.legendnames={"WSHP"};
+        //filename_object1.weightnames={"WSHP"};
+        filename_object1.filenamemod="weightmethod_co1_ac1";
+        //filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";  
+        //filename_object1.FitRange={0.4,0.8};
+        filename_object1.plotxlims={0,30};//min, max6.4
+        filename_object1.plotylims={0.25,0.26,0.08,0.11,0.0,2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
+        filename_object1.pTcutoff=30;
+        filename_object1.binres=1;
     }
     for(size_t i=0; i < filename_object1.fileNames.size(); i++){
         filename_object1.sqrtEsmearing.push_back(extractNumber(filename_object1.fileNames[i],1));
@@ -206,7 +277,7 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
     for (const auto& str : HistList) {
         combinedhiststring += str;
     }    
-    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf[",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_%s_OverlayPlot.pdf[",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0],filenameobj.particletype.c_str()));
     //loop over files. save 
     int legendInt=0;
     //loop over weight methods
@@ -223,29 +294,129 @@ void GraphAndSaveToPDF(filename_object filenameobj, std::vector<std::string> His
         for (const auto& fileName : filenameobj.fileNames) {
                 canvas = FitMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
                 // Save mean canvas to PDF as a page
-                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_%s_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0],filenameobj.particletype.c_str()));
 
                 canvas = FitSigmaMeanAndPlot(filenameobj, legendInt, fileName, histogramName, HistLegend);
                 // Save sigma/mean canvas to PDF as a page
-                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+                canvas->Print(Form("pioncode/canvas_pdf/%s_%d_%s_OverlayPlot.pdf",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0],filenameobj.particletype.c_str()));
                 
-                std::cout << "filename loop done" << std::endl; // debug line
+                //std::cout << "filename loop done" << std::endl; // debug line
         }
         
        // Clear the histogramName vector for the next iteration
         histogramName.clear();
-        std::cout << "l loop done" << std::endl; // debug line
+        //std::cout << "l loop done" << std::endl; // debug line
         legendInt++;
     }
     
     // Close the PDF file
-    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_OverlayPlot.pdf]",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0]));
+    canvas->Print(Form("pioncode/canvas_pdf/%s_%d_%s_OverlayPlot.pdf]",combinedhiststring.c_str(),filenameobj.sqrtEsmearing[0],filenameobj.particletype.c_str()));
     //clean up
     delete canvas;
 }
 
-TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend) {
 
+void PlotHistogramsToPDF(std::vector<filename_object> filenameobjs, filename_object comparisonFilenameObj, std::vector<std::string> HistList, std::vector<std::string> HistLegend) {
+    // Create canvas and open the output PDF
+    TCanvas *canvas = new TCanvas("canvas1", "Canvas", 800, 600);
+    std::string combinedhiststring;
+    for (const auto& str : HistList) {
+        combinedhiststring += str;
+    }    
+    std::string pdfFileName = Form("pioncode/canvas_pdf/%s_%d_%s_OverlayPlot.pdf", combinedhiststring.c_str(), comparisonFilenameObj.sqrtEsmearing[0], comparisonFilenameObj.particletype.c_str());
+    canvas->Print((pdfFileName + "[").c_str());
+
+    // Loop over weight methods
+    for (size_t l = 0; l < comparisonFilenameObj.weightnames.size(); ++l) {
+        std::vector<std::string> histogramName;
+        for (size_t v = 0; v < HistList.size(); ++v) {
+            histogramName.push_back(HistList[v] + std::to_string(l));
+            //std::cout << histogramName[v] << std::endl; // Debug line
+        }
+
+
+            const auto& filenameobj1 = filenameobjs[0];
+            const auto& filenameobj2 = filenameobjs[1];
+
+            TCanvas* meanCanvas = CompareMeans(comparisonFilenameObj, l, filenameobj1, filenameobj2, histogramName, HistLegend);
+            if (meanCanvas) {
+                meanCanvas->Print(pdfFileName.c_str());
+                delete meanCanvas;
+            }
+
+            //for (const auto& histName : histogramName) {
+                TCanvas* projectionCanvas1 = FitAndProjectY(filenameobj1, filenameobj1.fileNames[0], histogramName[l]);
+                if (projectionCanvas1) {
+                    projectionCanvas1->Print(pdfFileName.c_str());
+                    delete projectionCanvas1;
+                }
+
+                TCanvas* projectionCanvas2 = FitAndProjectY(filenameobj2, filenameobj2.fileNames[0], histogramName[l]);
+                if (projectionCanvas2) {
+                    projectionCanvas2->Print(pdfFileName.c_str());
+                    delete projectionCanvas2;
+                }
+
+                TCanvas* sigmaCanvas1 = FitSigmaMeanAndPlot(filenameobj1, l, filenameobj1.fileNames[0], histogramName[l], HistLegend[l]);
+                if (sigmaCanvas1) {
+                    sigmaCanvas1->Print(pdfFileName.c_str());
+                    delete sigmaCanvas1;
+                }
+
+
+                TCanvas* sigmaCanvas2 = FitSigmaMeanAndPlot(filenameobj2, l, filenameobj2.fileNames[0], histogramName[l], HistLegend[l]);
+                if (sigmaCanvas2) {
+                    sigmaCanvas2->Print(pdfFileName.c_str());
+                    delete sigmaCanvas2;
+                }
+
+
+
+            //std::cout << "Finished processing files: " << filenameobj1.fileNames[0] << " and " << filenameobj2.fileNames[0] << std::endl; // Debug line
+        }
+
+        //histogramName.clear();
+        //std::cout << "Finished processing weight method: " << l << std::endl; // Debug line
+    }
+
+    // Close the PDF file
+    canvas->Print((pdfFileName + "]").c_str());
+    delete canvas;
+}
+
+TCanvas* FitAndProjectY(filename_object filenameobj, const std::string& fileName, const std::string& histName) {
+    // Open the file
+    TFile* file = TFile::Open(fileName.c_str());
+    if (!file || file->IsZombie()) {
+        std::cerr << "Error opening file: " << fileName << std::endl;
+        return nullptr;
+    }
+
+    // Retrieve the 2D histogram
+    TH2F* hist2D = dynamic_cast<TH2F*>(file->Get(histName.c_str()));
+    if (!hist2D) {
+        std::cerr << "Error retrieving histogram: " << histName << " from file: " << fileName << std::endl;
+        file->Close();
+        return nullptr;
+    }
+
+    // Project the histogram onto the Y axis
+    TH1D* projY = hist2D->ProjectionY("projY", 0, hist2D->GetXaxis()->GetNbins());
+    projY->SetTitle(Form("Projection of %s on Y-axis", histName.c_str()));
+
+    // Create a canvas to draw the projection
+    TCanvas* c2 = new TCanvas(Form("canvas_%s", histName.c_str()), "Projection Canvas", 800, 600);
+    projY->Draw();
+    c2->Update();  // Ensure the canvas is updated
+
+    // Close the file
+    file->Close();
+
+    return c2;
+}
+
+TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend) {
+    ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
     // create canvas
     TCanvas *c1 = new TCanvas("c1", "Canvas", 800, 600);
     // Create a legend
@@ -261,7 +432,7 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
 
     //plotting operations.
     float errparam=filenameobj.sqrtEsmearing[0];
-    double binres=2;//number of divisions per GeV
+    int binres=filenameobj.binres;//number of divisions per GeV
 
     //int numhists=HistList.size();
     // Declare Histograms
@@ -277,14 +448,14 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
         // Load histograms from the file
         temphist[j] = dynamic_cast<TH2F*>(file->Get(HistList[j].c_str()));
         meanGraph[j] = new TGraphErrors(temphist[j]->GetNbinsX());
-        std::cout << "loaded hists? made graph" << std::endl; // debug line
+        //std::cout << "loaded hists? made graph" << std::endl; // debug line
         if (!temphist[j] ) {
             std::cerr << "Error: Unable to retrieve histogram "<< j << " from file " << fileName << std::endl;
             file->Close();
             delete c1;
             return nullptr;
         }
-        std::cout << "pre bin loop" << std::endl; // debug line
+        //std::cout << "pre bin loop" << std::endl; // debug line
         // Loop over each bin in the X direction
         for (int binX = 1; binX <= temphist[j]->GetNbinsX(); binX++) {
             
@@ -292,7 +463,7 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
             TH1D* yProjection = temphist[j]->ProjectionY(Form("YProjection_%zu_%d", j, binX), binX, binX, "");
 
             // Fit the Y projection with a Gaussian
-            yProjection->Fit("gaus", "Q");
+            yProjection->Fit("gaus", "QEM");
 
             // Access the fit parameters
             TF1* fitFunc = yProjection->GetFunction("gaus");
@@ -308,7 +479,7 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
             delete fitFunc;
             delete yProjection;
         }
-        std::cout << "bin loop done" << std::endl; // debug line
+        //std::cout << "bin loop done" << std::endl; // debug line
         // Set different line colors for each version
         int MarkerStyle = j + 24; // 
         int MarkerColor = j + 1;
@@ -320,18 +491,18 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
             //meanGraph->Draw("AP"); // Draw histogram for the first version
             //canvas1->Print("OverlayMeanHistograms.pdf");
             MultiGraphs->Add(meanGraph[j],"PE");
-            std::cout << "draw for the first file" << std::endl; // debug line
+            //std::cout << "draw for the first file" << std::endl; // debug line
         } else {
             MultiGraphs->Add(meanGraph[j],"PE");
             //meanGraph->Draw("P SAME"); // Draw subsequent histograms on the same canvas
-            std::cout << "draw for subsequent" << std::endl; // debug line
+            //std::cout << "draw for subsequent" << std::endl; // debug line
         }       
     // Add an entry to the legend
     legend1->AddEntry(meanGraph[j], HistLegend[j].c_str(), "P");//meanGraph[j]->GetTitle(),"P"
     }
 
     std::cout << "position 1" << std::endl; // debug line
-    MultiGraphs->SetTitle(Form("Smeared Pion pT vs Inv Mass: %s weight;pT (GeV);Inv. Mass (GeV)",filenameobj.weightnames[legendInt].c_str()));
+    MultiGraphs->SetTitle(Form("Smeared %s pT vs Inv Mass: %s weight;pT (GeV);Inv. Mass (GeV)",filenameobj.particletype.c_str(),filenameobj.weightnames[legendInt].c_str()));
     MultiGraphs->Draw("APE");
 
 
@@ -348,7 +519,7 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
     gPad->Modified();
     gPad->Update();
     //canvas1->Modified();
-    std::cout << "position 2" << std::endl; // debug line
+    //std::cout << "position 2" << std::endl; // debug line
     c1->Update();
     //c1->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayMeanHistograms.pdf",filenameobj.filenamemod.c_str(),errparam));
     
@@ -356,12 +527,12 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
     file->Close();
     delete file;
     //delete legend1;
-    std::cout << "position 3" << std::endl; // debug line
+    //std::cout << "position 3" << std::endl; // debug line
     return c1;
 }
 
 TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const std::string& fileName, std::vector<std::string> HistList,std::vector<std::string> HistLegend) {
-
+    ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
     // create canvas
     TCanvas *c1 = new TCanvas("c1", "Canvas", 800, 600);
     // Create a legend
@@ -377,7 +548,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
 
     //plotting operations.
     float errparam=filenameobj.sqrtEsmearing[0];
-    double binres=2;//number of divisions per GeV
+    int binres=filenameobj.binres;//number of divisions per GeV
 
     //int numhists=HistList.size();
     // Declare Histograms
@@ -393,14 +564,14 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
         // Load histograms from the file
         temphist[j] = dynamic_cast<TH2F*>(file->Get(HistList[j].c_str()));
         meanGraph[j] = new TGraphErrors(temphist[j]->GetNbinsX());
-        std::cout << "loaded hists? made graph" << std::endl; // debug line
+        //std::cout << "loaded hists? made graph" << std::endl; // debug line
         if (!temphist[j] ) {
             std::cerr << "Error: Unable to retrieve histogram "<< j << " from file " << fileName << std::endl;
             file->Close();
             delete c1;
             return nullptr;
         }
-        std::cout << "pre bin loop" << std::endl; // debug line
+        //std::cout << "pre bin loop" << std::endl; // debug line
         // Loop over each bin in the X direction
         for (int binX = 1; binX <= temphist[j]->GetNbinsX(); binX++) {
             
@@ -408,7 +579,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
             TH1D* yProjection = temphist[j]->ProjectionY(Form("YProjection_%zu_%d", j, binX), binX, binX, "");
 
             // Fit the Y projection with a Gaussian
-            yProjection->Fit("gaus", "Q");
+            yProjection->Fit("gaus", "QEM");
 
             // Access the fit parameters
             TF1* fitFunc = yProjection->GetFunction("gaus");
@@ -427,7 +598,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
             delete fitFunc;
             delete yProjection;
         }
-        std::cout << "bin loop done" << std::endl; // debug line
+        //std::cout << "bin loop done" << std::endl; // debug line
         // Set different line colors for each version
         int MarkerStyle = j + 24; // 
         int MarkerColor = j + 1;
@@ -439,18 +610,18 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
             //meanGraph->Draw("AP"); // Draw histogram for the first version
             //canvas1->Print("OverlayMeanHistograms.pdf");
             MultiGraphs->Add(meanGraph[j],"PE");
-            std::cout << "draw for the first file" << std::endl; // debug line
+            //std::cout << "draw for the first file" << std::endl; // debug line
         } else {
             MultiGraphs->Add(meanGraph[j],"PE");
             //meanGraph->Draw("P SAME"); // Draw subsequent histograms on the same canvas
-            std::cout << "draw for subsequent" << std::endl; // debug line
+            //std::cout << "draw for subsequent" << std::endl; // debug line
         }       
     // Add an entry to the legend
     legend1->AddEntry(meanGraph[j], HistLegend[j].c_str(), "P");//meanGraph[j]->GetTitle(),"P"
     }
 
-    std::cout << "position 1" << std::endl; // debug line
-    MultiGraphs->SetTitle(Form("Smeared Pion pT vs Sigma/Inv Mass Mean: %s weight;pT (GeV);Sigma/Inv. Mass ",filenameobj.weightnames[legendInt].c_str()));
+    //std::cout << "position 1" << std::endl; // debug line
+    MultiGraphs->SetTitle(Form("Smeared %s pT vs Sigma/Inv Mass Mean: %s weight;pT (GeV);Sigma/Inv. Mass ",filenameobj.particletype.c_str(),filenameobj.weightnames[legendInt].c_str()));
     MultiGraphs->Draw("APE");
 
 
@@ -467,7 +638,7 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
     gPad->Modified();
     gPad->Update();
     //canvas1->Modified();
-    std::cout << "position 2" << std::endl; // debug line
+    //std::cout << "position 2" << std::endl; // debug line
     c1->Update();
     //c1->Print(Form("pioncode/canvas_pdf/%s_%f_OverlayMeanHistograms.pdf",filenameobj.filenamemod.c_str(),errparam));
     
@@ -475,7 +646,99 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
     file->Close();
     delete file;
     //delete legend1;
-    std::cout << "position 3" << std::endl; // debug line
+    //std::cout << "position 3" << std::endl; // debug line
+    return c1;
+}
+
+TCanvas* CompareMeans(filename_object comparisonFilenameObj, int legendInt, const filename_object& filenameobj1, const filename_object& filenameobj2, std::vector<std::string> HistList, std::vector<std::string> HistLegend) {
+    ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+    // Create canvas
+    TCanvas *c1 = new TCanvas("c1", "Canvas", 800, 600);
+    // Create a legend
+    TLegend* legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
+
+    TFile *file1 = new TFile(filenameobj1.fileNames[0].c_str(), "READ");
+    TFile *file2 = new TFile(filenameobj2.fileNames[0].c_str(), "READ");
+    if (!file1 || file1->IsZombie() || !file2 || file2->IsZombie()) {
+        std::cerr << "Error: Unable to open files " << filenameobj1.fileNames[0] << " or " << filenameobj2.fileNames[0] << std::endl;
+        delete c1;
+        delete legend1;
+        return nullptr;
+    }
+
+    int binres = comparisonFilenameObj.binres; // Number of divisions per GeV
+    std::vector<TH2F*> temphist1(HistList.size()), temphist2(HistList.size());
+    TMultiGraph *MultiGraphs = new TMultiGraph();
+    std::vector<TGraphErrors*> meanGraph(HistList.size());
+
+    for (size_t j = 0; j < HistList.size(); j++) {
+        temphist1[j] = dynamic_cast<TH2F*>(file1->Get(HistList[j].c_str()));
+        temphist2[j] = dynamic_cast<TH2F*>(file2->Get(HistList[j].c_str()));
+        meanGraph[j] = new TGraphErrors(temphist1[j]->GetNbinsX());
+
+        if (!temphist1[j] || !temphist2[j]) {
+            std::cerr << "Error: Unable to retrieve histogram " << j << " from files " << filenameobj1.fileNames[0] << " or " << filenameobj2.fileNames[0] << std::endl;
+            file1->Close();
+            file2->Close();
+            delete c1;
+            return nullptr;
+        }
+
+        for (int binX = 1; binX <= temphist1[j]->GetNbinsX(); binX++) {
+            TH1D* yProjection1 = temphist1[j]->ProjectionY(Form("YProjection1_%zu_%d", j, binX), binX, binX, "");
+            TH1D* yProjection2 = temphist2[j]->ProjectionY(Form("YProjection2_%zu_%d", j, binX), binX, binX, "");
+
+            yProjection1->Fit("gaus", "QEM");
+            yProjection2->Fit("gaus", "QEM");
+
+            TF1* fitFunc1 = yProjection1->GetFunction("gaus");
+            TF1* fitFunc2 = yProjection2->GetFunction("gaus");
+
+            if (fitFunc1 && fitFunc2) {
+                double mu1 = fitFunc1->GetParameter(1);
+                double mu2 = fitFunc2->GetParameter(1);
+                double mu1Err = fitFunc1->GetParError(1);
+                double mu2Err = fitFunc2->GetParError(1);
+
+                double ratio = mu1 / mu2;
+                double ratioErr = ratio * sqrt(pow(mu1Err / mu1, 2) + pow(mu2Err / mu2, 2));
+
+                meanGraph[j]->SetPoint(binX, binX / binres, ratio);
+                meanGraph[j]->SetPointError(binX, 0, ratioErr);
+            }
+
+            delete fitFunc1;
+            delete fitFunc2;
+            delete yProjection1;
+            delete yProjection2;
+        }
+
+        int MarkerStyle = j + 24;
+        int MarkerColor = j + 1;
+        meanGraph[j]->SetMarkerStyle(MarkerStyle);
+        meanGraph[j]->SetMarkerColor(MarkerColor);
+
+        MultiGraphs->Add(meanGraph[j], "PE");
+        legend1->AddEntry(meanGraph[j], HistLegend[j].c_str(), "P");
+    }
+
+    MultiGraphs->SetTitle(Form("Smeared %s pT vs Mean Ratio: %s weight;pT (GeV);Mean Ratio", comparisonFilenameObj.particletype.c_str(), comparisonFilenameObj.weightnames[legendInt].c_str()));
+    MultiGraphs->Draw("APE");
+
+    legend1->Draw();
+
+    MultiGraphs->GetXaxis()->SetLimits(comparisonFilenameObj.plotxlims[0], comparisonFilenameObj.plotxlims[1]);
+    MultiGraphs->SetMinimum(comparisonFilenameObj.plotylims[0]);
+    MultiGraphs->SetMaximum(comparisonFilenameObj.plotylims[1]);
+    c1->SetMargin(0.2, 0.1, 0.1, 0.1);
+    gPad->Modified();
+    gPad->Update();
+
+    file1->Close();
+    file2->Close();
+    delete file1;
+    delete file2;
+
     return c1;
 }
 
@@ -772,7 +1035,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     //printf("error test code\n");
     hist2D->GetXaxis()->SetLabelSize(0.06);
     hist2D->GetYaxis()->SetLabelSize(0.06);
-    hist2D->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    hist2D->GetXaxis()->SetTitle(Form("%s Pt [GeV/c]",filenameobj.particletype.c_str()));
     hist2D->GetYaxis()->SetTitle("Invariant Mass [GeV/c^2]");
     hist2D->SetMarkerColor(kYellow);
     // Fit slices projected along Y fron bins in X [1,64] with more than 2 bins in Y filled
@@ -798,7 +1061,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
         double integral = hist2D->Integral(i, i, 1, hist2D->GetYaxis()->GetNbins());
         hIntegrals->SetBinContent(i, integral);
     }
-    hIntegrals->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    hIntegrals->GetXaxis()->SetTitle(Form("%s Pt [GeV/c]",filenameobj.particletype.c_str()));
     gPad->SetLogy();
     hIntegrals->Draw();
 
@@ -809,7 +1072,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     TH2F *hist2D_1 = (TH2F *)aSlices[1];
     //TH2F *hist2D_1 = (TH2F *)pionfile->Get(Form("%s_1",histName));
     hist2D_1->GetYaxis()->SetTitle("Mean");
-    hist2D_1->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    hist2D_1->GetXaxis()->SetTitle(Form("%s Pt [GeV/c]",filenameobj.particletype.c_str()));
     // hist2D_1->SetAxisRange(0.1, 0.16,"Y");
     hist2D_1->Draw();
 
@@ -823,7 +1086,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     //TH2F *hist2D_2 = (TH2F *)pionfile->Get(Form("%s_2",histName));
     hist2D_2->SetMinimum(0.8);
     hist2D_2->GetYaxis()->SetTitle("Sigma");
-    hist2D_2->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    hist2D_2->GetXaxis()->SetTitle(Form("%s Pt [GeV/c]",filenameobj.particletype.c_str()));
     hist2D_2->Draw();
 
     // Show chi^2/ndf
@@ -839,11 +1102,11 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
         return;
     // Handle error or return
     } 
-    hist2D_chi2->GetXaxis()->SetTitle("Pion Pt [GeV/c]");
+    hist2D_chi2->GetXaxis()->SetTitle(Form("%s Pt [GeV/c]",filenameobj.particletype.c_str()));
     //gPad->SetLogy();
     hist2D_chi2->Draw();
     // hist2D_chi2->SetMinimum(0.8);
-    hist2D_chi2->SetTitle("chi^2/NDF;Pion Pt [GeV/c];chi^2/NDF");
+    hist2D_chi2->SetTitle(Form("chi^2/NDF;%s Pt [GeV/c];chi^2/NDF",filenameobj.particletype.c_str()));
 
     // Show fitted sigma/mean for each slice
     c1->cd(6);
@@ -852,7 +1115,7 @@ void SliceAndFit(filename_object filenameobj, const char* histName, const char* 
     gPad->SetLeftMargin(0.15);
     gPad->SetFillColor(33);
     hist2D_4->Divide(hist2D_1); // divide by mean
-    hist2D_4->SetTitle("Value of par[2]/par[1]=Sigma/Mean;Pion Pt [GeV/c];Sigma/Mean");
+    hist2D_4->SetTitle(Form("Value of par[2]/par[1]=Sigma/Mean;%s Pt [GeV/c];Sigma/Mean",filenameobj.particletype.c_str()));
     // hist2D_4->SetMinimum(0.8);
     hist2D_4->Draw();
 
