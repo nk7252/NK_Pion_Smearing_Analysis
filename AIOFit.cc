@@ -327,8 +327,7 @@ void PlotHistogramsToPDF(std::vector<filename_object> filenameobjs, filename_obj
     canvas->Print((pdfFileName + "[").c_str());
 
     // Loop over weight methods
-    for (size_t l = 0; l < comparisonFilenameObj.weightnames.size(); ++l) {
-        std::vector<std::string> histogramName;
+    for (size_t l = 0; l < comparisonFilenameObj.weightnames.size(); ++l) {         std::vector<std::string> histogramName;
         for (size_t v = 0; v < HistList.size(); ++v) {
             histogramName.push_back(HistList[v] + std::to_string(l));
             //std::cout << histogramName[v] << std::endl; // Debug line
@@ -377,12 +376,10 @@ void PlotHistogramsToPDF(std::vector<filename_object> filenameobjs, filename_obj
 
         //histogramName.clear();
         //std::cout << "Finished processing weight method: " << l << std::endl; // Debug line
-    }
-
-    // Close the PDF file
+            // Close the PDF file
     canvas->Print((pdfFileName + "]").c_str());
     delete canvas;
-}
+    }
 
 TCanvas* FitAndProjectY(filename_object filenameobj, const std::string& fileName, const std::string& histName) {
     // Open the file
