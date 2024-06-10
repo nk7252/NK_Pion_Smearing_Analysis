@@ -203,13 +203,13 @@ filename_object choosecomparisontype(int choosetype){
     filename_object filename_object1;// 0=weight type, 1=ac on/off, 2=co on/off, 3=ac&co on/off
     if(choosetype==0){
         //filename_object weightfilenameobj;
-        filename_object1.fileNames={"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.174000_const.root"};
+        filename_object1.fileNames={"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.168000_const.root"};
         filename_object1.particletype="Pion";
         filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.filenamemod="weightmethod_co1_ac1";
         //filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";  
-        filename_object1.FitRange={0.1,0.2};
+        filename_object1.FitRange={0.1,0.19};
         filename_object1.plotxlims={0.9,30};//min, max6.4
         filename_object1.plotylims={0.14,0.155,0.05,0.2,0.0, 2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff=30;
@@ -217,7 +217,7 @@ filename_object choosecomparisontype(int choosetype){
     }
     if(choosetype==1){
         //filename_object weightfilenameobj;
-        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.174000_const.root"};
+        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.168000_const.root"};
         filename_object1.particletype="Eta";
         filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
@@ -233,7 +233,7 @@ filename_object choosecomparisontype(int choosetype){
     }
     if(choosetype==2){
         //filename_object weightfilenameobj;
-        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.174000_const.root"};
+        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.168000_const.root"};
         filename_object1.particletype="Eta";
         filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
@@ -241,15 +241,15 @@ filename_object choosecomparisontype(int choosetype){
         //filename_object1.weightnames={"WSHP"};
         filename_object1.filenamemod="weightmethod_co1_ac1";
         //filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";  
-        filename_object1.FitRange={0.4,0.8};
+        filename_object1.FitRange={0.4,0.80};
         filename_object1.plotxlims={0.9,30};//min, max6.4
-        filename_object1.plotylims={0.57,0.595,0.08,0.11,0.0,2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
+        filename_object1.plotylims={0.585,0.620,0.105,0.13,0.0,2.0}; //mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff=30;
         filename_object1.binres=1;
     }
     if(choosetype==3){
         //filename_object weightfilenameobj;
-        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.174000_const.root"};
+        filename_object1.fileNames={"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.168000_const.root"};
         filename_object1.particletype="Pion&Eta";
         filename_object1.legendnames={"EXP","POWER","WSHP","HAGEDORN"};
         filename_object1.weightnames={"EXP","POWER","WSHP","HAGEDORN"};
@@ -342,7 +342,7 @@ void PlotHistogramsToPDF(std::vector<filename_object> filenameobjs, filename_obj
                 meanCanvas->Print(pdfFileName.c_str());
                 delete meanCanvas;
             }
-
+                /*
             //for (const auto& histName : histogramName) {
                 TCanvas* projectionCanvas1 = FitAndProjectY(filenameobj1, filenameobj1.fileNames[0], histogramName[l]);
                 if (projectionCanvas1) {
@@ -369,7 +369,7 @@ void PlotHistogramsToPDF(std::vector<filename_object> filenameobjs, filename_obj
                     delete sigmaCanvas2;
                 }
 
-
+*/
 
             //std::cout << "Finished processing files: " << filenameobj1.fileNames[0] << " and " << filenameobj2.fileNames[0] << std::endl; // Debug line
         }
@@ -459,11 +459,13 @@ TCanvas* FitMeanAndPlot(filename_object filenameobj, int legendInt, const std::s
             // Project along Y for each binX
             TH1D* yProjection = temphist[j]->ProjectionY(Form("YProjection_%zu_%d", j, binX), binX, binX, "");
 
+            TF1 *fitFunc = new TF1("gaus", "gaus", filenameobj.FitRange[0], filenameobj.FitRange[1]);
+
             // Fit the Y projection with a Gaussian
-            yProjection->Fit("gaus", "QEM");
+            yProjection->Fit("gaus", "QEMR");
 
             // Access the fit parameters
-            TF1* fitFunc = yProjection->GetFunction("gaus");
+            //TF1* fitFunc = yProjection->GetFunction("gaus");
 
             // Check if the fit function is valid
             if (fitFunc) {
@@ -574,12 +576,12 @@ TCanvas* FitSigmaMeanAndPlot(filename_object filenameobj, int legendInt, const s
             
             // Project along Y for each binX
             TH1D* yProjection = temphist[j]->ProjectionY(Form("YProjection_%zu_%d", j, binX), binX, binX, "");
-
+            TF1 *fitFunc = new TF1("gaus", "gaus", filenameobj.FitRange[0], filenameobj.FitRange[1]);
             // Fit the Y projection with a Gaussian
-            yProjection->Fit("gaus", "QEM");
+            yProjection->Fit("gaus", "QEMR");
 
             // Access the fit parameters
-            TF1* fitFunc = yProjection->GetFunction("gaus");
+            //TF1* fitFunc = yProjection->GetFunction("gaus");
 
             // Check if the fit function is valid
             if (fitFunc) {

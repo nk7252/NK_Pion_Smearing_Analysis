@@ -58,8 +58,8 @@ int main(){
 	float pt1cut =1.5;   
 	float pt2cut =1.5;
     float comb_ptcut = 0;
-	float ptMaxCut = 40;
-	float nclus_ptCut =0.5;
+	float ptMaxCut = 50;
+	float nclus_ptCut =0.0;
 	//nclus is not something I can do here is it          
 
 	//--------------------Alternative paramaterization, woods saxon+hagedorn+power law
@@ -89,7 +89,7 @@ int main(){
 
 	for (int smear_factor_itt = 0; smear_factor_itt < 0 + 1; smear_factor_itt++){// originally int smear_factor_itt = 0; smear_factor_itt < 24 + 1; smear_factor_itt++
 		// only want .155
-		float smear_factor_basevalue = 0.174; //0.498, I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
+		float smear_factor_basevalue = 0.168; //0.498, I used 1.6% + 12.7%/sqrt(E) fig 22, but that is from a special beam cross section config. trying with fig 24 data i.e 2.8% + 15.5%
 		//--------------------preliminaries to read from root
 		float smear_factor_c = smear_factor_basevalue + 0.001 * smear_factor_itt;//constant term
 		float smear_factor_b = 0.154;//0.154,sqrt(E) term
