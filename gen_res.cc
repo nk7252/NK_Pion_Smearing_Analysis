@@ -26,6 +26,7 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx,doub
 bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMax);
 bool pTCut(const Pythia8::Vec4& particle, float ptCut);
 bool AsymmCutcheck(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float AsymmCutoff, bool asymcutbool);
+void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& params);
 
 int main(int argc, char* argv[]){
     // Define default parameters
@@ -98,6 +99,8 @@ int main(int argc, char* argv[]){
 
     std::map<double, std::vector<double>> mass_pt_map;
     TF1* myFunc = ChooseSpectrumFunction(weightMethod, PT_Min, PT_Max, particleType);
+
+    std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
 
     for (int smear_factor_itt = 0; smear_factor_itt < smear_factor_steps; smear_factor_itt++) {
         float smear_factor_c = smear_factor_basevalue + smear_factor_step * smear_factor_itt;
