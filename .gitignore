@@ -59,3 +59,5 @@ sPhenixStyle.h
 sPhenixStyle.hZone.Identifier
 eta_resolution
 pion_resolution
+gen_res
+guiconfig/run_counter.json
