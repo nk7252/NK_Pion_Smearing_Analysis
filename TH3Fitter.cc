@@ -135,7 +135,6 @@ void FitAndSaveProjection(TH3* h3, const FitConfig& config, const std::string& o
     TF1* fitFunc = new TF1("fitFunc", "gaus", config.minInvMass, config.maxInvMass);
     hProjZ->Fit(fitFunc, "RQ"); // "RQ" option for Range and Quiet
 
-
     hProjZ->SetTitle("Pion Inv. Mass for: nclus ,pT ;Pion Inv. Mass GeV;Counts");
     // Extract and print fit parameters
     double mean = fitFunc->GetParameter(1);
@@ -311,9 +310,9 @@ std::vector<TCanvas*> OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int 
     double bestChi2NDF = TMath::Infinity();
     double bestMinMass = 0, bestMaxMass = 0;
 
-    double startMass = 0.10; // start of mass range
-    double endMass = 0.24; // end of mass range
-    double step = 0.005; // step size
+    double startMass = 0.09; // start of mass range
+    double endMass = 0.21; // end of mass range
+    double step = 0.01; // step size
     
     for (double minMass = startMass; minMass < endMass; minMass += step) {
         for (double maxMass = minMass + step; maxMass <= endMass; maxMass += step) {
@@ -485,7 +484,6 @@ void appendtextfile(TF1* fitFunc, const std::string& fitName){//, Double_t scale
     }
 }
 
-
 std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass) {
     // more thorough minimizer for fit
     ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
@@ -626,7 +624,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     leg->Draw();
 
     canvases.push_back(c1);
-    c1->SaveAs("combined_fits.pdf");
+    c1->SaveAs("pioncode/canvas_pdf/ptdiff_combined_fits.pdf");
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
