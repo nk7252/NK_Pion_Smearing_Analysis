@@ -232,17 +232,17 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     gLeftRightPoly = &polyFunc; // Point the global pointer to your instance
     TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, leftlimit, rightlimit, 5);
 
-    hProjZ->Fit(leftRightFit, "RQ0ML");// "RQ" option for Range and Quiet, 0 for do not display fit on canvas.
+    hProjZ->Fit(leftRightFit, "RQ");// "RQ" option for Range and Quiet, 0 for do not display fit on canvas.
     // Fit Gaussian in the specified range
     TF1 *gausFit = new TF1("gausFit", "gaus", minMass, maxMass);//leftpolylim, rightpolylim
-    hProjZ->Fit(gausFit, "RQ0ML");
+    hProjZ->Fit(gausFit, "RQ");
     // Combined Gaussian + Polynomial fit
     TF1 *combinedFit = new TF1("combinedFit", combinedFunction, leftlimit, rightlimit, 8);
     // Set initial parameters from previous fits
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
     //try to improve the fit.
-    hProjZ->Fit(combinedFit, "RQ0ML");//L//M
+    hProjZ->Fit(combinedFit, "RQ");//L//M
     //-------------------------------------------show the poly4 part seperately
     // Create a new function for just the polynomial part
     TF1 *polyPart = new TF1("polyPart", "pol4", leftlimit, rightlimit);
@@ -259,7 +259,7 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     }
     TF1 *gausFit2 = new TF1("gausFit2", "gaus", minMass, maxMass);//leftmost_limit, 0.25
     for (int i = 0; i < 3; ++i) gausFit2->SetParameter(i, combinedFit->GetParameter(i));
-    histSubtracted->Fit(gausFit2, "RQ0ML");//L
+    histSubtracted->Fit(gausFit2, "RQ");//L
     //double chi2_s = gausFit2->GetChisquare();
     //double ndf_s = gausFit2->GetNDF();
     //double chi2ndf_s = chi2_s / ndf_s;
@@ -502,11 +502,11 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     gLeftRightPoly = &polyFunc; // Point the global pointer to your instance
     TF1 *leftRightFit = new TF1("leftRightFit", LeftRightPolynomialBridge, leftlimit, rightlimit, 5);
 
-    hProjZ->Fit(leftRightFit, "RQ0ML");
+    hProjZ->Fit(leftRightFit, "RQ");
 
     // Fit Gaussian in the specified range
     TF1 *gausFit = new TF1("gausFit", "gaus", minMass, maxMass);//leftpolylim, rightpolylim
-    hProjZ->Fit(gausFit, "RQ0ML");
+    hProjZ->Fit(gausFit, "RQ");
 
 
     // Combined Gaussian + Polynomial fit
@@ -515,7 +515,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
     for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
     //try to improve the fit.
-    hProjZ->Fit(combinedFit, "RLM");//M
+    hProjZ->Fit(combinedFit, "R");//M
     //double chi2 = combinedFit->GetChisquare();
     //double ndf = combinedFit->GetNDF();
     //double chi2ndf = chi2 / ndf;
@@ -549,7 +549,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     }
     TF1 *gausFit2 = new TF1("gausFit2", "gaus", minMass, maxMass);//leftmost_limit, 0.25
     for (int i = 0; i < 3; ++i) gausFit2->SetParameter(i, combinedFit->GetParameter(i));
-    histSubtracted->Fit(gausFit2, "RQ0ML");
+    histSubtracted->Fit(gausFit2, "RQ");
     //double chi2_s = gausFit2->GetChisquare();
     //double ndf_s = gausFit2->GetNDF();
     //double chi2ndf_s = chi2_s / ndf_s;
