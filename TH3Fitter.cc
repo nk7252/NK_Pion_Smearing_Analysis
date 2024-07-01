@@ -77,7 +77,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
 Double_t combinedFunction(Double_t *x, Double_t *par);
 double LeftRightPolynomialBridge(double *x, double *par);
 void appendtextfile(TF1* fitFunc, const std::string& fitName);
-std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass);
+std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass,int nclusitter);
 
 
 
@@ -393,7 +393,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
             delete pt0;
 
             std::vector<TCanvas*> canvases3;
-            canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
+            canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd, yBinEnd);
 
             for (auto* canvascol : canvases3) {//(int i=0;i<canvases3.size();i++){
                 canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
@@ -419,7 +419,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     delete pt0;
 
     std::vector<TCanvas*> canvases3;
-    canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, 1, 20);
+    canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, 1, 20, 0);
 
     for (auto* canvascol : canvases3) {//(int i=0;i<canvases3.size();i++){
         canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
@@ -484,7 +484,7 @@ void appendtextfile(TF1* fitFunc, const std::string& fitName){//, Double_t scale
     }
 }
 
-std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass) {
+std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double maxMass, int nclusitter) {
     // more thorough minimizer for fit
     ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     // Set the global fit strategy
@@ -624,7 +624,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     leg->Draw();
 
     canvases.push_back(c1);
-    c1->SaveAs("pioncode/canvas_pdf/ptdiff_combined_fits.pdf");
+    c1->SaveAs(Form("pioncode/canvas_pdf/ptdiff_nclus%i_combined_fits.pdf",nclusitter));
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
