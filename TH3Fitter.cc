@@ -338,7 +338,7 @@ std::vector<TCanvas*> OptimizeFitRange(TH3* h3, int xBinStart, int xBinEnd, int 
 
     // Optionally, perform and visualize the final fit with the best parameters
     
-    canvases2=DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass);
+    canvases2=DrawBestHistogram(hProjZ, bestMinMass, bestMaxMass, yBinEnd);
     return canvases2;
 }
 
@@ -393,7 +393,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
             delete pt0;
 
             std::vector<TCanvas*> canvases3;
-            canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd, yBinEnd);
+            canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, yBinStart, yBinEnd);
 
             for (auto* canvascol : canvases3) {//(int i=0;i<canvases3.size();i++){
                 canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
