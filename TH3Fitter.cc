@@ -419,7 +419,7 @@ void OptimizeHistogramFit(const std::string& rootFileName, const std::string& hi
     delete pt0;
 
     std::vector<TCanvas*> canvases3;
-    canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, 1, 20, 0);
+    canvases3=OptimizeFitRange(h3, xBinStart, xBinEnd, 1, 20);
 
     for (auto* canvascol : canvases3) {//(int i=0;i<canvases3.size();i++){
         canvascol->Print(Form("pioncode/canvas_pdf/%s_Fit.pdf",histogramName.c_str()));
