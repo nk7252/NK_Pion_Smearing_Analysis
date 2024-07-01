@@ -624,7 +624,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     leg->Draw();
 
     canvases.push_back(c1);
-    c1->SaveAs(Form("pioncode/canvas_pdf/ptdiff_nclus%i_combined_fits.pdf",nclusitter));
+    c1->SaveAs(Form("pioncode/canvas_pdf/ptdiff/ptdiff_nclus%i_combined_fits.pdf",nclusitter));
 
     //-------------------------------------------------------------------------------------------canvas 2
     TCanvas *c2 = new TCanvas("c2", "Subtracted Peak", 800, 600);
