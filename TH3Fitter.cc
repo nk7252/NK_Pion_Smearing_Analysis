@@ -220,8 +220,8 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
     }
     */
 
-    float leftlimit =0.08;
-    float rightlimit =0.25;
+    float leftlimit =0.05;
+    float rightlimit =0.5;
 
     //hProjZ->GetXaxis()->SetRangeUser(0, 0.4);
 
@@ -492,8 +492,8 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(5000);
 
 
-    float leftlimit =0.08;
-    float rightlimit =0.27;
+    float leftlimit =0.05;
+    float rightlimit =0.5;
     //hist->GetXaxis()->SetRangeUser(0, 0.4);
 
     LeftRightPolynomial polyFunc(minMass, maxMass); //exclusion range
