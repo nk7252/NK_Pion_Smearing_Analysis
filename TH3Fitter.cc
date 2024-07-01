@@ -511,7 +511,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     TF1 *combinedFit = new TF1("combinedFit", combinedFunction, leftlimit, rightlimit, 8);
     // Set initial parameters from previous fits
     for (int i = 0; i < 3; ++i) combinedFit->SetParameter(i, gausFit->GetParameter(i));
-    for (int i = 3; i < 8; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i-3));
+    for (int i = 0; i < 5; ++i) combinedFit->SetParameter(i, leftRightFit->GetParameter(i+3));
     //try to improve the fit.
     hProjZ->Fit(combinedFit, "R");//M
     //double chi2 = combinedFit->GetChisquare();
@@ -584,7 +584,6 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
         double residual2 = histSubtracted->GetBinContent(i) - gausFit2->Eval(bincenter2);
         residuals2->SetPoint(i, bincenter2, residual2); // Set the point in the residuals graph
         residuals2->SetPointError(i, 0,sqrt(pow(histSubtracted->GetBinError(i),2)));
-
     }
 
 
@@ -597,12 +596,12 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
     //hProjZ->SetStats(0); // Turn off stat box
     hProjZ->Draw("E");
 
-    gausFit->SetLineColor(kGreen);
-    gausFit->Draw("SAME");// draw the gaussian fit
+    //gausFit->SetLineColor(kGreen);
+    //gausFit->Draw("SAME");// draw the gaussian fit
     polyPart->SetLineColor(kRed);
     polyPart->Draw("SAME");
-    //GaussPart->SetLineColor(kGreen);
-    //GaussPart->Draw("SAME");
+    GaussPart->SetLineColor(kGreen);
+    GaussPart->Draw("SAME");
 
     //leftRightFit->SetLineColor(kBlue);
     fleft->SetLineColor(kBlue);
@@ -617,7 +616,7 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     // Add a legend
     TLegend *leg = new TLegend(0.1, 0.7, 0.3, 0.9);//bot left x, bot left y, top right x, top right y 
-    leg->AddEntry(gausFit, "Gaussian Fit");
+    leg->AddEntry(GaussPart, "Gaussian Fit");
     leg->AddEntry(polyPart, "Polynomial Fit");
     leg->AddEntry(fleft, "Left & Right Polynomial Fit");
     leg->AddEntry(combinedFit, "Combined Fit");
