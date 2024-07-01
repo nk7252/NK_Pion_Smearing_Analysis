@@ -274,19 +274,19 @@ std::vector<double> FitAndGetParams(TH1D* hProjZ, double minMass, double maxMass
 
     std::vector<double> fitparams;
     // add fit results to vector output
-    fitparams.push_back(gausFit2->GetChisquare());
-    fitparams.push_back(gausFit2->GetNDF());
-    fitparams.push_back(gausFit2->GetChisquare()/gausFit2->GetNDF());
-    fitparams.push_back(gausFit2->GetParameter(2));
-    fitparams.push_back(gausFit2->GetParameter(1));
-    fitparams.push_back(gausFit2->GetParameter(2)* 100.0f / gausFit2->GetParameter(1));
+    //fitparams.push_back(gausFit2->GetChisquare());
+    //fitparams.push_back(gausFit2->GetNDF());
+    //fitparams.push_back(gausFit2->GetChisquare()/gausFit2->GetNDF());
+    //fitparams.push_back(gausFit2->GetParameter(2));
+    //fitparams.push_back(gausFit2->GetParameter(1));
+    //fitparams.push_back(gausFit2->GetParameter(2)* 100.0f / gausFit2->GetParameter(1));
 
-    //fitparams.push_back(combinedFit->GetChisquare());
-    //fitparams.push_back(combinedFit->GetNDF());
-    //fitparams.push_back(combinedFit->GetChisquare()/combinedFit->GetNDF());
-    //fitparams.push_back(combinedFit->GetParameter(2));
-    //fitparams.push_back(combinedFit->GetParameter(1));
-    //fitparams.push_back(combinedFit->GetParameter(2)* 100.0f / combinedFit->GetParameter(1));
+    fitparams.push_back(combinedFit->GetChisquare());
+    fitparams.push_back(combinedFit->GetNDF());
+    fitparams.push_back(combinedFit->GetChisquare()/combinedFit->GetNDF());
+    fitparams.push_back(combinedFit->GetParameter(2));
+    fitparams.push_back(combinedFit->GetParameter(1));
+    fitparams.push_back(combinedFit->GetParameter(2)* 100.0f / combinedFit->GetParameter(1));
 
     // Clean up
     delete leftRightFit;
