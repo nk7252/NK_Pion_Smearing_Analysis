@@ -605,10 +605,10 @@ std::vector<TCanvas*> DrawBestHistogram(TH1D* hProjZ, double minMass, double max
 
     //leftRightFit->SetLineColor(kBlue);
     fleft->SetLineColor(kBlue);
-    fright->SetLineColor(kBlue);
-
     fleft->Draw("SAME");
+    fright->SetLineColor(kBlue);
     fright->Draw("SAME");// turn off to see the inflection better.
+
     //leftRightFit->Draw("SAME"); // Draw the left and right polynomial fits
 
     combinedFit->SetLineColor(kBlack);
