@@ -396,9 +396,9 @@ class SimulationGUI(QWidget):
         ptMax = self.ptMaxInput.value()
         ptMin = self.ptMinInput.value()
         weightMethod = self.weightMethodInput.currentText()
-        applyAsymmCut = int(self.asymmCutInput.isChecked())
+        applyAsymmCut = "true" if self.asymmCutInput.isChecked() else "false"
         asymmCutValue = self.asymmCutValueInput.value()
-        clusterOverlap = int(self.clusterOverlapInput.isChecked())
+        clusterOverlap = "true" if self.clusterOverlapInput.isChecked() else "false"
         clusterOverlapProb = self.clusterOverlapProbInput.value()
         deltaRcutMax = self.deltaRcutMaxInput.value()
         pt1cut = self.pt1cutInput.value()
@@ -407,7 +407,7 @@ class SimulationGUI(QWidget):
         ptMaxCut = self.ptMaxCutInput.value()
         nclusPtCut = self.nclusPtCutInput.value()
         positSmearingFactor = self.positSmearingFactorInput.value()
-        saveToTree = int(self.saveToTreeInput.isChecked())
+        saveToTree = "true" if self.saveToTreeInput.isChecked() else "false"
         baseSmearPercent = self.baseSmearPercentInput.value()
         nSteps = self.nStepsInput.value()
         stepSize = self.stepSizeInput.value()
@@ -499,6 +499,7 @@ class SimulationGUI(QWidget):
         plt.savefig(filePath, bbox_inches="tight")
         plt.close()
         print(f"Parameters saved to {filePath}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

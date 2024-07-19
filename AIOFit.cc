@@ -101,9 +101,9 @@ void AIOFit()
     GraphAndSaveToPDF(choosenfilenameobj0, HistList, HistLegend);
 
     std::vector<filename_object> filenameobjs = {choosenfilenameobj0, choosenfilenameobj2};
-    filename_object compfilenameobj = choosecomparisontype(3);
+    filename_object combfilenameobj = choosecomparisontype(3);
     // Assuming filenameobj1 and filenameobj2 are defined
-    PlotHistogramsToPDF(filenameobjs, compfilenameobj, HistList, HistLegend);
+    PlotHistogramsToPDF(filenameobjs, combfilenameobj, HistList, HistLegend);
 
     //*/
     // OverlayMeans(choosenfilenameobj);
@@ -209,7 +209,7 @@ filename_object choosecomparisontype(int choosetype)
     if (choosetype == 0)
     {
         // filename_object weightfilenameobj;
-        filename_object1.fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.168000_const.root"};
+        filename_object1.fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.120000_const.root"};
         filename_object1.particletype = "Pion";
         filename_object1.legendnames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
         filename_object1.weightnames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
@@ -217,14 +217,14 @@ filename_object choosecomparisontype(int choosetype)
         // filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";
         filename_object1.FitRange = {0.1, 0.19};
         filename_object1.plotxlims = {0.9, 10};                          // min, max6.4
-        filename_object1.plotylims = {0.14, 0.155, 0.05, 0.2, 0.0, 2.0}; // mean_min, mean_max,sm_min, sm_max, min h12, max h12
+        filename_object1.plotylims = {0.147, 0.152, 0.05, 0.2, 0.0, 2.0}; // mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff = 30;
         filename_object1.binres = 1;
     }
     if (choosetype == 1)
     {
         // filename_object weightfilenameobj;
-        filename_object1.fileNames = {"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.168000_const.root"};
+        filename_object1.fileNames = {"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root"};
         filename_object1.particletype = "Eta";
         filename_object1.legendnames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
         filename_object1.weightnames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
@@ -241,7 +241,7 @@ filename_object choosecomparisontype(int choosetype)
     if (choosetype == 2)
     {
         // filename_object weightfilenameobj;
-        filename_object1.fileNames = {"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.168000_const.root"};
+        filename_object1.fileNames = {"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root"};
         filename_object1.particletype = "Eta";
         filename_object1.legendnames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
         filename_object1.weightnames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
@@ -258,7 +258,7 @@ filename_object choosecomparisontype(int choosetype)
     if (choosetype == 3)
     {
         // filename_object weightfilenameobj;
-        filename_object1.fileNames = {"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.168000_const.root"};
+        filename_object1.fileNames = {"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root"};
         filename_object1.particletype = "Pion&Eta";
         filename_object1.legendnames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
         filename_object1.weightnames = {"EXP", "POWER", "WSHP", "HAGEDORN"};

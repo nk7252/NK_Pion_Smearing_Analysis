@@ -17,25 +17,26 @@
 #include "TGraph.h"
 #include "TCanvas.h"
 #include "Pythia8/Pythia.h" // Include Pythia headers.
-using namespace Pythia8;	// Let Pythia8:: be implicit;
+using namespace Pythia8;    // Let Pythia8:: be implicit;
 
 // Forward declarations
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max, const std::string& particleType);
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE);
-Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx,double smearingFactory,double smearingFactorz);
+Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx, double smearingFactory, double smearingFactorz);
 bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMax);
 bool pTCut(const Pythia8::Vec4& particle, float ptCut);
 bool AsymmCutcheck(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float AsymmCutoff, bool asymcutbool);
 void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& params);
 
 int main(int argc, char* argv[]){
-    //compiled with: 
-    //g++ gen_res.cc -o gen_res -w -I /home/nik/pythia8307/include -O2 -std=c++11 -pedantic -W -Wall -Wshadow -fPIC -pthread  -L/home/nik/pythia8307/lib/ -Wl,-rpath,/home/nik/pythia8307/lib -lpythia8 -ldl -L /home/nik/root/lib -Wl,-rpath,/home/nik/root/lib -lCore `root-config --cflags --glibs`
-    //code is run with:
-    //./gen_res -n 8000000 -p 50.0 -m 0.0 -w WSHP -a True -v 0.6 -c True -o 0.99 -d 1.1 -q 1.3 -r 0.7 -b 0.12 -x 0.0 -y 50.0 -z 0.0 -f 2.8 -t False -s 1 -i 0.001
+    // compiled with: 
+    // g++ gen_res.cc -o gen_res -w -I /home/nik/pythia8307/include -O2 -std=c++11 -pedantic -W -Wall -Wshadow -fPIC -pthread  -L/home/nik/pythia8307/lib/ -Wl,-rpath,/home/nik/pythia8307/lib -lpythia8 -ldl -L /home/nik/root/lib -Wl,-rpath,/home/nik/root/lib -lCore `root-config --cflags --glibs`
+    // code is run with:
+    // ./gen_res -n 8000000 -p 50.0 -m 0.0 -w WSHP -a True -v 0.6 -c True -o 0.99 -d 1.1 -q 1.3 -r 0.7 -b 0.12 -x 0.0 -y 50.0 -z 0.0 -f 2.8 -t False -s 1 -i 0.001
     // Define default parameters
-    //input params
-    std::string particleType = "pion";
+    // input params
+    //std::string particleType = "Pion";
+    std::string particleType = "Eta";
     int nParticles = 8 * 1000000;
     int PT_Max = 50;
     float PT_Min = 0;
@@ -50,12 +51,12 @@ int main(int argc, char* argv[]){
     int clusterOverlap = 1;
     float clusterOverlapProb = 0.99;
     float DeltaRcut_MAX = 1.1;
-    float pt1cut = 1.5;
-    float pt2cut = 1.5;
+    float pt1cut = 1.3;
+    float pt2cut = 0.7;
     float comb_ptcut = 0;
     float ptMaxCut = 50;
     float nclus_ptCut = 0.0;
-    //weighting params
+    // weighting params
     double t = 4.5;
     double w = 0.114;
     double A = 229.6;
@@ -63,30 +64,30 @@ int main(int argc, char* argv[]){
     double n = 8.1028;
     double m_param = 10.654;
     double p0 = 1.466;
-    //smearing params
+    // smearing params
     float smeared_lower_bin_limit = 0.0;
     float smeared_upper_bin_limit = 1.0;
     float smear_factor_a = 0;
     float smear_factor_d = 0.0;
     float posit_smearingFactor = 2.8;
-    float smear_factor_basevalue = 0.168;
+    float smear_factor_basevalue = 0.12;
     float smear_factor_step = 0.001;
     int smear_factor_steps = 1;
-    //output params
+    // output params
     bool saveToTree = false;
 
     // Parse command-line arguments
     std::map<std::string, std::string> params;
     parseArguments(argc, argv, params);
 
-    if (params.find("particleType") != params.end()) particleType = params["particleType"];
+     if (params.find("particleType") != params.end()) particleType = params["particleType"];
     if (params.find("nParticles") != params.end()) nParticles = std::stoi(params["nParticles"]);
     if (params.find("PT_Max") != params.end()) PT_Max = std::stoi(params["PT_Max"]);
     if (params.find("PT_Min") != params.end()) PT_Min = std::stof(params["PT_Min"]);
     if (params.find("weightMethod") != params.end()) weightMethodStr = params["weightMethod"];
-    if (params.find("applyAsymmCut") != params.end()) applyAsymmCut = std::stoi(params["applyAsymmCut"]);
+    if (params.find("applyAsymmCut") != params.end()) applyAsymmCut = (params["applyAsymmCut"] == "true");
     if (params.find("asymmCutValue") != params.end()) asymmCutValue = std::stof(params["asymmCutValue"]);
-    if (params.find("clusterOverlap") != params.end()) clusterOverlap = std::stoi(params["clusterOverlap"]);
+    if (params.find("clusterOverlap") != params.end()) clusterOverlap = (params["clusterOverlap"] == "true");
     if (params.find("clusterOverlapProb") != params.end()) clusterOverlapProb = std::stof(params["clusterOverlapProb"]);
     if (params.find("DeltaRcut_MAX") != params.end()) DeltaRcut_MAX = std::stof(params["DeltaRcut_MAX"]);
     if (params.find("pt1cut") != params.end()) pt1cut = std::stof(params["pt1cut"]);
@@ -95,18 +96,22 @@ int main(int argc, char* argv[]){
     if (params.find("ptMaxCut") != params.end()) ptMaxCut = std::stof(params["ptMaxCut"]);
     if (params.find("nclus_ptCut") != params.end()) nclus_ptCut = std::stof(params["nclus_ptCut"]);
     if (params.find("posit_smearingFactor") != params.end()) posit_smearingFactor = std::stof(params["posit_smearingFactor"]);
-    if (params.find("saveToTree") != params.end()) saveToTree = std::stoi(params["saveToTree"]);
+    if (params.find("saveToTree") != params.end()) saveToTree = (params["saveToTree"] == "true");
     if (params.find("smear_factor_basevalue") != params.end()) smear_factor_basevalue = std::stof(params["smear_factor_basevalue"]);
     if (params.find("smear_factor_step") != params.end()) smear_factor_step = std::stof(params["smear_factor_step"]);
     if (params.find("smear_factor_steps") != params.end()) smear_factor_steps = std::stoi(params["smear_factor_steps"]);
 
-    // Map weightMethod string to integer
-    if (weightMethodStr == "EXP") weightMethod = 0;
-    else if (weightMethodStr == "POWER") weightMethod = 1;
-    else if (weightMethodStr == "WSHP") weightMethod = 2;
-    else if (weightMethodStr == "HAGEDORN") weightMethod = 3;
-    else {
-        std::cerr << "Invalid weightMethod: " << weightMethodStr << std::endl;
+    // Map weightMethodStr to weightMethod integer
+    if (weightMethodStr == "EXP") {
+        weightMethod = 0;
+    } else if (weightMethodStr == "POWER") {
+        weightMethod = 1;
+    } else if (weightMethodStr == "WSHP") {
+        weightMethod = 2;
+    } else if (weightMethodStr == "HAGEDORN") {
+        weightMethod = 3;
+    } else {
+        std::cerr << "Unknown weight method: " << weightMethodStr << std::endl;
         return 1;
     }
 
@@ -231,16 +236,16 @@ int main(int argc, char* argv[]){
 
         Pythia pythia;
         pythia.readString("PromptPhoton:all = on");
-        if (particleType == "pion") {
+        if (particleType == "Pion") {
             pythia.readString("111:oneChannel = 1 1.0 0 22 22");
-        } else if (particleType == "eta") {
+        } else if (particleType == "Eta") {
             pythia.readString("221:oneChannel = 1 1.0 0 22 22");
         }
         pythia.init();
         pythia.event.clear();
 
         int particleCount = 0;
-        double particleMass = (particleType == "pion") ? 0.1349768 : 0.54786;
+        double particleMass = (particleType == "Pion") ? 0.1349768 : 0.54786;
         double mT_Scaling = 1.0;
 
         for (int i = 0; i < nParticles; i++) {
@@ -251,7 +256,7 @@ int main(int argc, char* argv[]){
             double inv_yield[4];
             int WeightScale[4] = {1e+14, 1e+5, 1e+14, 1e+14};
 
-            if (particleType == "eta") {
+            if (particleType == "Eta") {
                 mT_Scaling = 0.5 * pow((1.2 + sqrt(pow(0.54786, 2) + pow(Pt, 2))) / (1.2 + sqrt(pow(0.1349768, 2) + pow(Pt, 2))), -10);
             }
 
@@ -271,7 +276,7 @@ int main(int argc, char* argv[]){
             double particle_py = Pt * sin(azimuthal_ang);
             double particle_E = sqrt(particleMass * particleMass + Pt * Pt + 0.0);
 
-            if (pythia.event.append((particleType == "pion") ? 111 : 221, 23, 0, 0, particle_px, particle_py, 0.0, particle_E, particleMass)) {
+            if (pythia.event.append((particleType == "Pion") ? 111 : 221, 23, 0, 0, particle_px, particle_py, 0.0, particle_E, particleMass)) {
                 particleCount++;
             } else {
                 std::cout << "Failed to append particle at iteration " << i << std::endl;
@@ -281,11 +286,11 @@ int main(int argc, char* argv[]){
         pythia.moreDecays();
 
         for (int i = 0; i < pythia.event.size(); i++) {
-            if (pythia.event[i].id() == ((particleType == "pion") ? 111 : 221)) {
+            if (pythia.event[i].id() == ((particleType == "Pion") ? 111 : 221)) {
                 int Gamma_daughters[2] = {pythia.event[i].daughter1(), pythia.event[i].daughter2()};
                 double Pt = pythia.event[i].pT();
 
-                if (particleType == "eta") {
+                if (particleType == "Eta") {
                     mT_Scaling = 0.5 * pow((1.2 + sqrt(pow(0.54786, 2) + pow(Pt, 2))) / (1.2 + sqrt(pow(0.1349768, 2) + pow(Pt, 2))), -10);
                 }
 
@@ -454,7 +459,7 @@ int main(int argc, char* argv[]){
 
 TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max, const std::string& particleType) {
     TF1 *myFunc = nullptr;
-    if (particleType == "pion") {
+    if (particleType == "Pion") {
         if (weightmethod == 0) {
             myFunc = new TF1("myFunc", [](double *x, double *par) {
                 return x[0] * par[0] * TMath::Exp(-x[0] / 0.3);
@@ -480,7 +485,7 @@ TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max, const std:
         } else {
             std::cout << "Error: No Weight function found" << std::endl;
         }
-    } else if (particleType == "eta") {
+    } else if (particleType == "Eta") {
         if (weightmethod == 0) {
             myFunc = new TF1("myFunc", [](double *x, double *par) {
                 return x[0] * par[1] * pow((par[2] + sqrt(pow(par[3], 2) + pow(x[0], 2))) / (par[2] + sqrt(pow(par[4], 2) + pow(x[0], 2))), -par[5]) * par[0] * TMath::Exp(-x[0] / 0.3);
@@ -572,8 +577,8 @@ void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& 
     }
 
     // Debugging: Print all parsed parameters
-    //std::cout << "Parsed command-line parameters:" << std::endl;
-    //for (const auto& param : params) {
-        //std::cout << param.first << " = " << param.second << std::endl;
-    //}
+    std::cout << "Parsed command-line parameters:" << std::endl;
+    for (const auto& param : params) {
+        std::cout << param.first << " = " << param.second << std::endl;
+    }
 }
