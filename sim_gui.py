@@ -195,6 +195,7 @@ class SimulationGUI(QWidget):
             QDoubleSpinBox(self),
             max_value=1,
             decimals=3,
+            step=0.001,
             default_value=0.168,
             explanation="Enter the base smearing percent.",
         )
@@ -390,14 +391,14 @@ class SimulationGUI(QWidget):
         self.saveParams()
         run_number = self.incrementRunCounter()
 
-        particleType = self.particleTypeInput.currentText().lower()
+        particleType = self.particleTypeInput.currentText().capitalize()
         nParticles = self.nParticlesInput.value()
         ptMax = self.ptMaxInput.value()
         ptMin = self.ptMinInput.value()
         weightMethod = self.weightMethodInput.currentText()
-        applyAsymmCut = self.asymmCutInput.isChecked()
+        applyAsymmCut = int(self.asymmCutInput.isChecked())
         asymmCutValue = self.asymmCutValueInput.value()
-        clusterOverlap = self.clusterOverlapInput.isChecked()
+        clusterOverlap = int(self.clusterOverlapInput.isChecked())
         clusterOverlapProb = self.clusterOverlapProbInput.value()
         deltaRcutMax = self.deltaRcutMaxInput.value()
         pt1cut = self.pt1cutInput.value()
@@ -406,26 +407,27 @@ class SimulationGUI(QWidget):
         ptMaxCut = self.ptMaxCutInput.value()
         nclusPtCut = self.nclusPtCutInput.value()
         positSmearingFactor = self.positSmearingFactorInput.value()
-        saveToTree = self.saveToTreeInput.isChecked()
+        saveToTree = int(self.saveToTreeInput.isChecked())
         baseSmearPercent = self.baseSmearPercentInput.value()
         nSteps = self.nStepsInput.value()
         stepSize = self.stepSizeInput.value()
         outputFormat = self.outputFormatInput.currentText().lower()
 
-        script = (
-            "gen_res"
-        )
+        script = "gen_res"
 
         command = (
-            f"./{script} -n {nParticles} -p {ptMax} -m {ptMin} -w {weightMethod} -a {applyAsymmCut} "
-            f"-v {asymmCutValue} -c {clusterOverlap} -o {clusterOverlapProb} -d {deltaRcutMax} "
-            f"-q {pt1cut} -r {pt2cut} -b {baseSmearPercent} -x {combPtCut} -y {ptMaxCut} "
-            f"-z {nclusPtCut} -f {positSmearingFactor} -t {saveToTree} -s {nSteps} -i {stepSize}"
+            f"./{script} -particleType={particleType} -nParticles={nParticles} -PT_Max={ptMax} "
+            f"-PT_Min={ptMin} -weightMethod={weightMethod} -applyAsymmCut={applyAsymmCut} "
+            f"-asymmCutValue={asymmCutValue} -clusterOverlap={clusterOverlap} "
+            f"-clusterOverlapProb={clusterOverlapProb} -DeltaRcut_MAX={deltaRcutMax} "
+            f"-pt1cut={pt1cut} -pt2cut={pt2cut} -comb_ptcut={combPtCut} -ptMaxCut={ptMaxCut} "
+            f"-nclus_ptCut={nclusPtCut} -posit_smearingFactor={positSmearingFactor} "
+            f"-saveToTree={saveToTree} -smear_factor_basevalue={baseSmearPercent} "
+            f"-smear_factor_step={stepSize} -smear_factor_steps={nSteps}"
         )
 
         print("Running command:", command)
 
-        # Uncomment the following line to actually run the command
         os.system(command)
 
         params = {
@@ -460,7 +462,7 @@ class SimulationGUI(QWidget):
         filename = f"pioncode/canvas_pdf/simulation_params_{run_number}.{outputFormat}"
         if outputFormat == "pdf":
             self.printParametersToPDF(params, filename)
-        elif outputFormat == "png" or "jpeg":
+        elif outputFormat in ["png", "jpeg"]:
             self.printParametersToImage(params, filename)
 
     def printParametersToPDF(self, params, filePath):
@@ -497,7 +499,6 @@ class SimulationGUI(QWidget):
         plt.savefig(filePath, bbox_inches="tight")
         plt.close()
         print(f"Parameters saved to {filePath}")
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

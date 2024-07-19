@@ -216,7 +216,7 @@ filename_object choosecomparisontype(int choosetype)
         filename_object1.filenamemod = "weightmethod_co1_ac1";
         // filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";
         filename_object1.FitRange = {0.1, 0.19};
-        filename_object1.plotxlims = {0.9, 30};                          // min, max6.4
+        filename_object1.plotxlims = {0.9, 10};                          // min, max6.4
         filename_object1.plotylims = {0.14, 0.155, 0.05, 0.2, 0.0, 2.0}; // mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff = 30;
         filename_object1.binres = 1;
@@ -233,7 +233,7 @@ filename_object choosecomparisontype(int choosetype)
         filename_object1.filenamemod = "weightmethod_co1_ac1";
         // filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";
         filename_object1.FitRange = {0.4, 0.8};
-        filename_object1.plotxlims = {0, 30};                             // min, max6.4
+        filename_object1.plotxlims = {0, 10};                             // min, max6.4
         filename_object1.plotylims = {0.58, 0.605, 0.08, 0.16, 0.0, 2.0}; // mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff = 30;
         filename_object1.binres = 1;
@@ -250,7 +250,7 @@ filename_object choosecomparisontype(int choosetype)
         filename_object1.filenamemod = "weightmethod_co1_ac1";
         // filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";
         filename_object1.FitRange = {0.4, 0.80};
-        filename_object1.plotxlims = {0.9, 30};                             // min, max6.4
+        filename_object1.plotxlims = {0.9, 10};                             // min, max6.4
         filename_object1.plotylims = {0.585, 0.620, 0.105, 0.13, 0.0, 2.0}; // mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff = 30;
         filename_object1.binres = 1;
@@ -267,7 +267,7 @@ filename_object choosecomparisontype(int choosetype)
         filename_object1.filenamemod = "weightmethod_co1_ac1";
         // filename_object1.canvasnamemod=" for various weighting methods. asymm+clustering";
         // filename_object1.FitRange={0.4,0.8};
-        filename_object1.plotxlims = {0, 30};                            // min, max6.4
+        filename_object1.plotxlims = {0, 10};                            // min, max6.4
         filename_object1.plotylims = {0.25, 0.26, 0.08, 0.11, 0.0, 2.0}; // mean_min, mean_max,sm_min, sm_max, min h12, max h12
         filename_object1.pTcutoff = 30;
         filename_object1.binres = 1;

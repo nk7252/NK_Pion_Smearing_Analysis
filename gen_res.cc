@@ -29,6 +29,10 @@ bool AsymmCutcheck(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float AsymmCu
 void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& params);
 
 int main(int argc, char* argv[]){
+    //compiled with: 
+    //g++ gen_res.cc -o gen_res -w -I /home/nik/pythia8307/include -O2 -std=c++11 -pedantic -W -Wall -Wshadow -fPIC -pthread  -L/home/nik/pythia8307/lib/ -Wl,-rpath,/home/nik/pythia8307/lib -lpythia8 -ldl -L /home/nik/root/lib -Wl,-rpath,/home/nik/root/lib -lCore `root-config --cflags --glibs`
+    //code is run with:
+    //./gen_res -n 8000000 -p 50.0 -m 0.0 -w WSHP -a True -v 0.6 -c True -o 0.99 -d 1.1 -q 1.3 -r 0.7 -b 0.12 -x 0.0 -y 50.0 -z 0.0 -f 2.8 -t False -s 1 -i 0.001
     // Define default parameters
     //input params
     std::string particleType = "pion";
@@ -39,6 +43,7 @@ int main(int argc, char* argv[]){
     int MassNBins = 50;
     int binres = 1;
     int n_bins = binres * PT_Max;
+    std::string weightMethodStr = "WSHP";
     int weightMethod = 2;
     bool applyAsymmCut = true;
     float asymmCutValue = 0.6;
@@ -78,7 +83,7 @@ int main(int argc, char* argv[]){
     if (params.find("nParticles") != params.end()) nParticles = std::stoi(params["nParticles"]);
     if (params.find("PT_Max") != params.end()) PT_Max = std::stoi(params["PT_Max"]);
     if (params.find("PT_Min") != params.end()) PT_Min = std::stof(params["PT_Min"]);
-    if (params.find("weightMethod") != params.end()) weightMethod = std::stoi(params["weightMethod"]);
+    if (params.find("weightMethod") != params.end()) weightMethodStr = params["weightMethod"];
     if (params.find("applyAsymmCut") != params.end()) applyAsymmCut = std::stoi(params["applyAsymmCut"]);
     if (params.find("asymmCutValue") != params.end()) asymmCutValue = std::stof(params["asymmCutValue"]);
     if (params.find("clusterOverlap") != params.end()) clusterOverlap = std::stoi(params["clusterOverlap"]);
@@ -89,10 +94,44 @@ int main(int argc, char* argv[]){
     if (params.find("comb_ptcut") != params.end()) comb_ptcut = std::stof(params["comb_ptcut"]);
     if (params.find("ptMaxCut") != params.end()) ptMaxCut = std::stof(params["ptMaxCut"]);
     if (params.find("nclus_ptCut") != params.end()) nclus_ptCut = std::stof(params["nclus_ptCut"]);
+    if (params.find("posit_smearingFactor") != params.end()) posit_smearingFactor = std::stof(params["posit_smearingFactor"]);
     if (params.find("saveToTree") != params.end()) saveToTree = std::stoi(params["saveToTree"]);
     if (params.find("smear_factor_basevalue") != params.end()) smear_factor_basevalue = std::stof(params["smear_factor_basevalue"]);
     if (params.find("smear_factor_step") != params.end()) smear_factor_step = std::stof(params["smear_factor_step"]);
     if (params.find("smear_factor_steps") != params.end()) smear_factor_steps = std::stoi(params["smear_factor_steps"]);
+
+    // Map weightMethod string to integer
+    if (weightMethodStr == "EXP") weightMethod = 0;
+    else if (weightMethodStr == "POWER") weightMethod = 1;
+    else if (weightMethodStr == "WSHP") weightMethod = 2;
+    else if (weightMethodStr == "HAGEDORN") weightMethod = 3;
+    else {
+        std::cerr << "Invalid weightMethod: " << weightMethodStr << std::endl;
+        return 1;
+    }
+
+    // Debugging: Print all parameters after parsing
+    std::cout << "Parameters after parsing:" << std::endl;
+    std::cout << "particleType: " << particleType << std::endl;
+    std::cout << "nParticles: " << nParticles << std::endl;
+    std::cout << "PT_Max: " << PT_Max << std::endl;
+    std::cout << "PT_Min: " << PT_Min << std::endl;
+    std::cout << "weightMethod: " << weightMethod << std::endl;
+    std::cout << "applyAsymmCut: " << applyAsymmCut << std::endl;
+    std::cout << "asymmCutValue: " << asymmCutValue << std::endl;
+    std::cout << "clusterOverlap: " << clusterOverlap << std::endl;
+    std::cout << "clusterOverlapProb: " << clusterOverlapProb << std::endl;
+    std::cout << "DeltaRcut_MAX: " << DeltaRcut_MAX << std::endl;
+    std::cout << "pt1cut: " << pt1cut << std::endl;
+    std::cout << "pt2cut: " << pt2cut << std::endl;
+    std::cout << "comb_ptcut: " << comb_ptcut << std::endl;
+    std::cout << "ptMaxCut: " << ptMaxCut << std::endl;
+    std::cout << "nclus_ptCut: " << nclus_ptCut << std::endl;
+    std::cout << "posit_smearingFactor: " << posit_smearingFactor << std::endl;
+    std::cout << "saveToTree: " << saveToTree << std::endl;
+    std::cout << "smear_factor_basevalue: " << smear_factor_basevalue << std::endl;
+    std::cout << "smear_factor_step: " << smear_factor_step << std::endl;
+    std::cout << "smear_factor_steps: " << smear_factor_steps << std::endl;
 
     TStopwatch timer;
     timer.Start();
@@ -106,7 +145,7 @@ int main(int argc, char* argv[]){
         float smear_factor_c = smear_factor_basevalue + smear_factor_step * smear_factor_itt;
         float smear_factor_b = 0.154;
 
-        TFile* output = new TFile(Form("%sFastMC_%f_sqrte_%f_const.root", particleType.c_str(), smear_factor_b, smear_factor_c), "recreate");
+        TFile* output = new TFile(Form("pioncode/rootfiles/%sFastMC_%f_sqrte_%f_const.root", particleType.c_str(), smear_factor_b, smear_factor_c), "recreate");
 
         TTree* tree = nullptr;
         if (saveToTree) {
@@ -409,7 +448,7 @@ int main(int argc, char* argv[]){
         }
         delete output;
     }
-
+    std::cout << "All done!" << std::endl; // debug line
     return 0;
 }
 
@@ -526,9 +565,15 @@ void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& 
         std::string arg = argv[i];
         size_t equalPos = arg.find('=');
         if (equalPos != std::string::npos) {
-            std::string key = arg.substr(0, equalPos);
+            std::string key = arg.substr(1, equalPos - 1); // Remove the leading '-'
             std::string value = arg.substr(equalPos + 1);
             params[key] = value;
         }
     }
+
+    // Debugging: Print all parsed parameters
+    //std::cout << "Parsed command-line parameters:" << std::endl;
+    //for (const auto& param : params) {
+        //std::cout << param.first << " = " << param.second << std::endl;
+    //}
 }
