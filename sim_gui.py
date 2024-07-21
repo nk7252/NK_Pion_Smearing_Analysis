@@ -148,12 +148,12 @@ class SimulationGUI(QWidget):
         )
 
         self.combPtCutInput = self.addFieldWithExplanation(
-            "Combined PT Cut (GeV):",
+            "Combined PT Cut Multiplier:",
             QDoubleSpinBox(self),
             max_value=100,
             decimals=2,
             default_value=0,
-            explanation="Enter the combined PT cut value in GeV.",
+            explanation="This value is multiplied by the sum of the photon cuts. If the pion has a pt smaller than that value, it is cut.",
         )
 
         self.ptMaxCutInput = self.addFieldWithExplanation(

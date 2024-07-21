@@ -41,8 +41,8 @@ int main(int argc, char* argv[]){
     int PT_Max = 50;
     float PT_Min = 0;
     double PT_ratio = PT_Min / PT_Max;
-    int MassNBins = 50;
-    int binres = 1;
+    int MassNBins = 100;
+    int binres = 2;
     int n_bins = binres * PT_Max;
     std::string weightMethodStr = "WSHP";
     int weightMethod = 2;
