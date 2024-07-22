@@ -35,15 +35,12 @@ int main(int argc, char* argv[]){
     // ./gen_res -n 8000000 -p 50.0 -m 0.0 -w WSHP -a True -v 0.6 -c True -o 0.99 -d 1.1 -q 1.3 -r 0.7 -b 0.12 -x 0.0 -y 50.0 -z 0.0 -f 2.8 -t False -s 1 -i 0.001
     // Define default parameters
     // input params
-    //std::string particleType = "Pion";
-    std::string particleType = "Eta";
+    std::string particleType = "Pion";
+    //std::string particleType = "Eta";
     int nParticles = 8 * 1000000;
     int PT_Max = 50;
     float PT_Min = 0;
     double PT_ratio = PT_Min / PT_Max;
-    int MassNBins = 100;
-    int binres = 2;
-    int n_bins = binres * PT_Max;
     std::string weightMethodStr = "WSHP";
     int weightMethod = 2;
     bool applyAsymmCut = true;
@@ -56,6 +53,10 @@ int main(int argc, char* argv[]){
     float comb_ptcut = 0;
     float ptMaxCut = 50;
     float nclus_ptCut = 0.0;
+    //untracked general parameters
+    int MassNBins = 600;
+    int binres = 2;
+    int n_bins = binres * PT_Max;
     // weighting params
     double t = 4.5;
     double w = 0.114;
@@ -66,7 +67,7 @@ int main(int argc, char* argv[]){
     double p0 = 1.466;
     // smearing params
     float smeared_lower_bin_limit = 0.0;
-    float smeared_upper_bin_limit = 1.0;
+    float smeared_upper_bin_limit = 1.2;
     float smear_factor_a = 0;
     float smear_factor_d = 0.0;
     float posit_smearingFactor = 2.8;
