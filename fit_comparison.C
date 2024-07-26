@@ -380,7 +380,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   gMassRatios->Draw("APE");
   legend1->Draw();
 
-  TFile outputFile("ptdifferential_overlay.root", "RECREATE");
+  TFile outputFile("pioncode/rootfiles/ptdifferential_overlay.root", "RECREATE");
   gPionMeans->Write("gPionMean");
   gPionWidths->Write("gPionWidth");
   gEtaMeans->Write("gEtaMean");
