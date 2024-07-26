@@ -380,21 +380,25 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   legend1->Draw();
 
   TFile outputFile("ptdifferential_overlay.root", "RECREATE");
-  gPionMean->Write("gPionMean");
-  gPionWidth->Write("gPionWidth");
-  gEtaMean->Write("gEtaMean");
-  gEtaWidth->Write("gEtaWidth");
+  gPionMeans->Write("gPionMean");
+  gPionWidths->Write("gPionWidth");
+  gEtaMeans->Write("gEtaMean");
+  gEtaWidths->Write("gEtaWidth");
+  gMassRatios->Write("gMassRatio");
   outputFile.Close();
 }
 
 void fit_comparison()
 {
   std::vector<std::string> Geant_fileNames = {"pioncode/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011_merged_V1.root", "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V3.root"};
+  std::vector<std::string> Geant_histNames = {"h_InvMass_2d", "h_InvMass_weighted_2d"};
+  std::vector<std::string> Geant_legendNames = {"Pythia8", "SinglePi0"};
+
   std::vector<std::string> fastmc_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.077000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.077000_const.root"};
-  std::vector<std::string> Geant_histNames = {"h_InvMass_2d", "h_InvMass_2d"};
   std::vector<std::string> fastmc_histNames = {"h100_2", "h100_2"};
+  std::vector<std::string> fastmc_legendNames = {"PionFastMC", "EtaFastMC"};
 
   AnalyzeHistograms(Geant_fileNames, fastmc_fileNames, Geant_histNames, fastmc_histNames);
 
-  return 0;
+  //return 0;
 }
