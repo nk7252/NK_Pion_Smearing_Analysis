@@ -118,7 +118,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   // Loop through Geant4 files
   for (size_t j = 0; j < GeantFileNames.size(); ++j)
   {
-    TFile file(GeantFileNames[i].c_str(), "READ");
+    TFile file(GeantFileNames[j].c_str(), "READ");
     if (!file.IsOpen())
     {
       std::cerr << "Error opening file: " << GeantFileNames[j] << std::endl;
@@ -137,15 +137,16 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       endBin = nBinsX; // Default to the last bin if not specified
 
     // Loop over the x-axis bins
+    int bincounter=1;
     for (int i = startBin; i <= endBin; i += projectionBins)
     {
       // Project the histogram along the Y-axis
       int lastBin = std::min(i + projectionBins - 1, nBinsX);
       TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
       // Check if the projection has enough entries to perform a fit
-      if (hist->GetEntries() < 1000)
+      if (yProjection->GetEntries() < 1000)
       { // Adjust the threshold as needed
-        delete hist;
+        delete yProjection;
         continue;
       }
       TH1D *histF = (TH1D *)yProjection;
@@ -179,6 +180,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
       double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
       TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
+      double pion_pt = (pt_min + pt_max) / 2.0;
       scale_histogram_errors(histF, scale_factor);
       // fitting background only
       TF1 *leftRightFit;
@@ -219,17 +221,17 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       histF->Fit(combinedFit, "RE");
 
       // Get the fit parameters
-      double Pmean = fitFunc->GetParameter(1);
-      double Psigma = fitFunc->GetParameter(2);
-      double PmeanErr = fitFunc->GetParError(1);
-      double PsigmaErr = fitFunc->GetParError(2);
+      double Pmean = combinedFit->GetParameter(1);
+      double Psigma = combinedFit->GetParameter(2);
+      double PmeanErr = combinedFit->GetParError(1);
+      double PsigmaErr = combinedFit->GetParError(2);
       double PWidth = Psigma / Pmean;
       double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
 
-      double Emean = fitFunc->GetParameter(4);
-      double Esigma = fitFunc->GetParameter(5);
-      double EmeanErr = fitFunc->GetParError(4);
-      double EsigmaErr = fitFunc->GetParError(5);
+      double Emean = combinedFit->GetParameter(4);
+      double Esigma = combinedFit->GetParameter(5);
+      double EmeanErr = combinedFit->GetParError(4);
+      double EsigmaErr = combinedFit->GetParError(5);
       double EWidth = Esigma / Emean;
       double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
 
@@ -246,19 +248,19 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       Eta_Mean_errors.push_back(EmeanErr);
       Eta_Width_errors.push_back(EWidthErr);
 
-      pT_Bins.push_back(hist->GetXaxis()->GetBinCenter(binX));
+      pT_Bins.push_back(pion_pt);
       pT_Bins_Errors.push_back(0);
 
-      pionmeanGraph[j]->SetPoint(binX, hist->GetXaxis()->GetBinCenter(binX), Pmean);
-      pionmeanGraph[j]->SetPointError(binX, 0, PmeanErr);
-      pionwidthGraph[j]->SetPoint(binX, hist->GetXaxis()->GetBinCenter(binX), PWidth);
-      pionwidthGraph[j]->SetPointError(binX, 0, PWidthErr);
-      etameanGraph[j]->SetPoint(binX, hist->GetXaxis()->GetBinCenter(binX), Emean);
-      etameanGraph[j]->SetPointError(binX, 0, EmeanErr);
-      etawidthGraph[j]->SetPoint(binX, hist->GetXaxis()->GetBinCenter(binX), EWidth);
-      etawidthGraph[j]->SetPointError(binX, 0, EWidthErr);
-      massRatioGraph[j]->SetPoint(binX, hist->GetXaxis()->GetBinCenter(binX), MassRatio);
-      massRatioGraph[j]->SetPointError(binX, 0, MassRatioErr);
+      pionmeanGraph[j]->SetPoint(bincounter, pion_pt, Pmean);
+      pionmeanGraph[j]->SetPointError(bincounter, 0, PmeanErr);
+      pionwidthGraph[j]->SetPoint(bincounter, pion_pt, PWidth);
+      pionwidthGraph[j]->SetPointError(bincounter, 0, PWidthErr);
+      etameanGraph[j]->SetPoint(bincounter, pion_pt, Emean);
+      etameanGraph[j]->SetPointError(bincounter, 0, EmeanErr);
+      etawidthGraph[j]->SetPoint(bincounter, pion_pt, EWidth);
+      etawidthGraph[j]->SetPointError(bincounter, 0, EWidthErr);
+      massRatioGraph[j]->SetPoint(bincounter, pion_pt, MassRatio);
+      massRatioGraph[j]->SetPointError(bincounter, 0, MassRatioErr);
     }
 
     int MarkerStyle = j + 24;
@@ -300,6 +302,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
     legend1->AddEntry(massRatioGraph[j], HistLegend[j].c_str(), "P");
 
     file.Close();
+    bincounter++;
   }
 
   // Repeat the same for FastMC files
