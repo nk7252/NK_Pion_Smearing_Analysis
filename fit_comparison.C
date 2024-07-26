@@ -76,7 +76,8 @@ TH1D *rebinHistogram(TH1D *h, const std::vector<double> &binEdges)
   return (TH1D *)h->Rebin(Nbins, "hrb", bins);
 }
 
-void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std::vector<std::string> &FastMCFileNames, const std::vector<std::string> &GeanthistNames, const std::vector<std::string> &FastMChistNames)
+//Geant_fileNames, Geant_histNames, Geant_legendNames, fastmc_fileNames, fastmc_histNames, fastmc_legendNames
+void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std::vector<std::string> &GeanthistNames,const std::vector<std::string> &Geant_legendNames, const std::vector<std::string> &FastMCFileNames, const std::vector<std::string> &FastMChistNames, const std::vector<std::string> &fastmc_legendNames)
 {
   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
   ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
@@ -398,7 +399,7 @@ void fit_comparison()
   std::vector<std::string> fastmc_histNames = {"h100_2", "h100_2"};
   std::vector<std::string> fastmc_legendNames = {"PionFastMC", "EtaFastMC"};
 
-  AnalyzeHistograms(Geant_fileNames, fastmc_fileNames, Geant_histNames, fastmc_histNames);
+  AnalyzeHistograms(Geant_fileNames, Geant_histNames, Geant_legendNames, fastmc_fileNames, fastmc_histNames, fastmc_legendNames);
 
   //return 0;
 }
