@@ -288,19 +288,19 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
     massRatioGraph[j]->SetMarkerColor(MarkerColor);
 
     gPionMeans->Add(pionmeanGraph[j], "PE");
-    legend1->AddEntry(pionmeanGraph[j], HistLegend[j].c_str(), "P");
+    legend1->AddEntry(pionmeanGraph[j], Geant_legendNames[j].c_str(), "P");
 
     gPionWidths->Add(pionwidthGraph[j], "PE");
-    legend1->AddEntry(pionwidthGraph[j], HistLegend[j].c_str(), "P");
+    legend1->AddEntry(pionwidthGraph[j], Geant_legendNames[j].c_str(), "P");
 
     gEtaMeans->Add(etameanGraph[j], "PE");
-    legend1->AddEntry(etameanGraph[j], HistLegend[j].c_str(), "P");
+    legend1->AddEntry(etameanGraph[j], Geant_legendNames[j].c_str(), "P");
 
     gEtaWidths->Add(etawidthGraph[j], "PE");
-    legend1->AddEntry(etawidthGraph[j], HistLegend[j].c_str(), "P");
+    legend1->AddEntry(etawidthGraph[j], Geant_legendNames[j].c_str(), "P");
 
     gMassRatios->Add(massRatioGraph[j], "PE");
-    legend1->AddEntry(massRatioGraph[j], HistLegend[j].c_str(), "P");
+    legend1->AddEntry(massRatioGraph[j], Geant_legendNames[j].c_str(), "P");
 
     file.Close();
     bincounter++;
