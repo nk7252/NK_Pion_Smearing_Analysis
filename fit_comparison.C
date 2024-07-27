@@ -116,6 +116,16 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   std::vector<TGraphErrors *> etawidthGraph(totalfiles);
   std::vector<TGraphErrors *> massRatioGraph(totalfiles);
 
+ // Initialize the graphs
+  for (size_t j = 0; j < totalfiles; ++j)
+  {
+    pionmeanGraph[j] = new TGraphErrors();
+    pionwidthGraph[j] = new TGraphErrors();
+    etameanGraph[j] = new TGraphErrors();
+    etawidthGraph[j] = new TGraphErrors();
+    massRatioGraph[j] = new TGraphErrors();
+  }
+
   // Loop through Geant4 files
   for (size_t j = 0; j < GeantFileNames.size(); ++j)
   {
@@ -391,7 +401,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
 
 void fit_comparison()
 {
-  std::vector<std::string> Geant_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011_merged_V1.root", "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V3.root"};
+  std::vector<std::string> Geant_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root", "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V3.root"};
   std::vector<std::string> Geant_histNames = {"h_InvMass_2d", "h_InvMass_weighted_2d"};
   std::vector<std::string> Geant_legendNames = {"Pythia8", "SinglePi0"};
 
