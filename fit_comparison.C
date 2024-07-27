@@ -76,8 +76,8 @@ TH1D *rebinHistogram(TH1D *h, const std::vector<double> &binEdges)
   return (TH1D *)h->Rebin(Nbins, "hrb", bins);
 }
 
-//Geant_fileNames, Geant_histNames, Geant_legendNames, fastmc_fileNames, fastmc_histNames, fastmc_legendNames
-void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std::vector<std::string> &GeanthistNames,const std::vector<std::string> &Geant_legendNames, const std::vector<std::string> &FastMCFileNames, const std::vector<std::string> &FastMChistNames, const std::vector<std::string> &fastmc_legendNames)
+// Geant_fileNames, Geant_histNames, Geant_legendNames, fastmc_fileNames, fastmc_histNames, fastmc_legendNames
+void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std::vector<std::string> &GeanthistNames, const std::vector<std::string> &Geant_legendNames, const std::vector<std::string> &FastMCFileNames, const std::vector<std::string> &FastMChistNames, const std::vector<std::string> &fastmc_legendNames)
 {
   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
   ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
@@ -97,7 +97,10 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   double scale_factor = 1.0;
   double limits[8] = {0.1, 0.2, 0.11, 0.19, 0.52, 0.68, 0.50, 0.64};
 
-  TCanvas *c1 = new TCanvas("c1", "Canvas", 800, 600);
+  // Create a PDF to save the canvases
+  TCanvas *dummyCanvas = new TCanvas(); // to create pdf
+  dummyCanvas->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
+
   TLegend *legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
 
   std::vector<double> Pion_Mean, Pion_Width, Eta_Mean, Eta_Width, Mass_Ratio;
@@ -116,7 +119,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   std::vector<TGraphErrors *> etawidthGraph(totalfiles);
   std::vector<TGraphErrors *> massRatioGraph(totalfiles);
 
- // Initialize the graphs
+  // Initialize the graphs
   for (size_t j = 0; j < totalfiles; ++j)
   {
     pionmeanGraph[j] = new TGraphErrors();
@@ -148,7 +151,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       endBin = nBinsX; // Default to the last bin if not specified
 
     // Loop over the x-axis bins
-    int bincounter=1;
+    int bincounter = 1;
     for (int i = startBin; i <= endBin; i += projectionBins)
     {
       // Project the histogram along the Y-axis
@@ -297,20 +300,33 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
     massRatioGraph[j]->SetMarkerStyle(MarkerStyle);
     massRatioGraph[j]->SetMarkerColor(MarkerColor);
 
+    TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
     gPionMeans->Add(pionmeanGraph[j], "PE");
     legend1->AddEntry(pionmeanGraph[j], Geant_legendNames[j].c_str(), "P");
+    c1->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
+    TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
     gPionWidths->Add(pionwidthGraph[j], "PE");
     legend1->AddEntry(pionwidthGraph[j], Geant_legendNames[j].c_str(), "P");
+    c2->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
+    TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
     gEtaMeans->Add(etameanGraph[j], "PE");
     legend1->AddEntry(etameanGraph[j], Geant_legendNames[j].c_str(), "P");
+    c3->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
+    TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
     gEtaWidths->Add(etawidthGraph[j], "PE");
     legend1->AddEntry(etawidthGraph[j], Geant_legendNames[j].c_str(), "P");
+    c4->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
+    TCanvas *c5 = new TCanvas("c5", "Canvas5", 800, 600);
     gMassRatios->Add(massRatioGraph[j], "PE");
     legend1->AddEntry(massRatioGraph[j], Geant_legendNames[j].c_str(), "P");
+    c4->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
+
+    // Close the PDF file
+    dummyCanvas->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
 
     file.Close();
     bincounter++;
@@ -411,5 +427,5 @@ void fit_comparison()
 
   AnalyzeHistograms(Geant_fileNames, Geant_histNames, Geant_legendNames, fastmc_fileNames, fastmc_histNames, fastmc_legendNames);
 
-  //return 0;
+  // return 0;
 }
