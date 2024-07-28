@@ -95,7 +95,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   int endBin = -1;
   int projectionBins = 1;
   double scale_factor = 1.0;
-  double limits[8] = {0.05, 1.0, 0.11, 0.19, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
+  double limits[10] = {0.05, 1.0, 0.11, 0.19, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
   /*
   std::vector<float> limits = {
       polyL, polyR,              // 0,1 Polynomial fit range: left and right limits
