@@ -378,6 +378,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   // draw multigraphs
   TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
+  gPionMeans->GetXaxis()->SetLimits(0.01, 10);
   gPionMeans->Draw("APE");
   legend1->SetFillStyle(0);
   legend1->SetTextAlign(32);
@@ -392,24 +393,28 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   // c1->SaveAs(Form("%s/%
   TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
   gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
+  gPionWidths->GetXaxis()->SetLimits(0.01, 10);
   gPionWidths->Draw("APE");
   legend1->Draw();
   c2->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
   gEtaMeans->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
+  gEtaMeans->GetXaxis()->SetLimits(0.01, 10);
   gEtaMeans->Draw("APE");
   legend1->Draw();
   c3->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
   gEtaWidths->SetTitle("Eta: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Eta Relative Width");
+  gEtaWidths->GetXaxis()->SetLimits(0.01, 10);
   gEtaWidths->Draw("APE");
   legend1->Draw();
   c4->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c5 = new TCanvas("c5", "Canvas5", 800, 600);
   gMassRatios->SetTitle("Mass Ratios: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion/Eta Mass Ratio");
+  gMassRatios->GetXaxis()->SetLimits(0.01, 10);
   gMassRatios->Draw("APE");
   legend1->Draw();
   c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
