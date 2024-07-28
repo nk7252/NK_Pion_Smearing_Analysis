@@ -100,8 +100,8 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   // Create a PDF to save the canvases
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
-
   TLegend *legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
+  
 
   std::vector<double> Pion_Mean, Pion_Width, Eta_Mean, Eta_Width, Mass_Ratio;
   std::vector<double> Pion_Mean_errors, Pion_Width_errors, Eta_Mean_errors, Eta_Width_errors, Mass_Ratio_errors;
@@ -305,16 +305,16 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
     legend1->AddEntry(pionmeanGraph[j], Geant_legendNames[j].c_str(), "P");
 
     gPionWidths->Add(pionwidthGraph[j], "PE");
-    legend1->AddEntry(pionwidthGraph[j], Geant_legendNames[j].c_str(), "P");
+    //legend1->AddEntry(pionwidthGraph[j], Geant_legendNames[j].c_str(), "P");
 
     gEtaMeans->Add(etameanGraph[j], "PE");
-    legend1->AddEntry(etameanGraph[j], Geant_legendNames[j].c_str(), "P");
+    //legend1->AddEntry(etameanGraph[j], Geant_legendNames[j].c_str(), "P");
 
     gEtaWidths->Add(etawidthGraph[j], "PE");
-    legend1->AddEntry(etawidthGraph[j], Geant_legendNames[j].c_str(), "P");
+    //legend1->AddEntry(etawidthGraph[j], Geant_legendNames[j].c_str(), "P");
 
     gMassRatios->Add(massRatioGraph[j], "PE");
-    legend1->AddEntry(massRatioGraph[j], Geant_legendNames[j].c_str(), "P");
+    //legend1->AddEntry(massRatioGraph[j], Geant_legendNames[j].c_str(), "P");
 
     file.Close();
   }
