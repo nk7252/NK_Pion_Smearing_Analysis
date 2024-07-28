@@ -99,7 +99,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
 
   // Create a PDF to save the canvases
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
-  dummyCanvas->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
 
   TLegend *legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
 
@@ -371,7 +371,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
   gPionMeans->Draw("APE");
   legend1->Draw();
-  c1->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
+  c1->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
   // gPionMeans->GetXaxis()->SetLimits(comparisonFilenameObj.plotxlims[0], comparisonFilenameObj.plotxlims[1]);
   // gPionMeans->SetMinimum(comparisonFilenameObj.plotylims[0]);
   // gPionMeans->SetMaximum(comparisonFilenameObj.plotylims[1]);
@@ -383,28 +383,28 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   gPionWidths->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
   gPionWidths->Draw("APE");
   legend1->Draw();
-  c2->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
+  c2->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
   gEtaMeans->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
   gEtaMeans->Draw("APE");
   legend1->Draw();
-  c3->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
+  c3->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
   gEtaWidths->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
   gEtaWidths->Draw("APE");
   legend1->Draw();
-  c4->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
+  c4->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c5 = new TCanvas("c5", "Canvas5", 800, 600);
   gMassRatios->SetTitle("Mass Ratios: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion/Eta Mass Ratio");
   gMassRatios->Draw("APE");
   legend1->Draw();
-  c5->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
+  c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   // Close the PDF file
-  dummyCanvas->Print("/pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
 
   TFile outputFile("pioncode/rootfiles/ptdifferential_overlay.root", "RECREATE");
   gPionMeans->Write("gPionMean");
