@@ -427,5 +427,6 @@ void fit_comparison()
 
   AnalyzeHistograms(Geant_fileNames, Geant_histNames, Geant_legendNames, fastmc_fileNames, fastmc_histNames, fastmc_legendNames);
 
+  gApplication->Terminate(0);
   // return 0;
 }
