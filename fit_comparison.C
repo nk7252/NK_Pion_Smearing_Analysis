@@ -275,6 +275,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       etawidthGraph[j]->SetPointError(bincounter, 0, EWidthErr);
       massRatioGraph[j]->SetPoint(bincounter, pion_pt, MassRatio);
       massRatioGraph[j]->SetPointError(bincounter, 0, MassRatioErr);
+      bincounter++;
     }
 
     int MarkerStyle = j + 24;
@@ -316,7 +317,6 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
     legend1->AddEntry(massRatioGraph[j], Geant_legendNames[j].c_str(), "P");
 
     file.Close();
-    bincounter++;
   }
 
   // Repeat the same for FastMC files
@@ -380,7 +380,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   // gPad->Update();
   // c1->SaveAs(Form("%s/%
   TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
-  gPionWidths->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
+  gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
   gPionWidths->Draw("APE");
   legend1->Draw();
   c2->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
@@ -392,7 +392,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   c3->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
-  gEtaWidths->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
+  gEtaWidths->SetTitle("Eta: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Eta Relative Width");
   gEtaWidths->Draw("APE");
   legend1->Draw();
   c4->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
