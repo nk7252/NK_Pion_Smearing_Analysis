@@ -95,8 +95,16 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   int endBin = -1;
   int projectionBins = 1;
   double scale_factor = 1.0;
-  double limits[8] = {0.1, 0.2, 0.11, 0.19, 0.52, 0.68, 0.50, 0.64};
-
+  double limits[8] = {0.05, 1.0, 0.11, 0.19, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
+  /*
+  std::vector<float> limits = {
+      polyL, polyR,              // 0,1 Polynomial fit range: left and right limits
+      gauss1L, gauss1R,          // 2-3 First Gaussian fit range: left and right limits
+      polygauss1L, polygauss1R,  // 4,5 Exclusion zone for left and right polynomials: first gaussian
+      gauss2L, gauss2R,          // 6,7 Second Gaussian fit range (if fitting eta peak): left and right limits
+      polygauss2L, polygauss2R   // 8,9 Exclusion zone for left and right polynomials: second gaussian
+  };
+  */
   // Create a PDF to save the canvases
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
@@ -178,19 +186,20 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       histF->Scale(1. / 2, "width");
 
       // Determine the leftmost point with a value in the projection histograms
-      float leftmost_limit = 0;
+      //float leftmost_limit = 0;
       if (dynamic_left)
       {
         for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
         {
           if (histF->GetBinContent(bin) > 0)
           {
-            leftmost_limit = histF->GetBinLowEdge(bin);
-            // limits[0] = leftmost_limit;
+            float leftmost_limit = histF->GetBinLowEdge(bin);
+            limits[0] = leftmost_limit;
             break;
           }
         }
       }
+
       double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
       double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
       TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
@@ -198,7 +207,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       scale_histogram_errors(histF, scale_factor);
       // fitting background only
       TF1 *leftRightFit;
-      leftRightFit = new TF1("leftRightFit", poly5BG, leftmost_limit, 1.2, 6);
+      leftRightFit = new TF1("leftRightFit", poly5BG, limits[0], limits[1], 6);
       histF->Fit(leftRightFit, "RE");
 
       // Fit first Gaussian in the specified range
