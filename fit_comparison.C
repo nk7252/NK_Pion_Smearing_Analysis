@@ -370,6 +370,8 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
   gPionMeans->Draw("APE");
+  legend1->SetFillStyle(0);
+  leg1->SetTextAlign(32);
   legend1->Draw();
   c1->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
   // gPionMeans->GetXaxis()->SetLimits(comparisonFilenameObj.plotxlims[0], comparisonFilenameObj.plotxlims[1]);
