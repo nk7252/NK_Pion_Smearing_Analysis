@@ -76,8 +76,8 @@ TH1D *rebinHistogram(TH1D *h, const std::vector<double> &binEdges)
   return (TH1D *)h->Rebin(Nbins, "hrb", bins);
 }
 
-// Geant_fileNames, Geant_histNames, Geant_legendNames, fastmc_fileNames, fastmc_histNames, fastmc_legendNames
-void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std::vector<std::string> &GeanthistNames, const std::vector<std::string> &Geant_legendNames, const std::vector<std::string> &FastMCFileNames, const std::vector<std::string> &FastMChistNames, const std::vector<std::string> &fastmc_legendNames)
+// unweighted_fileNames, unweighted_histNames, unweighted_legendNames,, SPMC_FileNames, SPMC_histNames, SPMC_legend, FastMC_fileNames, FastMC_histNames, FastMC_legendNames
+void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, const std::vector<std::string> &unweightedhistNames, const std::vector<std::string> &unweighted_legendNames, const std::vector<std::string> &SPMC_FileNames, const std::vector<std::string> &SPMC_histNames, const std::vector<std::string> &SPMC_legendNames, const std::vector<std::string> &FastMC_FileNames, const std::vector<std::string> &FastMC_histNames, const std::vector<std::string> &FastMC_legendNames)
 {
   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
   ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
@@ -91,9 +91,9 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   bool var_bins = true;
   int rebinFactor = 1;
   bool dynamic_left = true;
-  int startBin = 1;
+  int startBin = 9;
   int endBin = -1;
-  int projectionBins = 1;
+  int projectionBins = 2;
   double scale_factor = 1.0;
   double limits[10] = {0.05, 1.0, 0.11, 0.19, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
   /*
@@ -108,7 +108,11 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   // Create a PDF to save the canvases
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
-  TLegend *legend1 = new TLegend(0.7, 0.7, 0.9, 0.9);
+  TLegend *legend1 = new TLegend(0.2, 0.7, 0.4, 0.9);//pion mean
+  TLegend *legend2 = new TLegend(0.2, 0.7, 0.4, 0.9);//pion width
+  TLegend *legend3 = new TLegend(0.2, 0.7, 0.4, 0.9);//eta mean
+  TLegend *legend4 = new TLegend(0.2, 0.1, 0.4, 0.3);//eta width
+  TLegend *legend5 = new TLegend(0.2, 0.7, 0.4, 0.9);//mass ratio
   
 
   std::vector<double> Pion_Mean, Pion_Width, Eta_Mean, Eta_Width, Mass_Ratio;
@@ -120,7 +124,7 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   TMultiGraph *gEtaMeans = new TMultiGraph();
   TMultiGraph *gEtaWidths = new TMultiGraph();
   TMultiGraph *gMassRatios = new TMultiGraph();
-  int totalfiles = GeantFileNames.size(); //+ 1 + FastMCFileNames.size()
+  int totalfiles = unweightedFileNames.size()+ FastMC_FileNames.size() + SPMC_FileNames.size();
   std::vector<TGraphErrors *> pionmeanGraph(totalfiles);
   std::vector<TGraphErrors *> pionwidthGraph(totalfiles);
   std::vector<TGraphErrors *> etameanGraph(totalfiles);
@@ -137,20 +141,24 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
     massRatioGraph[j] = new TGraphErrors();
   }
 
-  // Loop through Geant4 files
-  for (size_t j = 0; j < GeantFileNames.size(); ++j)
+  int MarkerStyle = 24;
+  int MarkerColor = 1; 
+  int filecounter = 0;
+
+  // Loop through unweighted files(pythia,data)
+  for (size_t j = 0; j < unweightedFileNames.size(); ++j)
   {
-    TFile file(GeantFileNames[j].c_str(), "READ");
+    TFile file(unweightedFileNames[j].c_str(), "READ");
     if (!file.IsOpen())
     {
-      std::cerr << "Error opening file: " << GeantFileNames[j] << std::endl;
+      std::cerr << "Error opening file: " << unweightedFileNames[j] << std::endl;
       continue;
     }
 
-    TH2 *hist2D = dynamic_cast<TH2 *>(file.Get(GeanthistNames[j].c_str()));
+    TH2 *hist2D = dynamic_cast<TH2 *>(file.Get(unweightedhistNames[j].c_str()));
     if (!hist2D)
     {
-      std::cerr << "Error getting histogram: " << GeanthistNames[j] << " from file: " << GeantFileNames[j] << std::endl;
+      std::cerr << "Error getting histogram: " << unweightedhistNames[j] << " from file: " << unweightedFileNames[j] << std::endl;
       file.Close();
       continue;
     }
@@ -261,36 +269,303 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
       double MassRatio = Pmean / Emean;
       double MassRatioErr = MassRatio * sqrt(pow(PmeanErr / Pmean, 2) + pow(EmeanErr / Emean, 2));
 
+      //Pion_Mean.push_back(Pmean);
+      //Pion_Width.push_back(PWidth);
+      //Pion_Mean_errors.push_back(PmeanErr);
+      //Pion_Width_errors.push_back(PWidthErr);
+
+      //Eta_Mean.push_back(Emean);
+      //Eta_Width.push_back(EWidth);
+      //Eta_Mean_errors.push_back(EmeanErr);
+      //Eta_Width_errors.push_back(EWidthErr);
+
+      //pT_Bins.push_back(pion_pt);
+      //pT_Bins_Errors.push_back(0);
+
+      pionmeanGraph[filecounter]->SetPoint(bincounter, pion_pt, Pmean);
+      pionmeanGraph[filecounter]->SetPointError(bincounter, 0, PmeanErr);
+      pionwidthGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);
+      pionwidthGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr);
+      etameanGraph[filecounter]->SetPoint(bincounter, pion_pt, Emean);
+      etameanGraph[filecounter]->SetPointError(bincounter, 0, EmeanErr);
+      etawidthGraph[filecounter]->SetPoint(bincounter, pion_pt, EWidth);
+      etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
+      massRatioGraph[filecounter]->SetPoint(bincounter, pion_pt, MassRatio);
+      massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
+      bincounter++;
+    }
+
+
+    MarkerStyle+=filecounter;
+    MarkerColor+=filecounter;
+
+    pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
+    // pionmeanGraph[filecounter]->SetMarkerSize(1.5);
+    // pionmeanGraph[filecounter]->SetLineColor(MarkerColor);
+    // pionmeanGraph[filecounter]->SetLineWidth(2);
+    // pionmeanGraph[filecounter]->SetLineStyle(1);
+    // pionmeanGraph[filecounter]->SetFillColor(0);
+    // pionmeanGraph[filecounter]->SetFillStyle(0);
+
+    pionwidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    pionwidthGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    etameanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    etameanGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    etawidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    etawidthGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    gPionMeans->Add(pionmeanGraph[filecounter], "PE");
+    legend1->AddEntry(pionmeanGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
+    gPionWidths->Add(pionwidthGraph[filecounter], "PE");
+    legend2->AddEntry(pionwidthGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
+    gEtaMeans->Add(etameanGraph[filecounter], "PE");
+    legend3->AddEntry(etameanGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
+    gEtaWidths->Add(etawidthGraph[filecounter], "PE");
+    legend4->AddEntry(etawidthGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
+    gMassRatios->Add(massRatioGraph[filecounter], "PE");
+    legend5->AddEntry(massRatioGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
+    file.Close();
+    filecounter++;
+  }
+  
+  // Loop through SPMC files
+  for (size_t j = 0; j < SPMC_FileNames.size(); ++j)
+  {
+    TFile file(SPMC_FileNames[j].c_str(), "READ");
+    if (!file.IsOpen())
+    {
+      std::cerr << "Error opening file: " << SPMC_FileNames[j] << std::endl;
+      continue;
+    }
+
+    TH2 *hist2D = dynamic_cast<TH2 *>(file.Get(SPMC_histNames[j].c_str()));
+    if (!hist2D)
+    {
+      std::cerr << "Error getting histogram: " << SPMC_histNames[j] << " from file: " << SPMC_FileNames[j] << std::endl;
+      file.Close();
+      continue;
+    }
+    int nBinsX = hist2D->GetNbinsX();
+    if (endBin == -1)
+      endBin = nBinsX; // Default to the last bin if not specified
+
+    // Loop over the x-axis bins
+    int bincounter = 1;
+    for (int i = startBin; i <= endBin; i += projectionBins)
+    {
+      // Project the histogram along the Y-axis
+      int lastBin = std::min(i + projectionBins - 1, nBinsX);
+      TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
+      // Check if the projection has enough entries to perform a fit
+      if (yProjection->GetEntries() < 1000)
+      { // Adjust the threshold as needed
+        delete yProjection;
+        continue;
+      }
+      TH1D *histF = (TH1D *)yProjection;
+      // re binning
+      if (var_bins && !nuBins.empty())
+      {
+        std::cout << "Rebinning histogram with non-uniform edges" << std::endl;
+        histF = rebinHistogram(histF, nuBins); // nuBins
+      }
+      else if (rebinFactor > 1)
+      {
+        histF->Rebin(rebinFactor);
+      }
+
+      histF->Scale(1. / 2, "width");
+
+      // Determine the leftmost point with a value in the projection histograms
+      //float leftmost_limit = 0;
+      if (dynamic_left)
+      {
+        for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
+        {
+          if (histF->GetBinContent(bin) > 0)
+          {
+            float leftmost_limit = histF->GetBinLowEdge(bin);
+            limits[0] = leftmost_limit;
+            break;
+          }
+        }
+      }
+
+      double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
+      double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
+      TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
+      double pion_pt = (pt_min + pt_max) / 2.0;
+      scale_histogram_errors(histF, scale_factor);
+      
+      // Fit Pion Gaussian in the specified range
+      TF1 *gausFit = new TF1("gausFit", "gaus", limits[2], limits[3]);
+      gausFit->SetParLimits(1, 0.11, 0.19);
+      gausFit->SetParLimits(2, 0.01, 0.25);
+      gausFit->SetNpx(1000);
+      histF->Fit(gausFit, "RE");
+
+      // Get the fit parameters
+      double Pmean = gausFit->GetParameter(1);
+      double Psigma = gausFit->GetParameter(2);
+      double PmeanErr = gausFit->GetParError(1);
+      double PsigmaErr = gausFit->GetParError(2);
+      double PWidth = Psigma / Pmean;
+      double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
+
+      //Pion_Mean.push_back(Pmean);
+      //Pion_Width.push_back(PWidth);
+      //Pion_Mean_errors.push_back(PmeanErr);
+      //Pion_Width_errors.push_back(PWidthErr);
+      //pT_Bins.push_back(pion_pt);
+      //pT_Bins_Errors.push_back(0);
+
+      pionmeanGraph[filecounter]->SetPoint(bincounter, pion_pt, Pmean);
+      pionmeanGraph[filecounter]->SetPointError(bincounter, 0, PmeanErr);
+      pionwidthGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);
+      pionwidthGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr);
+      bincounter++;
+    }
+
+    MarkerStyle+=filecounter;
+    MarkerColor+=filecounter;
+    pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
+    // pionmeanGraph[filecounter]->SetMarkerSize(1.5);
+    // pionmeanGraph[filecounter]->SetLineColor(MarkerColor);
+    // pionmeanGraph[filecounter]->SetLineWidth(2);
+    // pionmeanGraph[filecounter]->SetLineStyle(1);
+    // pionmeanGraph[filecounter]->SetFillColor(0);
+    // pionmeanGraph[filecounter]->SetFillStyle(0);
+
+    pionwidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    pionwidthGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    gPionMeans->Add(pionmeanGraph[filecounter], "PE");
+    legend1->AddEntry(pionmeanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+
+    gPionWidths->Add(pionwidthGraph[filecounter], "PE");
+    legend2->AddEntry(pionwidthGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+    file.Close();
+    filecounter++;
+  }
+
+
+  // Repeat the same for FastMC files
+  //*
+  for (size_t j = 0; j < FastMC_FileNames.size(); ++j)
+  {
+    TFile file(FastMC_FileNames[j].c_str(), "READ");
+    if (!file.IsOpen())
+    {
+      std::cerr << "Error opening file: " << FastMC_FileNames[j] << std::endl;
+      continue;
+    }
+
+    TH2 *hist2D = dynamic_cast<TH2 *>(file.Get(FastMC_histNames[j].c_str()));
+    if (!hist2D)
+    {
+      std::cerr << "Error getting histogram: " << FastMC_histNames[j] << " from file: " << FastMC_FileNames[j] << std::endl;
+      file.Close();
+      continue;
+    }
+    int nBinsX = hist2D->GetNbinsX();
+    if (endBin == -1)
+      endBin = nBinsX; // Default to the last bin if not specified
+
+    // Loop over the x-axis bins
+    int bincounter = 1;
+    if(j==0){//pion
+    for (int i = startBin; i <= endBin; i += projectionBins)
+    {
+      // Project the histogram along the Y-axis
+      int lastBin = std::min(i + projectionBins - 1, nBinsX);
+      TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
+      // Check if the projection has enough entries to perform a fit
+      if (yProjection->GetEntries() < 1000)
+      { // Adjust the threshold as needed
+        delete yProjection;
+        continue;
+      }
+      TH1D *histF = (TH1D *)yProjection;
+      // re binning
+      if (var_bins && !nuBins.empty())
+      {
+        std::cout << "Rebinning histogram with non-uniform edges" << std::endl;
+        histF = rebinHistogram(histF, nuBins); // nuBins
+      }
+      else if (rebinFactor > 1)
+      {
+        histF->Rebin(rebinFactor);
+      }
+
+      histF->Scale(1. / 2, "width");
+
+      // Determine the leftmost point with a value in the projection histograms
+      //float leftmost_limit = 0;
+      if (dynamic_left)
+      {
+        for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
+        {
+          if (histF->GetBinContent(bin) > 0)
+          {
+            float leftmost_limit = histF->GetBinLowEdge(bin);
+            limits[0] = leftmost_limit;
+            break;
+          }
+        }
+      }
+
+      double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
+      double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
+      TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
+      double pion_pt = (pt_min + pt_max) / 2.0;
+      scale_histogram_errors(histF, scale_factor);
+      
+      // Fit Pion Gaussian in the specified range
+      TF1 *gausFit = new TF1("gausFit", "gaus", limits[2], limits[3]);
+      gausFit->SetParLimits(1, 0.11, 0.19);
+      gausFit->SetParLimits(2, 0.01, 0.25);
+      gausFit->SetNpx(1000);
+      histF->Fit(gausFit, "RE");
+
+      // Get the fit parameters
+      double Pmean = gausFit->GetParameter(1);
+      double Psigma = gausFit->GetParameter(2);
+      double PmeanErr = gausFit->GetParError(1);
+      double PsigmaErr = gausFit->GetParError(2);
+      double PWidth = Psigma / Pmean;
+      double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
+
       Pion_Mean.push_back(Pmean);
       Pion_Width.push_back(PWidth);
       Pion_Mean_errors.push_back(PmeanErr);
       Pion_Width_errors.push_back(PWidthErr);
 
-      Eta_Mean.push_back(Emean);
-      Eta_Width.push_back(EWidth);
-      Eta_Mean_errors.push_back(EmeanErr);
-      Eta_Width_errors.push_back(EWidthErr);
+      //pT_Bins.push_back(pion_pt);
+      //pT_Bins_Errors.push_back(0);
 
-      pT_Bins.push_back(pion_pt);
-      pT_Bins_Errors.push_back(0);
-
-      pionmeanGraph[j]->SetPoint(bincounter, pion_pt, Pmean);
-      pionmeanGraph[j]->SetPointError(bincounter, 0, PmeanErr);
-      pionwidthGraph[j]->SetPoint(bincounter, pion_pt, PWidth);
-      pionwidthGraph[j]->SetPointError(bincounter, 0, PWidthErr);
-      etameanGraph[j]->SetPoint(bincounter, pion_pt, Emean);
-      etameanGraph[j]->SetPointError(bincounter, 0, EmeanErr);
-      etawidthGraph[j]->SetPoint(bincounter, pion_pt, EWidth);
-      etawidthGraph[j]->SetPointError(bincounter, 0, EWidthErr);
-      massRatioGraph[j]->SetPoint(bincounter, pion_pt, MassRatio);
-      massRatioGraph[j]->SetPointError(bincounter, 0, MassRatioErr);
+      pionmeanGraph[filecounter]->SetPoint(bincounter, pion_pt, Pmean);
+      pionmeanGraph[filecounter]->SetPointError(bincounter, 0, PmeanErr);
+      pionwidthGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);
+      pionwidthGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr);
       bincounter++;
     }
 
-    int MarkerStyle = j + 24;
-    int MarkerColor = j + 1;
-    pionmeanGraph[j]->SetMarkerStyle(MarkerStyle);
-    pionmeanGraph[j]->SetMarkerColor(MarkerColor);
+    MarkerStyle+=filecounter;
+    MarkerColor+=filecounter;
+    pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
     // pionmeanGraph[j]->SetMarkerSize(1.5);
     // pionmeanGraph[j]->SetLineColor(MarkerColor);
     // pionmeanGraph[j]->SetLineWidth(2);
@@ -298,87 +573,133 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
     // pionmeanGraph[j]->SetFillColor(0);
     // pionmeanGraph[j]->SetFillStyle(0);
 
-    pionwidthGraph[j]->SetMarkerStyle(MarkerStyle);
-    pionwidthGraph[j]->SetMarkerColor(MarkerColor);
+    pionwidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    pionwidthGraph[filecounter]->SetMarkerColor(MarkerColor);
 
-    etameanGraph[j]->SetMarkerStyle(MarkerStyle);
-    etameanGraph[j]->SetMarkerColor(MarkerColor);
+    gPionMeans->Add(pionmeanGraph[filecounter], "PE");
+    legend1->AddEntry(pionmeanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
-    etawidthGraph[j]->SetMarkerStyle(MarkerStyle);
-    etawidthGraph[j]->SetMarkerColor(MarkerColor);
-
-    massRatioGraph[j]->SetMarkerStyle(MarkerStyle);
-    massRatioGraph[j]->SetMarkerColor(MarkerColor);
-
-    gPionMeans->Add(pionmeanGraph[j], "PE");
-    legend1->AddEntry(pionmeanGraph[j], Geant_legendNames[j].c_str(), "P");
-
-    gPionWidths->Add(pionwidthGraph[j], "PE");
-    //legend1->AddEntry(pionwidthGraph[j], Geant_legendNames[j].c_str(), "P");
-
-    gEtaMeans->Add(etameanGraph[j], "PE");
-    //legend1->AddEntry(etameanGraph[j], Geant_legendNames[j].c_str(), "P");
-
-    gEtaWidths->Add(etawidthGraph[j], "PE");
-    //legend1->AddEntry(etawidthGraph[j], Geant_legendNames[j].c_str(), "P");
-
-    gMassRatios->Add(massRatioGraph[j], "PE");
-    //legend1->AddEntry(massRatioGraph[j], Geant_legendNames[j].c_str(), "P");
-
-    file.Close();
-  }
-
-  // Repeat the same for FastMC files
-  /*
-  for (size_t i = 0; i < FastMCFileNames.size(); ++i)
-  {
-    TFile file(FastMCFileNames[i].c_str(), "READ");
-    if (!file.IsOpen())
-    {
-      std::cerr << "Error opening file: " << FastMCFileNames[i] << std::endl;
-      continue;
+    gPionWidths->Add(pionwidthGraph[filecounter], "PE");
+    legend2->AddEntry(pionwidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
     }
-
-    TH2 *hist = dynamic_cast<TH2 *>(file.Get(FastMChistNames[i].c_str()));
-    if (!hist)
-    {
-      std::cerr << "Error getting histogram: " << FastMChistNames[i] << " from file: " << FastMCFileNames[i] << std::endl;
-      file.Close();
-      continue;
-    }
-
-    for (int binX = 1; binX <= hist->GetNbinsX(); ++binX)
-    {
-      TH1D *yProjection = hist->ProjectionY(Form("YProjection_%zu_%d", i, binX), binX, binX, "");
-      yProjection->Fit("gaus", "QE");
-
-      TF1 *fitFunc = yProjection->GetFunction("gaus");
-      if (fitFunc)
+    else if(j==1){//eta
+      for (int i = startBin; i <= endBin; i += projectionBins)
       {
-        double mean = fitFunc->GetParameter(1);
-        double sigma = fitFunc->GetParameter(2);
-        double meanErr = fitFunc->GetParError(1);
-        double sigmaErr = fitFunc->GetParError(2);
-
-        Eta_Mean.push_back(mean);
-        Eta_Width.push_back(sigma / mean);
-        Eta_Mean_errors.push_back(meanErr);
-        Eta_Width_errors.push_back(sigmaErr / mean);
-
-        pT_Bins.push_back(hist->GetXaxis()->GetBinCenter(binX));
-        pT_Bins_Errors.push_back(0);
+      // Project the histogram along the Y-axis
+      int lastBin = std::min(i + projectionBins - 1, nBinsX);
+      TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
+      // Check if the projection has enough entries to perform a fit
+      if (yProjection->GetEntries() < 1000)
+      { // Adjust the threshold as needed
+        delete yProjection;
+        continue;
+      }
+      TH1D *histF = (TH1D *)yProjection;
+      // re binning
+      if (var_bins && !nuBins.empty())
+      {
+        std::cout << "Rebinning histogram with non-uniform edges" << std::endl;
+        histF = rebinHistogram(histF, nuBins); // nuBins
+      }
+      else if (rebinFactor > 1)
+      {
+        histF->Rebin(rebinFactor);
       }
 
-      delete yProjection;
+      histF->Scale(1. / 2, "width");
+
+      // Determine the leftmost point with a value in the projection histograms
+      //float leftmost_limit = 0;
+      if (dynamic_left)
+      {
+        for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
+        {
+          if (histF->GetBinContent(bin) > 0)
+          {
+            float leftmost_limit = histF->GetBinLowEdge(bin);
+            limits[0] = leftmost_limit;
+            break;
+          }
+        }
+      }
+
+      double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
+      double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
+      TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
+      double Eta_pt = (pt_min + pt_max) / 2.0;
+      scale_histogram_errors(histF, scale_factor);
+      
+      // Fit Eta Gaussian in the specified range
+      TF1 *gausFit = new TF1("gausFit", "gaus", limits[6], limits[7]);
+      gausFit->SetParLimits(1, 0.50, 0.64);
+      gausFit->SetParLimits(2, 0.03, 0.25);
+      gausFit->SetNpx(1000);
+      histF->Fit(gausFit, "RE");
+
+      double Emean = gausFit->GetParameter(1);
+      double Esigma = gausFit->GetParameter(2);
+      double EmeanErr = gausFit->GetParError(1);
+      double EsigmaErr = gausFit->GetParError(2);
+      double EWidth = Esigma / Emean;
+      double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
+
+      double MassRatio = Pion_Mean[j] / Emean;
+      double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
+
+      //Eta_Mean.push_back(Emean);
+      //Eta_Width.push_back(EWidth);
+      //Eta_Mean_errors.push_back(EmeanErr);
+      //Eta_Width_errors.push_back(EWidthErr);
+      //pT_Bins.push_back(Eta_pt);
+      //pT_Bins_Errors.push_back(0);
+
+      etameanGraph[filecounter]->SetPoint(bincounter, Eta_pt, Emean);
+      etameanGraph[filecounter]->SetPointError(bincounter, 0, EmeanErr);
+      etawidthGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
+      etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
+      massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
+      massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
+      bincounter++;
+    }
+
+    MarkerStyle+=filecounter;
+    MarkerColor+=filecounter;
+    etameanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    etameanGraph[filecounter]->SetMarkerColor(MarkerColor);  
+    // etameanGraph[j]->SetMarkerSize(1.5);
+    // etameanGraph[j]->SetLineColor(MarkerColor);
+    // etameanGraph[j]->SetLineWidth(2);
+    // etameanGraph[j]->SetLineStyle(1);
+    // etameanGraph[j]->SetFillColor(0);
+    // etameanGraph[j]->SetFillStyle(0);
+
+    etawidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    etawidthGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    gEtaMeans->Add(etameanGraph[filecounter], "PE");
+    legend3->AddEntry(etameanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+
+    gEtaWidths->Add(etawidthGraph[filecounter], "PE");
+    legend4->AddEntry(etawidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+
+    gMassRatios->Add(massRatioGraph[filecounter], "PE");
+    legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+
     }
 
     file.Close();
+    filecounter++;
   }
-*/
+  //*/
+
   // draw multigraphs
   TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
   gPionMeans->GetXaxis()->SetLimits(0.01, 10);
+  gPionMeans->SetMinimum(0.135);
   gPionMeans->Draw("APE");
   legend1->SetFillStyle(0);
   legend1->SetTextAlign(32);
@@ -394,29 +715,41 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
   TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
   gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
   gPionWidths->GetXaxis()->SetLimits(0.01, 10);
+  gPionWidths->SetMinimum(0.085);
   gPionWidths->Draw("APE");
-  legend1->Draw();
+  legend2->SetFillStyle(0);
+  legend2->SetTextAlign(32);
+  legend2->Draw();
   c2->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
   gEtaMeans->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
   gEtaMeans->GetXaxis()->SetLimits(0.01, 10);
+  gEtaMeans->SetMinimum(0.55);
   gEtaMeans->Draw("APE");
-  legend1->Draw();
+  legend3->SetFillStyle(0);
+  legend3->SetTextAlign(32);
+  legend3->Draw();
   c3->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
   gEtaWidths->SetTitle("Eta: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Eta Relative Width");
   gEtaWidths->GetXaxis()->SetLimits(0.01, 10);
+  gEtaWidths->SetMinimum(0.045);
   gEtaWidths->Draw("APE");
-  legend1->Draw();
+  legend4->SetFillStyle(0);
+  legend4->SetTextAlign(32);
+  legend4->Draw();
   c4->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c5 = new TCanvas("c5", "Canvas5", 800, 600);
   gMassRatios->SetTitle("Mass Ratios: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion/Eta Mass Ratio");
   gMassRatios->GetXaxis()->SetLimits(0.01, 10);
+  gMassRatios->SetMinimum(0.24);
   gMassRatios->Draw("APE");
-  legend1->Draw();
+  legend5->SetFillStyle(0);
+  legend5->SetTextAlign(32);
+  legend5->Draw();
   c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   // Close the PDF file
@@ -433,15 +766,19 @@ void AnalyzeHistograms(const std::vector<std::string> &GeantFileNames, const std
 
 void fit_comparison()
 {
-  std::vector<std::string> Geant_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root"};//, "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V3.root"
-  std::vector<std::string> Geant_histNames = {"h_InvMass_2d", "h_InvMass_smear_weighted_2d_37"};
-  std::vector<std::string> Geant_legendNames = {"Pythia8", "SinglePi0"};
+  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root"};
+  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_2d"};
+  std::vector<std::string> unweighted_legendNames = {"Pythia8", "pp_mb_3MHz"};
 
-  std::vector<std::string> fastmc_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.077000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.077000_const.root"};
-  std::vector<std::string> fastmc_histNames = {"h100_2", "h100_2"};
-  std::vector<std::string> fastmc_legendNames = {"PionFastMC", "EtaFastMC"};
+  std::vector<std::string> SPMC_FileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V7.root", "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V8.root"};//no single eta for now
+  std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_65", "h_InvMass_smear_weighted_2d_80"};
+  std::vector<std::string> SPMC_legend = {"SinglePi0", "Spi0+pc", "SingleEta", "SEta+pc"};
 
-  AnalyzeHistograms(Geant_fileNames, Geant_histNames, Geant_legendNames, fastmc_fileNames, fastmc_histNames, fastmc_legendNames);
+  std::vector<std::string> FastMC_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.077000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.077000_const.root"};//
+  std::vector<std::string> FastMC_histNames = {"h100_2", "h100_2"};
+  std::vector<std::string> FastMC_legendNames = {"PionFastMC", "EtaFastMC"};
+
+  AnalyzeHistograms(unweighted_fileNames, unweighted_histNames, unweighted_legendNames, SPMC_FileNames, SPMC_histNames, SPMC_legend, FastMC_fileNames, FastMC_histNames, FastMC_legendNames);
 
   gApplication->Terminate(0);
   // return 0;

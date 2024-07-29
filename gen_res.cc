@@ -54,9 +54,10 @@ int main(int argc, char* argv[]){
     float ptMaxCut = 50;
     float nclus_ptCut = 0.0;
     //untracked general parameters
+    int PT_Max_bin=10;// normally this, but now we want to match fun4all PT_Max;
     int MassNBins = 600;
     int binres = 2;
-    int n_bins = binres * PT_Max;
+    int n_bins = 4*10;//binres * PT_Max;
     // weighting params
     double t = 4.5;
     double w = 0.114;
@@ -159,14 +160,14 @@ int main(int argc, char* argv[]){
             tree->SetMaxTreeSize(500 * 1024 * 1024);
         }
 
-        TH1* h4 = new TH1F("h4", "PT, unweighted", n_bins, PT_Min, PT_Max);
-        TH1* h5 = new TH1F("h5", "Photon Pt, unweighted", n_bins, PT_Min, PT_Max);
+        TH1* h4 = new TH1F("h4", "PT, unweighted", n_bins, PT_Min, PT_Max_bin);
+        TH1* h5 = new TH1F("h5", "Photon Pt, unweighted", n_bins, PT_Min, PT_Max_bin);
         TH1* h6 = new TH1F("h6", "inv mass of gamma pair", MassNBins, 0, 1);
         TH1* h8 = new TH1F("h8", "inv mass of Photon pair, smeared", MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-        TH2F* h9 = new TH2F("h9", "Smeared Pt vs Smeared Inv Mass", n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-        TH1* h10 = new TH1F("h10", "Smeared PT", n_bins, PT_Min, PT_Max);
-        TH1* h16 = new TH1F("h16", "Smeared Photon pT", n_bins, PT_Min, PT_Max);
-        TH1* h17 = new TH1F("h17", "Photon pT", n_bins, PT_Min, PT_Max);
+        TH2F* h9 = new TH2F("h9", "Smeared Pt vs Smeared Inv Mass", n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+        TH1* h10 = new TH1F("h10", "Smeared PT", n_bins, PT_Min, PT_Max_bin);
+        TH1* h16 = new TH1F("h16", "Smeared Photon pT", n_bins, PT_Min, PT_Max_bin);
+        TH1* h17 = new TH1F("h17", "Photon pT", n_bins, PT_Min, PT_Max_bin);
         TH1* hInvMass_Cutson = new TH1F("hInvMass_Cutson", "PT,nSmeared+no_weight+cuts+pr", MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
 
         std::vector<TH1*> hpionpt(WeightNames.size());
@@ -195,29 +196,29 @@ int main(int argc, char* argv[]){
         std::vector<TH1F*> h100_1d(WeightNames.size());
 
         for (int p = 0; p < WeightNames.size(); p++) {
-            hpionpt[p] = new TH1D(Form("hpionpt_%i", p), Form("Pt no smear + no weight:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max);
-            h2[p] = new TH1D(Form("h2_%i", p), Form("Photon Pt:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max);
-            h3[p] = new TH1D(Form("h3_%i", p), Form("PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max);
-            h12[p] = new TH1F(Form("h12_%i", p), Form("Smeared PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max);
-            h20[p] = new TH1F(Form("h20_%i", p), Form("Smeared Photon pT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max);
-            h21[p] = new TH1F(Form("h21_%i", p), Form("Photon pT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max);
-            h18[p] = new TH2F(Form("h18_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            hpionpt[p] = new TH1D(Form("hpionpt_%i", p), Form("Pt no smear + no weight:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+            h2[p] = new TH1D(Form("h2_%i", p), Form("Photon Pt:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+            h3[p] = new TH1D(Form("h3_%i", p), Form("PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+            h12[p] = new TH1F(Form("h12_%i", p), Form("Smeared PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+            h20[p] = new TH1F(Form("h20_%i", p), Form("Smeared Photon pT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+            h21[p] = new TH1F(Form("h21_%i", p), Form("Photon pT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+            h18[p] = new TH2F(Form("h18_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h18_1d[p] = new TH1F(Form("h18_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h27[p] = new TH2F(Form("h27_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. cluster:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h28[p] = new TH2F(Form("h28_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. cluster and Asymm Cut:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h29[p] = new TH2F(Form("h29_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Asymm Cut:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h28_v2[p] = new TH2F(Form("h28_v2_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Cluster+Asymm+pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h29_v2[p] = new TH2F(Form("h29_v2_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Asymm+Pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h30[p] = new TH2F(Form("h30_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, 0, smeared_upper_bin_limit);
+            h27[p] = new TH2F(Form("h27_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. cluster:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h28[p] = new TH2F(Form("h28_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. cluster and Asymm Cut:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h29[p] = new TH2F(Form("h29_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Asymm Cut:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h28_v2[p] = new TH2F(Form("h28_v2_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Cluster+Asymm+pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h29_v2[p] = new TH2F(Form("h29_v2_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Asymm+Pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h30[p] = new TH2F(Form("h30_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
             h30_1d[p] = new TH1F(Form("h30_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
-            h31[p] = new TH2F(Form("h31_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts+pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, 0, smeared_upper_bin_limit);
+            h31[p] = new TH2F(Form("h31_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts+pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
             h31_1d[p] = new TH1F(Form("h31_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts+pos res:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
-            h31_pionspectrum[p] = new TH1F(Form("h31_ps_%i", p), Form("Cuts+pos res, Smeared PT, weighted:%s", WeightNames[p].c_str()), MassNBins, PT_Min, PT_Max);
-            h34[p] = new TH2F(Form("h34_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Position Smearing:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h31_pionspectrum[p] = new TH1F(Form("h31_ps_%i", p), Form("Cuts+pos res, Smeared PT, weighted:%s", WeightNames[p].c_str()), MassNBins, PT_Min, PT_Max_bin);
+            h34[p] = new TH2F(Form("h34_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Position Smearing:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h34_1d[p] = new TH1F(Form("h34_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Position Smearing:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h35[p] = new TH2F(Form("h35_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts+cluster:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, 0, smeared_upper_bin_limit);
+            h35[p] = new TH2F(Form("h35_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts+cluster:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
             h35_1d[p] = new TH1F(Form("h35_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts+cluster:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
-            h100[p] = new TH2F(Form("h100_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h100[p] = new TH2F(Form("h100_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h100_1d[p] = new TH1F(Form("h100_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
         }
 
