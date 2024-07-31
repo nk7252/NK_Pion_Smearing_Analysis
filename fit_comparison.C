@@ -88,12 +88,12 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(3);
   SetsPhenixStyle();
   //
-  bool var_bins = true;
+  bool var_bins = false;
   int rebinFactor = 1;
   bool dynamic_left = true;
   int startBin = 9;
   int endBin = -1;
-  int projectionBins = 2;
+  int projectionBins = 1;
   double scale_factor = 1.0;
   double limits[10] = {0.05, 1.0, 0.11, 0.19, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
   /*
@@ -111,7 +111,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TLegend *legend1 = new TLegend(0.2, 0.7, 0.4, 0.9);//pion mean
   TLegend *legend2 = new TLegend(0.2, 0.7, 0.4, 0.9);//pion width
   TLegend *legend3 = new TLegend(0.2, 0.7, 0.4, 0.9);//eta mean
-  TLegend *legend4 = new TLegend(0.2, 0.1, 0.4, 0.3);//eta width
+  TLegend *legend4 = new TLegend(0.7, 0.7, 0.9, 0.9);//eta width
   TLegend *legend5 = new TLegend(0.2, 0.7, 0.4, 0.9);//mass ratio
   
 
@@ -703,6 +703,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gPionMeans->Draw("APE");
   legend1->SetFillStyle(0);
   legend1->SetTextAlign(32);
+  legend1->SetTextSize(0.03);
   legend1->Draw();
   c1->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
   // gPionMeans->GetXaxis()->SetLimits(comparisonFilenameObj.plotxlims[0], comparisonFilenameObj.plotxlims[1]);
@@ -719,6 +720,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gPionWidths->Draw("APE");
   legend2->SetFillStyle(0);
   legend2->SetTextAlign(32);
+  legend2->SetTextSize(0.03);
   legend2->Draw();
   c2->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
@@ -729,6 +731,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gEtaMeans->Draw("APE");
   legend3->SetFillStyle(0);
   legend3->SetTextAlign(32);
+  legend3->SetTextSize(0.03);
   legend3->Draw();
   c3->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
@@ -739,6 +742,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gEtaWidths->Draw("APE");
   legend4->SetFillStyle(0);
   legend4->SetTextAlign(32);
+  legend4->SetTextSize(0.03);
   legend4->Draw();
   c4->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
@@ -749,6 +753,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gMassRatios->Draw("APE");
   legend5->SetFillStyle(0);
   legend5->SetTextAlign(32);
+  legend5->SetTextSize(0.03);
   legend5->Draw();
   c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
@@ -770,9 +775,9 @@ void fit_comparison()
   std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_2d"};
   std::vector<std::string> unweighted_legendNames = {"Pythia8", "pp_mb_3MHz"};
 
-  std::vector<std::string> SPMC_FileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V7.root", "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V8.root"};//no single eta for now
-  std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_65", "h_InvMass_smear_weighted_2d_80"};
-  std::vector<std::string> SPMC_legend = {"SinglePi0", "Spi0+pc", "SingleEta", "SEta+pc"};
+  std::vector<std::string> SPMC_FileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V10.root", "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V9.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V7.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V8.root"};//no single eta for now
+  std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_0", "h_InvMass_smear_weighted_2d_0","h_InvMass_smear_weighted_2d_65","h_InvMass_smear_weighted_2d_80"};
+  std::vector<std::string> SPMC_legend = {"SPi0+0sm", "SPi0+pc+0sm","SPi0+6.5sm","SPi0+pc+8sm", "SingleEta", "SEta+pc"};
 
   std::vector<std::string> FastMC_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.077000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.077000_const.root"};//
   std::vector<std::string> FastMC_histNames = {"h100_2", "h100_2"};
