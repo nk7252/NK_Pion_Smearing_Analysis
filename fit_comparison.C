@@ -95,7 +95,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   int endBin = -1;
   int projectionBins = 1;
   double scale_factor = 1.0;
-  double limits[10] = {0.05, 1.0, 0.11, 0.19, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
+  double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
   /*
   std::vector<float> limits = {
       polyL, polyR,              // 0,1 Polynomial fit range: left and right limits
@@ -771,13 +771,16 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
 void fit_comparison()
 {
-  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root"};
+  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V21.root","pioncode/rootfiles/meson_graphs.root"};//pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root
+  //meson_graphs.root
   std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_2d"};
-  std::vector<std::string> unweighted_legendNames = {"Pythia8", "pp_mb_3MHz"};
+  std::vector<std::string> unweighted_legendNames = {"Pythia8","Pythia8_wvfm", "Run2024"};
 
-  std::vector<std::string> SPMC_FileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V10.root", "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V9.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V7.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V8.root"};//no single eta for now
-  std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_0", "h_InvMass_smear_weighted_2d_0","h_InvMass_smear_weighted_2d_65","h_InvMass_smear_weighted_2d_80"};
-  std::vector<std::string> SPMC_legend = {"SPi0+0sm", "SPi0+pc+0sm","SPi0+6.5sm","SPi0+pc+8sm", "SingleEta", "SEta+pc"};
+  std::vector<std::string> SPMC_FileNames = { "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"};//no single eta for now
+  //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V10.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V7.root",
+  std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_0", "h_InvMass_smear_weighted_2d_65",};
+  //"h_InvMass_smear_weighted_2d_0","h_InvMass_smear_weighted_2d_65"
+  std::vector<std::string> SPMC_legend = {"SPi0+0sm","SPi0+6.5sm"};//"SPi0+nodc+0sm",,"SPi0+nodc+6.5sm", "SingleEta", "SEta+pc"
 
   std::vector<std::string> FastMC_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.077000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.077000_const.root"};//
   std::vector<std::string> FastMC_histNames = {"h100_2", "h100_2"};
