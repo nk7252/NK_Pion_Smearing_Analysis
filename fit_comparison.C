@@ -1,7 +1,9 @@
 #pragma once
+//c++ includes
 #include <iostream>
 #include <vector>
 #include <string>
+//root includes
 #include <TFile.h>
 #include <TH2.h>
 #include <TF1.h>
@@ -13,6 +15,7 @@
 #include <Math/MinimizerOptions.h>
 #include <Math/Factory.h>
 #include <Math/Functor.h>
+//local includes
 #include "sPhenixStyle.h"
 #include "sPhenixStyle.C"
 
@@ -76,8 +79,7 @@ TH1D *rebinHistogram(TH1D *h, const std::vector<double> &binEdges)
   return (TH1D *)h->Rebin(Nbins, "hrb", bins);
 }
 
-// unweighted_fileNames, unweighted_histNames, unweighted_legendNames,, SPMC_FileNames, SPMC_histNames, SPMC_legend, FastMC_fileNames, FastMC_histNames, FastMC_legendNames
-void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, const std::vector<std::string> &unweightedhistNames, const std::vector<std::string> &unweighted_legendNames, const std::vector<std::string> &SPMC_FileNames, const std::vector<std::string> &SPMC_histNames, const std::vector<std::string> &SPMC_legendNames, const std::vector<std::string> &FastMC_FileNames, const std::vector<std::string> &FastMC_histNames, const std::vector<std::string> &FastMC_legendNames)
+void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, const std::vector<std::string> &unweightedhistNames, const std::vector<std::string> &unweighted_legendNames, const std::vector<std::string> &SPMC_FileNames, const std::vector<std::string> &SPMC_histNames, const std::vector<std::string> &SPMC_legendNames, const std::vector<std::string> &FastMC_FileNames, const std::vector<std::string> &FastMC_histNames, const std::vector<std::string> &FastMC_legendNames, const std::vector<std::string> &Run2024_FileNames, const std::vector<std::string> &Run2024_legendNames)
 {
   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
   ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
@@ -92,7 +94,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   int rebinFactor = 1;
   bool dynamic_left = true;
   int startBin = 9;
-  int endBin = -1;
+  int endBin_global = -1;
   int projectionBins = 1;
   double scale_factor = 1.0;
   double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
@@ -108,23 +110,33 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // Create a PDF to save the canvases
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
-  TLegend *legend1 = new TLegend(0.2, 0.7, 0.4, 0.9);//pion mean
-  TLegend *legend2 = new TLegend(0.2, 0.7, 0.4, 0.9);//pion width
-  TLegend *legend3 = new TLegend(0.2, 0.7, 0.4, 0.9);//eta mean
-  TLegend *legend4 = new TLegend(0.7, 0.7, 0.9, 0.9);//eta width
-  TLegend *legend5 = new TLegend(0.2, 0.7, 0.4, 0.9);//mass ratio
+  //top right (0.66, 0.7, 0.90, 0.9)
+  //top left (0.2, 0.7, 0.44, 0.9)
+  //bottom left (0.2, 0.2, 0.44, 0.4)
+  //bottom right (0.66, 0.2, 0.90, 0.4)
+  TLegend *legend1 = new TLegend(0.2, 0.7, 0.44, 0.9);//pion mean
+  TLegend *legend2 = new TLegend(0.2, 0.2, 0.44, 0.4);//pion width
+  TLegend *legend3 = new TLegend(0.2, 0.2, 0.44, 0.4);//eta mean
+  TLegend *legend4 = new TLegend(0.2, 0.7, 0.44, 0.9);//eta width
+  TLegend *legend5 = new TLegend(0.2, 0.7, 0.44, 0.9);//mass ratio
+  legend1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+  legend2->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+  legend3->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+  legend4->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+  legend5->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
   
 
   std::vector<double> Pion_Mean, Pion_Width, Eta_Mean, Eta_Width, Mass_Ratio;
   std::vector<double> Pion_Mean_errors, Pion_Width_errors, Eta_Mean_errors, Eta_Width_errors, Mass_Ratio_errors;
   std::vector<double> pT_Bins, pT_Bins_Errors;
+  int endBin = endBin_global;
 
   TMultiGraph *gPionMeans = new TMultiGraph();
   TMultiGraph *gPionWidths = new TMultiGraph();
   TMultiGraph *gEtaMeans = new TMultiGraph();
   TMultiGraph *gEtaWidths = new TMultiGraph();
   TMultiGraph *gMassRatios = new TMultiGraph();
-  int totalfiles = unweightedFileNames.size()+ FastMC_FileNames.size() + SPMC_FileNames.size();
+  int totalfiles = unweightedFileNames.size()+ FastMC_FileNames.size() + SPMC_FileNames.size() + Run2024_FileNames.size();
   std::vector<TGraphErrors *> pionmeanGraph(totalfiles);
   std::vector<TGraphErrors *> pionwidthGraph(totalfiles);
   std::vector<TGraphErrors *> etameanGraph(totalfiles);
@@ -163,7 +175,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       continue;
     }
     int nBinsX = hist2D->GetNbinsX();
-    if (endBin == -1)
+    if (endBin_global == -1)
       endBin = nBinsX; // Default to the last bin if not specified
 
     // Loop over the x-axis bins
@@ -357,7 +369,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       continue;
     }
     int nBinsX = hist2D->GetNbinsX();
-    if (endBin == -1)
+    if (endBin_global == -1)
       endBin = nBinsX; // Default to the last bin if not specified
 
     // Loop over the x-axis bins
@@ -460,7 +472,6 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     filecounter++;
   }
 
-
   // Repeat the same for FastMC files
   //*
   for (size_t j = 0; j < FastMC_FileNames.size(); ++j)
@@ -480,9 +491,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       continue;
     }
     int nBinsX = hist2D->GetNbinsX();
-    if (endBin == -1)
+    //std::cout << "nBinsX: " << nBinsX << std::endl;
+    if (endBin_global == -1)
       endBin = nBinsX; // Default to the last bin if not specified
-
+    std::cout << "endBin: " << endBin << std::endl;
     // Loop over the x-axis bins
     int bincounter = 1;
     if(j==0){//pion
@@ -588,12 +600,14 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // Project the histogram along the Y-axis
       int lastBin = std::min(i + projectionBins - 1, nBinsX);
       TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
+      /*
       // Check if the projection has enough entries to perform a fit
       if (yProjection->GetEntries() < 1000)
       { // Adjust the threshold as needed
         delete yProjection;
         continue;
       }
+      */
       TH1D *histF = (TH1D *)yProjection;
       // re binning
       if (var_bins && !nuBins.empty())
@@ -660,6 +674,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
       massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
       bincounter++;
+      //std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
+      std::cout << "Bincounter: " << bincounter << std::endl;
     }
 
     MarkerStyle+=filecounter;
@@ -695,15 +711,101 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   }
   //*/
 
+ //data, pre made graphs
+  if(Run2024_FileNames.size()>0){
+    for (size_t j = 0; j < Run2024_FileNames.size(); ++j){
+      // Load the new file and retrieve the TGraphErrors
+      TFile newFile(Run2024_FileNames[0].c_str(), "READ");
+      if (!newFile.IsOpen())
+      {
+        std::cerr << "Error opening file: " << Run2024_FileNames[0] << std::endl;
+        return;
+      }
+
+      TGraphErrors* newPionMean = dynamic_cast<TGraphErrors*>(newFile.Get("gr_mass_pi0"));
+      TGraphErrors* newPionSigma = dynamic_cast<TGraphErrors*>(newFile.Get("gr_width_pi0"));
+      TGraphErrors* newEtaMean = dynamic_cast<TGraphErrors*>(newFile.Get("gr_mass_eta"));
+      TGraphErrors* newEtaSigma = dynamic_cast<TGraphErrors*>(newFile.Get("gr_width_eta"));
+      TGraphErrors* pionRelativeWidthGraph = new TGraphErrors();
+      TGraphErrors* etaRelativeWidthGraph = new TGraphErrors();
+      if (!newPionMean || !newPionSigma || !newEtaMean || !newEtaSigma)
+      {
+        std::cerr << "Error getting TGraphErrors from new file." << std::endl;
+        newFile.Close();
+        return;
+      }
+      
+      int nPionPoints = newPionMean->GetN();
+      for (int i = 0; i < nPionPoints; ++i) {
+          double pionPt, pionMean, pionSigma;
+          double pionMeanErr, pionSigmaErr;
+          newPionMean->GetPoint(i, pionPt, pionMean);
+          pionMeanErr = newPionMean->GetErrorY(i);
+          newPionSigma->GetPoint(i, pionPt, pionSigma);
+          pionSigmaErr = newPionSigma->GetErrorY(i);
+
+          double pionRelativeWidth = pionMean > 0 ? pionSigma / pionMean : 0;
+          double pionRelativeWidthErr = pionRelativeWidth * sqrt(pow(pionMeanErr / pionMean, 2) + pow(pionSigmaErr / pionSigma, 2));
+
+          pionRelativeWidthGraph->SetPoint(i, pionPt, pionRelativeWidth);
+          pionRelativeWidthGraph->SetPointError(i, 0, pionRelativeWidthErr);
+      }
+
+
+      int nEtaPoints = newEtaMean->GetN();
+      for (int i = 0; i < nEtaPoints; ++i) {
+          double etaPt, etaMean, etaSigma;
+          double etaMeanErr, etaSigmaErr;
+          newEtaMean->GetPoint(i, etaPt, etaMean);
+          etaMeanErr = newEtaMean->GetErrorY(i);
+          newEtaSigma->GetPoint(i, etaPt, etaSigma);
+          etaSigmaErr = newEtaSigma->GetErrorY(i);
+
+          double etaRelativeWidth = etaMean > 0 ? etaSigma / etaMean : 0;
+          double etaRelativeWidthErr = etaRelativeWidth * sqrt(pow(etaMeanErr / etaMean, 2) + pow(etaSigmaErr / etaSigma, 2));
+
+          etaRelativeWidthGraph->SetPoint(i, etaPt, etaRelativeWidth);
+          etaRelativeWidthGraph->SetPointError(i, 0, etaRelativeWidthErr);
+      }
+      
+      MarkerStyle+=filecounter+1;
+      MarkerColor+=filecounter+1;
+      //with all off will default to sphenix style
+      //newPionMean->SetMarkerStyle(MarkerStyle);
+      //newPionMean->SetMarkerColor(MarkerColor);
+      //newEtaMean->SetMarkerStyle(MarkerStyle);
+      //newEtaMean->SetMarkerColor(MarkerColor);
+      //pionRelativeWidthGraph->SetMarkerStyle(MarkerStyle);
+      //pionRelativeWidthGraph->SetMarkerColor(MarkerColor);
+      //etaRelativeWidthGraph->SetMarkerStyle(MarkerStyle);
+      //etaRelativeWidthGraph->SetMarkerColor(MarkerColor);
+      // Add the new graphs to the multigraphs
+      gPionMeans->Add(newPionMean, "PE");
+      legend1->AddEntry(newPionMean, Run2024_legendNames[j].c_str(), "PE");
+
+      gPionWidths->Add(pionRelativeWidthGraph, "PE");
+      legend2->AddEntry(pionRelativeWidthGraph, Run2024_legendNames[j].c_str(), "PE");
+
+      gEtaMeans->Add(newEtaMean, "PE");
+      legend3->AddEntry(newEtaMean, Run2024_legendNames[j].c_str(), "PE");
+
+      gEtaWidths->Add(etaRelativeWidthGraph, "PE");
+      legend4->AddEntry(etaRelativeWidthGraph, Run2024_legendNames[j].c_str(), "PE");
+
+      newFile.Close();
+    }
+  }
+
   // draw multigraphs
   TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
   gPionMeans->GetXaxis()->SetLimits(0.01, 10);
   gPionMeans->SetMinimum(0.135);
+  gPionMeans->SetMaximum(0.17);
   gPionMeans->Draw("APE");
   legend1->SetFillStyle(0);
   legend1->SetTextAlign(32);
-  legend1->SetTextSize(0.03);
+  legend1->SetTextSize(0.02);
   legend1->Draw();
   c1->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
   // gPionMeans->GetXaxis()->SetLimits(comparisonFilenameObj.plotxlims[0], comparisonFilenameObj.plotxlims[1]);
@@ -716,33 +818,35 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
   gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
   gPionWidths->GetXaxis()->SetLimits(0.01, 10);
-  gPionWidths->SetMinimum(0.085);
+  gPionWidths->SetMinimum(0.05);
   gPionWidths->Draw("APE");
   legend2->SetFillStyle(0);
   legend2->SetTextAlign(32);
-  legend2->SetTextSize(0.03);
+  legend2->SetTextSize(0.02);
   legend2->Draw();
   c2->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
   gEtaMeans->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
-  gEtaMeans->GetXaxis()->SetLimits(0.01, 10);
-  gEtaMeans->SetMinimum(0.55);
+  gEtaMeans->GetXaxis()->SetLimits(0.01, 17);
+  gEtaMeans->SetMinimum(0.45);
+  gEtaMeans->SetMaximum(0.7);
   gEtaMeans->Draw("APE");
   legend3->SetFillStyle(0);
   legend3->SetTextAlign(32);
-  legend3->SetTextSize(0.03);
+  legend3->SetTextSize(0.02);
   legend3->Draw();
   c3->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
   gEtaWidths->SetTitle("Eta: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Eta Relative Width");
-  gEtaWidths->GetXaxis()->SetLimits(0.01, 10);
-  gEtaWidths->SetMinimum(0.045);
+  gEtaWidths->GetXaxis()->SetLimits(0.01, 17);
+  gEtaWidths->SetMinimum(0.01);
+  gEtaWidths->SetMaximum(0.3);
   gEtaWidths->Draw("APE");
   legend4->SetFillStyle(0);
   legend4->SetTextAlign(32);
-  legend4->SetTextSize(0.03);
+  legend4->SetTextSize(0.02);
   legend4->Draw();
   c4->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
@@ -753,7 +857,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gMassRatios->Draw("APE");
   legend5->SetFillStyle(0);
   legend5->SetTextAlign(32);
-  legend5->SetTextSize(0.03);
+  legend5->SetTextSize(0.02);
   legend5->Draw();
   c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
@@ -771,22 +875,29 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
 void fit_comparison()
 {
-  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V21.root","pioncode/rootfiles/meson_graphs.root"};//pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root
-  //meson_graphs.root
+  //-----------------------------------------
+  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V21.root"};
   std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_2d"};
-  std::vector<std::string> unweighted_legendNames = {"Pythia8","Pythia8_wvfm", "Run2024"};
+  std::vector<std::string> unweighted_legendNames = {"Pythia8","Pythia8_wvfm"};
 
-  std::vector<std::string> SPMC_FileNames = { "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"};//no single eta for now
-  //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V10.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V7.root",
+  //-----------------------------------------
+  std::vector<std::string> SPMC_FileNames = { "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"};
   std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_0", "h_InvMass_smear_weighted_2d_65",};
-  //"h_InvMass_smear_weighted_2d_0","h_InvMass_smear_weighted_2d_65"
-  std::vector<std::string> SPMC_legend = {"SPi0+0sm","SPi0+6.5sm"};//"SPi0+nodc+0sm",,"SPi0+nodc+6.5sm", "SingleEta", "SEta+pc"
+  std::vector<std::string> SPMC_legend = {"SPi0+0sm","SPi0+6.5sm"};
 
-  std::vector<std::string> FastMC_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.077000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.077000_const.root"};//
-  std::vector<std::string> FastMC_histNames = {"h100_2", "h100_2"};
-  std::vector<std::string> FastMC_legendNames = {"PionFastMC", "EtaFastMC"};
+  //-----------------------------------------
+  std::vector<std::string> FastMC_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root"};//
+  std::vector<std::string> FastMC_histNames = {"h100_2", "h101_2"};
+  std::vector<std::string> FastMC_legendNames = {"FastMC: 15.4%/#sqrt{E} #oplus 18%", "FastMC: 15.4%/#sqrt{E} #oplus 12%"};//"PionFastMC", "EtaFastMC"
+  std::vector<int> FastMC_FileTypes ={0,1};//0 for pion, 1 for eta
 
-  AnalyzeHistograms(unweighted_fileNames, unweighted_histNames, unweighted_legendNames, SPMC_FileNames, SPMC_histNames, SPMC_legend, FastMC_fileNames, FastMC_histNames, FastMC_legendNames);
+  //-----------------------------------------
+  std::vector<std::string> Run2024_fileNames = {"pioncode/rootfiles/meson_graphs.root"};
+  std::vector<std::string> Run2024_legendNames = {"Run2024"};
+
+  //-----------------------------------------
+  AnalyzeHistograms(unweighted_fileNames, unweighted_histNames, unweighted_legendNames, SPMC_FileNames, SPMC_histNames, SPMC_legend, FastMC_fileNames, FastMC_histNames, FastMC_legendNames,Run2024_fileNames, Run2024_legendNames);
+
 
   gApplication->Terminate(0);
   // return 0;

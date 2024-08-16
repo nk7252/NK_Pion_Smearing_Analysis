@@ -25,8 +25,10 @@ Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double ra
 Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx, double smearingFactory, double smearingFactorz);
 bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMax);
 bool pTCut(const Pythia8::Vec4& particle, float ptCut);
+bool eTCut(const Pythia8::Vec4& particle, float etCut);
+bool EtaCut(const Pythia8::Vec4& particle, float EtaCutValue, bool ApplyEtaCut, bool debug);
 bool AsymmCutcheck(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float AsymmCutoff, bool asymcutbool);
-void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& params);
+void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& params, bool debug);
 
 int main(int argc, char* argv[]){
     // compiled with: 
@@ -43,9 +45,9 @@ int main(int argc, char* argv[]){
     double PT_ratio = PT_Min / PT_Max;
     std::string weightMethodStr = "WSHP";
     int weightMethod = 2;
-    bool applyAsymmCut = true;
+    bool applyAsymmCut = true;//need to remove all do this bool
     float asymmCutValue = 0.6;
-    int clusterOverlap = 1;
+    int clusterOverlap = 1;//need to remove all do this bool
     float clusterOverlapProb = 0.99;
     float DeltaRcut_MAX = 1.1;
     float pt1cut = 1.3;
@@ -54,10 +56,14 @@ int main(int argc, char* argv[]){
     float ptMaxCut = 50;
     float nclus_ptCut = 0.0;
     //untracked general parameters
-    int PT_Max_bin=10;// normally this, but now we want to match fun4all PT_Max;
+    int PT_Max_bin= 20; // normally this, but now we want to match fun4all PT_Max;
     int MassNBins = 600;
     int binres = 2;
-    int n_bins = 4*10;//binres * PT_Max;
+    int n_bins = 8*10; //binres * PT_Max;
+    bool Apply_Eta_Cut =true;//need to remove all do this bool
+    float eta_cut_val = 0.6;
+    bool Debug = false;//default should be false ofc.
+    float etCut = 1.0;
     // weighting params
     double t = 4.5;
     double w = 0.114;
@@ -80,9 +86,9 @@ int main(int argc, char* argv[]){
 
     // Parse command-line arguments
     std::map<std::string, std::string> params;
-    parseArguments(argc, argv, params);
+    parseArguments(argc, argv, params, Debug);
 
-     if (params.find("particleType") != params.end()) particleType = params["particleType"];
+    if (params.find("particleType") != params.end()) particleType = params["particleType"];
     if (params.find("nParticles") != params.end()) nParticles = std::stoi(params["nParticles"]);
     if (params.find("PT_Max") != params.end()) PT_Max = std::stoi(params["PT_Max"]);
     if (params.find("PT_Min") != params.end()) PT_Min = std::stof(params["PT_Min"]);
@@ -118,7 +124,7 @@ int main(int argc, char* argv[]){
     }
 
     // Debugging: Print all parameters after parsing
-    std::cout << "Parameters after parsing:" << std::endl;
+    std::cout << "\n Parameters after parsing: \n" << std::endl;
     std::cout << "particleType: " << particleType << std::endl;
     std::cout << "nParticles: " << nParticles << std::endl;
     std::cout << "PT_Max: " << PT_Max << std::endl;
@@ -194,6 +200,8 @@ int main(int argc, char* argv[]){
         std::vector<TH1F*> h35_1d(WeightNames.size());
         std::vector<TH2F*> h100(WeightNames.size());
         std::vector<TH1F*> h100_1d(WeightNames.size());
+        std::vector<TH2F*> h101(WeightNames.size());
+        std::vector<TH1F*> h101_1d(WeightNames.size());
 
         for (int p = 0; p < WeightNames.size(); p++) {
             hpionpt[p] = new TH1D(Form("hpionpt_%i", p), Form("Pt no smear + no weight:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
@@ -220,6 +228,8 @@ int main(int argc, char* argv[]){
             h35_1d[p] = new TH1F(Form("h35_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts+cluster:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
             h100[p] = new TH2F(Form("h100_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h100_1d[p] = new TH1F(Form("h100_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h101[p] = new TH2F(Form("h101_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            h101_1d[p] = new TH1F(Form("h101_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
         }
 
         std::random_device rd;
@@ -422,10 +432,27 @@ int main(int argc, char* argv[]){
                             h35_1d[p]->Fill(gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
                         }
 
-                        if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_All_Cuts[0], pt1cut) == true && pTCut(gamma_All_Cuts[1], pt2cut) == true && nclus_ptCut < gamma_All_Cuts[0].pT() && gamma_All_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_All_Cuts[1].pT() && gamma_All_Cuts[1].pT() < ptMaxCut && gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut)) {
+                        if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_All_Cuts[0], pt1cut) == true && pTCut(gamma_All_Cuts[1], pt2cut) == true && nclus_ptCut < gamma_All_Cuts[0].pT() && gamma_All_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_All_Cuts[1].pT() && gamma_All_Cuts[1].pT() < ptMaxCut && gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut)) 
+                        {
                             h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                             h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                         }
+                    
+                    if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && 
+                    AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && 
+                    eTCut(gamma_All_Cuts[0], etCut) == true && 
+                    eTCut(gamma_All_Cuts[1], etCut) == true && 
+                    nclus_ptCut < gamma_All_Cuts[0].pT() && 
+                    gamma_All_Cuts[0].pT() < ptMaxCut && 
+                    nclus_ptCut < gamma_All_Cuts[1].pT() && 
+                    gamma_All_Cuts[1].pT() < ptMaxCut && 
+                    gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
+                    {
+                        h101[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+                        h101_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+                    }
+                    
+                    
                     }
 
                     try {
@@ -557,7 +584,22 @@ bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMa
 
 bool pTCut(const Pythia8::Vec4& particle, float ptCut) {
     double pT = particle.pT();
-    return pT > ptCut;
+    return pT > ptCut;// true if greater than the cut. I use this for the min and max pT cuts
+}
+
+bool eTCut(const Pythia8::Vec4& particle, float eTCut) {
+    double eT = sqrt(pow(particle.mCalc(),2)+particle.pT2());
+    return eT > eTCut;// true if greater than the cut. 
+}
+
+bool EtaCut(const Pythia8::Vec4& particle, float EtaCutValue, bool ApplyEtaCut, bool debug) {
+    if (ApplyEtaCut == false) //will fill the histogram if the cut is not applied
+    {
+        return false;
+    }
+    float Eta = abs(particle.eta());
+    if(debug) std::cout << "Debug:  " << " Eta, abs(Eta) = " << particle.eta() << " , "  << Eta << std::endl;
+    return Eta > EtaCutValue;// true if greater than the cut, I.e. out of the allowed range
 }
 
 bool AsymmCutcheck(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float AsymmCutoff, bool asymcutbool) {
@@ -567,7 +609,7 @@ bool AsymmCutcheck(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float AsymmCu
     return abs(Photon1.e() - Photon2.e()) / (Photon1.e() + Photon2.e()) < AsymmCutoff;
 }
 
-void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& params) {
+void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& params, bool debug) {
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
         size_t equalPos = arg.find('=');
@@ -579,8 +621,12 @@ void parseArguments(int argc, char* argv[], std::map<std::string, std::string>& 
     }
 
     // Debugging: Print all parsed parameters
-    std::cout << "Parsed command-line parameters:" << std::endl;
-    for (const auto& param : params) {
-        std::cout << param.first << " = " << param.second << std::endl;
+    if(debug)
+    {
+        std::cout << "\n Parsed command-line parameters: \n" << std::endl;
+        for (const auto& param : params) 
+        {
+            std::cout << param.first << " = " << param.second << std::endl;
+        }
     }
 }
