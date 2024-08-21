@@ -53,17 +53,17 @@ int main(int argc, char* argv[]){
     float pt1cut = 1.3;
     float pt2cut = 0.7;
     float comb_ptcut = 0;
-    float ptMaxCut = 50;
+    float ptMaxCut = 100;
     float nclus_ptCut = 0.0;
     //untracked general parameters
     int PT_Max_bin= 20; // normally this, but now we want to match fun4all PT_Max;
-    int MassNBins = 600;
+    int MassNBins = 1200;
     int binres = 2;
     int n_bins = 8*10; //binres * PT_Max;
-    bool Apply_Eta_Cut =true;//need to remove all do this bool
-    float eta_cut_val = 0.6;
     bool Debug = false;//default should be false ofc.
     float etCut = 1.0;
+    bool Apply_Eta_Cut = false;//need to remove all do this bool
+    float eta_cut_val = 0.6;
     // weighting params
     double t = 4.5;
     double w = 0.114;
@@ -73,14 +73,16 @@ int main(int argc, char* argv[]){
     double m_param = 10.654;
     double p0 = 1.466;
     // smearing params
-    float smeared_lower_bin_limit = 0.0;
+    //add first three to gui
+    float smeared_lower_bin_limit = 0.0;//mass limits
     float smeared_upper_bin_limit = 1.2;
+    float smear_factor_sqrtE = 0.154;//0.154;
     float smear_factor_a = 0;
     float smear_factor_d = 0.0;
     float posit_smearingFactor = 2.8;
-    float smear_factor_basevalue = 0.12;
-    float smear_factor_step = 0.001;
-    int smear_factor_steps = 1;
+    float smear_factor_const = 0.12;
+    float smear_factor_const_step_size = 0.001;
+    int smear_factor_const_num_steps = 1;
     // output params
     bool saveToTree = false;
 
@@ -105,9 +107,9 @@ int main(int argc, char* argv[]){
     if (params.find("nclus_ptCut") != params.end()) nclus_ptCut = std::stof(params["nclus_ptCut"]);
     if (params.find("posit_smearingFactor") != params.end()) posit_smearingFactor = std::stof(params["posit_smearingFactor"]);
     if (params.find("saveToTree") != params.end()) saveToTree = (params["saveToTree"] == "true");
-    if (params.find("smear_factor_basevalue") != params.end()) smear_factor_basevalue = std::stof(params["smear_factor_basevalue"]);
-    if (params.find("smear_factor_step") != params.end()) smear_factor_step = std::stof(params["smear_factor_step"]);
-    if (params.find("smear_factor_steps") != params.end()) smear_factor_steps = std::stoi(params["smear_factor_steps"]);
+    if (params.find("smear_factor_const") != params.end()) smear_factor_const = std::stof(params["smear_factor_const"]);
+    if (params.find("smear_factor_const_step_size") != params.end()) smear_factor_const_step_size = std::stof(params["smear_factor_const_step_size"]);
+    if (params.find("smear_factor_const_num_steps") != params.end()) smear_factor_const_num_steps = std::stoi(params["smear_factor_const_num_steps"]);
 
     // Map weightMethodStr to weightMethod integer
     if (weightMethodStr == "EXP") {
@@ -142,9 +144,9 @@ int main(int argc, char* argv[]){
     std::cout << "nclus_ptCut: " << nclus_ptCut << std::endl;
     std::cout << "posit_smearingFactor: " << posit_smearingFactor << std::endl;
     std::cout << "saveToTree: " << saveToTree << std::endl;
-    std::cout << "smear_factor_basevalue: " << smear_factor_basevalue << std::endl;
-    std::cout << "smear_factor_step: " << smear_factor_step << std::endl;
-    std::cout << "smear_factor_steps: " << smear_factor_steps << std::endl;
+    std::cout << "smear_factor_const: " << smear_factor_const << std::endl;
+    std::cout << "smear_factor_const_step_size: " << smear_factor_const_step_size << std::endl;
+    std::cout << "smear_factor_const_num_steps: " << smear_factor_const_num_steps << std::endl;
 
     TStopwatch timer;
     timer.Start();
@@ -154,9 +156,9 @@ int main(int argc, char* argv[]){
 
     std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
 
-    for (int smear_factor_itt = 0; smear_factor_itt < smear_factor_steps; smear_factor_itt++) {
-        float smear_factor_c = smear_factor_basevalue + smear_factor_step * smear_factor_itt;
-        float smear_factor_b = 0.154;
+    for (int smear_factor_itt = 0; smear_factor_itt < smear_factor_const_num_steps; smear_factor_itt++) {
+        float smear_factor_c = smear_factor_const + smear_factor_const_step_size * smear_factor_itt;
+        float smear_factor_b = smear_factor_sqrtE;
 
         TFile* output = new TFile(Form("pioncode/rootfiles/%sFastMC_%f_sqrte_%f_const.root", particleType.c_str(), smear_factor_b, smear_factor_c), "recreate");
 
@@ -240,7 +242,7 @@ int main(int argc, char* argv[]){
         std::mt19937_64 gen_gamma(rdgamma());
         std::mt19937_64 gen_gammacluster(rdgammacluster());
         std::mt19937_64 gen_gammapositsmear(rdgammapositsmr());
-        std::normal_distribution<double> gammadis(0.0, 1.0);
+        std::normal_distribution<double> gammadis(0.0, 1.0);//mean 0 and std dev 1
         std::uniform_real_distribution<> gammacluster(0, 1.0);
         std::normal_distribution<double> gamma_positsmear(0.0, 1.0);
         std::uniform_real_distribution<> pdis(PT_ratio, 1.0);
@@ -438,21 +440,19 @@ int main(int argc, char* argv[]){
                             h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                         }
                     
-                    if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && 
-                    AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && 
-                    eTCut(gamma_All_Cuts[0], etCut) == true && 
-                    eTCut(gamma_All_Cuts[1], etCut) == true && 
-                    nclus_ptCut < gamma_All_Cuts[0].pT() && 
-                    gamma_All_Cuts[0].pT() < ptMaxCut && 
-                    nclus_ptCut < gamma_All_Cuts[1].pT() && 
-                    gamma_All_Cuts[1].pT() < ptMaxCut && 
-                    gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
-                    {
-                        h101[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
-                        h101_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
-                    }
-                    
-                    
+                        if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && 
+                        AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && 
+                        eTCut(gamma_All_Cuts[0], etCut) == true && 
+                        eTCut(gamma_All_Cuts[1], etCut) == true && 
+                        nclus_ptCut < gamma_All_Cuts[0].pT() && 
+                        gamma_All_Cuts[0].pT() < ptMaxCut && 
+                        nclus_ptCut < gamma_All_Cuts[1].pT() && 
+                        gamma_All_Cuts[1].pT() < ptMaxCut && 
+                        gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
+                        {
+                            h101[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+                            h101_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+                        }
                     }
 
                     try {
@@ -584,12 +584,12 @@ bool DeltaRcut(Pythia8::Vec4& Photon1, Pythia8::Vec4& Photon2, float DeltaRcutMa
 
 bool pTCut(const Pythia8::Vec4& particle, float ptCut) {
     double pT = particle.pT();
-    return pT > ptCut;// true if greater than the cut. I use this for the min and max pT cuts
+    return pT > ptCut; // true if greater than the cut. I use this for the min and max pT cuts
 }
 
 bool eTCut(const Pythia8::Vec4& particle, float eTCut) {
     double eT = sqrt(pow(particle.mCalc(),2)+particle.pT2());
-    return eT > eTCut;// true if greater than the cut. 
+    return eT > eTCut; // true if greater than the cut. 
 }
 
 bool EtaCut(const Pythia8::Vec4& particle, float EtaCutValue, bool ApplyEtaCut, bool debug) {

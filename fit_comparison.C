@@ -79,7 +79,7 @@ TH1D *rebinHistogram(TH1D *h, const std::vector<double> &binEdges)
   return (TH1D *)h->Rebin(Nbins, "hrb", bins);
 }
 
-void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, const std::vector<std::string> &unweightedhistNames, const std::vector<std::string> &unweighted_legendNames, const std::vector<std::string> &SPMC_FileNames, const std::vector<std::string> &SPMC_histNames, const std::vector<std::string> &SPMC_legendNames, const std::vector<std::string> &FastMC_FileNames, const std::vector<std::string> &FastMC_histNames, const std::vector<std::string> &FastMC_legendNames, const std::vector<std::string> &Run2024_FileNames, const std::vector<std::string> &Run2024_legendNames)
+void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, const std::vector<std::string> &unweightedhistNames, const std::vector<std::string> &unweighted_legendNames, const std::vector<std::string> &SPMC_FileNames, const std::vector<std::string> &SPMC_histNames, const std::vector<std::string> &SPMC_legendNames, const std::vector<std::string> &FastMC_FileNames, const std::vector<std::string> &FastMC_histNames, const std::vector<std::string> &FastMC_legendNames,std::vector<int> FastMC_FileTypes, const std::vector<std::string> &Run2024_FileNames, const std::vector<std::string> &Run2024_legendNames)
 {
   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
   ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
@@ -308,9 +308,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     }
 
 
-    MarkerStyle+=filecounter;
-    MarkerColor+=filecounter;
-
+    MarkerStyle+=1;
+    
+    MarkerColor+=1;
+    if(MarkerColor==5) MarkerColor+=1;//avoid yellow
     pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
     // pionmeanGraph[filecounter]->SetMarkerSize(1.5);
@@ -449,8 +450,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       bincounter++;
     }
 
-    MarkerStyle+=filecounter;
-    MarkerColor+=filecounter;
+    MarkerStyle+=1;
+    MarkerColor+=1;
+    if(MarkerColor==5) MarkerColor+=1;//avoid yellow
     pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
     // pionmeanGraph[filecounter]->SetMarkerSize(1.5);
@@ -497,7 +499,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     std::cout << "endBin: " << endBin << std::endl;
     // Loop over the x-axis bins
     int bincounter = 1;
-    if(j==0){//pion
+    if(FastMC_FileTypes[j]==0){//pion
     for (int i = startBin; i <= endBin; i += projectionBins)
     {
       // Project the histogram along the Y-axis
@@ -574,8 +576,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       bincounter++;
     }
 
-    MarkerStyle+=filecounter;
-    MarkerColor+=filecounter;
+    MarkerStyle+=1;
+    MarkerColor+=1;
+    if(MarkerColor==5) MarkerColor+=1;//avoid yellow
     pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
     // pionmeanGraph[j]->SetMarkerSize(1.5);
@@ -594,7 +597,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     gPionWidths->Add(pionwidthGraph[filecounter], "PE");
     legend2->AddEntry(pionwidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
     }
-    else if(j==1){//eta
+    else if(FastMC_FileTypes[j]==1){//eta
       for (int i = startBin; i <= endBin; i += projectionBins)
       {
       // Project the histogram along the Y-axis
@@ -678,8 +681,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       std::cout << "Bincounter: " << bincounter << std::endl;
     }
 
-    MarkerStyle+=filecounter;
-    MarkerColor+=filecounter;
+    MarkerStyle+=1;
+    MarkerColor+=1;
+    if(MarkerColor==5) MarkerColor+=1;//avoid yellow
     etameanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     etameanGraph[filecounter]->SetMarkerColor(MarkerColor);  
     // etameanGraph[j]->SetMarkerSize(1.5);
@@ -768,8 +772,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
           etaRelativeWidthGraph->SetPointError(i, 0, etaRelativeWidthErr);
       }
       
-      MarkerStyle+=filecounter+1;
-      MarkerColor+=filecounter+1;
+      MarkerStyle+=1;
+      MarkerColor+=1;
+      if(MarkerColor==5) MarkerColor+=1;//avoid yellow
       //with all off will default to sphenix style
       //newPionMean->SetMarkerStyle(MarkerStyle);
       //newPionMean->SetMarkerColor(MarkerColor);
@@ -876,27 +881,28 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 void fit_comparison()
 {
   //-----------------------------------------
-  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V21.root"};
-  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_2d"};
-  std::vector<std::string> unweighted_legendNames = {"Pythia8","Pythia8_wvfm"};
+  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V33.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V31.root"};
+  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_2d", "h_InvMass_smear_2d_100"};
+  std::vector<std::string> unweighted_legendNames = {"Pythia","Pythia_wvfm","Pythia_wvfm+10%smr"};
 
   //-----------------------------------------
-  std::vector<std::string> SPMC_FileNames = { "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"};
+  std::vector<std::string> SPMC_FileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root"};
+  ////,"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"
   std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_0", "h_InvMass_smear_weighted_2d_65",};
   std::vector<std::string> SPMC_legend = {"SPi0+0sm","SPi0+6.5sm"};
 
   //-----------------------------------------
-  std::vector<std::string> FastMC_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root"};//
-  std::vector<std::string> FastMC_histNames = {"h100_2", "h101_2"};
-  std::vector<std::string> FastMC_legendNames = {"FastMC: 15.4%/#sqrt{E} #oplus 18%", "FastMC: 15.4%/#sqrt{E} #oplus 12%"};//"PionFastMC", "EtaFastMC"
-  std::vector<int> FastMC_FileTypes ={0,1};//0 for pion, 1 for eta
+  std::vector<std::string> FastMC_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root", "pioncode/rootfiles/PionFastMC_0.000000_sqrte_0.000000_const.root"};//
+  std::vector<std::string> FastMC_histNames = {"h101_2", "h101_2", "h101_2"};
+  std::vector<std::string> FastMC_legendNames = {"FastMC: 15.4%/#sqrt{E} #oplus 18%", "FastMC: 15.4%/#sqrt{E} #oplus 12%","FastMC: no smearing"};//"PionFastMC", "EtaFastMC"
+  std::vector<int> FastMC_FileTypes ={0,1,0};//0 for pion, 1 for eta
 
   //-----------------------------------------
   std::vector<std::string> Run2024_fileNames = {"pioncode/rootfiles/meson_graphs.root"};
   std::vector<std::string> Run2024_legendNames = {"Run2024"};
 
   //-----------------------------------------
-  AnalyzeHistograms(unweighted_fileNames, unweighted_histNames, unweighted_legendNames, SPMC_FileNames, SPMC_histNames, SPMC_legend, FastMC_fileNames, FastMC_histNames, FastMC_legendNames,Run2024_fileNames, Run2024_legendNames);
+  AnalyzeHistograms(unweighted_fileNames, unweighted_histNames, unweighted_legendNames, SPMC_FileNames, SPMC_histNames, SPMC_legend, FastMC_fileNames, FastMC_histNames, FastMC_legendNames,FastMC_FileTypes,Run2024_fileNames, Run2024_legendNames);
 
 
   gApplication->Terminate(0);

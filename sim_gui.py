@@ -190,14 +190,14 @@ class SimulationGUI(QWidget):
             explanation="Check to save the results to a tree.",
         )
 
-        self.baseSmearPercentInput = self.addFieldWithExplanation(
+        self.SmearFactorconstInput = self.addFieldWithExplanation(
             "Base Smearing Percent:",
             QDoubleSpinBox(self),
             max_value=1,
             decimals=3,
             step=0.001,
             default_value=0.168,
-            explanation="Enter the base smearing percent.",
+            explanation="Enter the base constant smearing percent.",
         )
 
         self.nStepsInput = self.addFieldWithExplanation(
@@ -205,7 +205,7 @@ class SimulationGUI(QWidget):
             QSpinBox(self),
             max_value=100,
             default_value=1,
-            explanation="Enter the number of steps for the simulation.",
+            explanation="Enter the number of constant smearing steps for the simulation to run over. Currently the only itterative value is the constant smearing factor.",
         )
 
         self.stepSizeInput = self.addFieldWithExplanation(
@@ -336,8 +336,8 @@ class SimulationGUI(QWidget):
                     params.get("positSmearingFactor", 2.8)
                 )
                 self.saveToTreeInput.setChecked(params.get("saveToTree", False))
-                self.baseSmearPercentInput.setValue(
-                    params.get("baseSmearPercent", 0.168)
+                self.SmearFactorconstInput.setValue(
+                    params.get("SmearFactorconst", 0.168)
                 )
                 self.nStepsInput.setValue(params.get("nSteps", 25))
                 self.stepSizeInput.setValue(params.get("stepSize", 0.001))
@@ -365,7 +365,7 @@ class SimulationGUI(QWidget):
             "nclusPtCut": self.nclusPtCutInput.value(),
             "positSmearingFactor": self.positSmearingFactorInput.value(),
             "saveToTree": self.saveToTreeInput.isChecked(),
-            "baseSmearPercent": self.baseSmearPercentInput.value(),
+            "SmearFactorconst": self.SmearFactorconstInput.value(),
             "nSteps": self.nStepsInput.value(),
             "stepSize": self.stepSizeInput.value(),
             "outputFormat": self.outputFormatInput.currentText(),
@@ -408,7 +408,7 @@ class SimulationGUI(QWidget):
         nclusPtCut = self.nclusPtCutInput.value()
         positSmearingFactor = self.positSmearingFactorInput.value()
         saveToTree = "true" if self.saveToTreeInput.isChecked() else "false"
-        baseSmearPercent = self.baseSmearPercentInput.value()
+        SmearFactorconst = self.SmearFactorconstInput.value()
         nSteps = self.nStepsInput.value()
         stepSize = self.stepSizeInput.value()
         outputFormat = self.outputFormatInput.currentText().lower()
@@ -422,8 +422,8 @@ class SimulationGUI(QWidget):
             f"-clusterOverlapProb={clusterOverlapProb} -DeltaRcut_MAX={deltaRcutMax} "
             f"-pt1cut={pt1cut} -pt2cut={pt2cut} -comb_ptcut={combPtCut} -ptMaxCut={ptMaxCut} "
             f"-nclus_ptCut={nclusPtCut} -posit_smearingFactor={positSmearingFactor} "
-            f"-saveToTree={saveToTree} -smear_factor_basevalue={baseSmearPercent} "
-            f"-smear_factor_step={stepSize} -smear_factor_steps={nSteps}"
+            f"-saveToTree={saveToTree} -smear_factor_const={SmearFactorconst} "
+            f"-smear_factor_const_step_size={stepSize} -smear_factor_const_num_steps={nSteps}"
         )
 
         print("Running command:", command)
@@ -448,7 +448,7 @@ class SimulationGUI(QWidget):
             "NCLUS PT Cut (GeV)": self.nclusPtCutInput.value(),
             "Position Smearing Factor (mm)": self.positSmearingFactorInput.value(),
             "Save to Tree": self.saveToTreeInput.isChecked(),
-            "Base Smearing Percent": self.baseSmearPercentInput.value(),
+            "Base Constant Smearing (%)": self.SmearFactorconstInput.value(),
             "Number of Steps": self.nStepsInput.value(),
             "Step Size": self.stepSizeInput.value(),
             "Output Format": self.outputFormatInput.currentText(),
