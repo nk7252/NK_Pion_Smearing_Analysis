@@ -90,6 +90,7 @@ int main(int argc, char* argv[]){
     std::map<std::string, std::string> params;
     parseArguments(argc, argv, params, Debug);
 
+    // Override default parameters with command-line arguments
     if (params.find("particleType") != params.end()) particleType = params["particleType"];
     if (params.find("nParticles") != params.end()) nParticles = std::stoi(params["nParticles"]);
     if (params.find("PT_Max") != params.end()) PT_Max = std::stoi(params["PT_Max"]);
@@ -110,6 +111,17 @@ int main(int argc, char* argv[]){
     if (params.find("smear_factor_const") != params.end()) smear_factor_const = std::stof(params["smear_factor_const"]);
     if (params.find("smear_factor_const_step_size") != params.end()) smear_factor_const_step_size = std::stof(params["smear_factor_const_step_size"]);
     if (params.find("smear_factor_const_num_steps") != params.end()) smear_factor_const_num_steps = std::stoi(params["smear_factor_const_num_steps"]);
+    if (params.find("PT_Max_bin") != params.end()) PT_Max_bin = std::stoi(params["PT_Max_bin"]);
+    if (params.find("MassNBins") != params.end()) MassNBins = std::stoi(params["MassNBins"]);
+    if (params.find("binres") != params.end()) binres = std::stoi(params["binres"]);
+    if (params.find("n_bins") != params.end()) n_bins = std::stoi(params["n_bins"]);
+    if (params.find("Debug") != params.end()) Debug = (params["Debug"] == "true");
+    if (params.find("etCut") != params.end()) etCut = std::stof(params["etCut"]);
+    if (params.find("Apply_Eta_Cut") != params.end()) Apply_Eta_Cut = (params["Apply_Eta_Cut"] == "true");
+    if (params.find("eta_cut_val") != params.end()) eta_cut_val = std::stof(params["eta_cut_val"]);
+    if (params.find("smeared_lower_bin_limit") != params.end()) smeared_lower_bin_limit = std::stof(params["smeared_lower_bin_limit"]);
+    if (params.find("smeared_upper_bin_limit") != params.end()) smeared_upper_bin_limit = std::stof(params["smeared_upper_bin_limit"]);
+    if (params.find("smear_factor_sqrtE") != params.end()) smear_factor_sqrtE = std::stof(params["smear_factor_sqrtE"]);
 
     // Map weightMethodStr to weightMethod integer
     if (weightMethodStr == "EXP") {
@@ -147,6 +159,18 @@ int main(int argc, char* argv[]){
     std::cout << "smear_factor_const: " << smear_factor_const << std::endl;
     std::cout << "smear_factor_const_step_size: " << smear_factor_const_step_size << std::endl;
     std::cout << "smear_factor_const_num_steps: " << smear_factor_const_num_steps << std::endl;
+    std::cout << "PT_Max_bin: " << PT_Max_bin << std::endl;
+    std::cout << "MassNBins: " << MassNBins << std::endl;
+    std::cout << "binres: " << binres << std::endl;
+    std::cout << "n_bins: " << n_bins << std::endl;
+    std::cout << "Debug: " << std::boolalpha << Debug << std::endl;
+    std::cout << "etCut: " << etCut << std::endl;
+    std::cout << "Apply_Eta_Cut: " << std::boolalpha << Apply_Eta_Cut << std::endl;
+    std::cout << "eta_cut_val: " << eta_cut_val << std::endl;
+    std::cout << "smeared_lower_bin_limit: " << smeared_lower_bin_limit << std::endl;
+    std::cout << "smeared_upper_bin_limit: " << smeared_upper_bin_limit << std::endl;
+    std::cout << "smear_factor_sqrtE: " << smear_factor_sqrtE << std::endl;
+
 
     TStopwatch timer;
     timer.Start();

@@ -15,6 +15,8 @@ from PyQt5.QtWidgets import (
     QSpinBox,
     QFileDialog,
     QScrollArea,
+    QGridLayout,
+    QFrame,
 )
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
@@ -31,8 +33,8 @@ class SimulationGUI(QWidget):
         self.params_file = "guiconfig/last_params.json"
         self.counter_file = "guiconfig/run_counter.json"
         self.icon_file = "guiconfig/question_icon.png"
-        self.resize(550, 800)  # Set the initial size of the GUI
-        self.setMinimumSize(550, 800)  # Set the minimum size of the GUI
+        self.resize(1400, 800)  # Set the initial size of the GUI
+        self.setMinimumSize(500, 500)  # Set the minimum size of the GUI
         self.initUI()
 
     def initUI(self):
@@ -43,14 +45,37 @@ class SimulationGUI(QWidget):
         self.main_layout.addWidget(scroll_area)
 
         content_widget = QWidget()
-        self.layout = QVBoxLayout(content_widget)
+        self.content_layout = QHBoxLayout(content_widget)
 
         scroll_area.setWidget(content_widget)
 
+        # Create the columns using QVBoxLayout
+        self.column1 = QVBoxLayout()
+        self.column2 = QVBoxLayout()
+        self.column3 = QVBoxLayout()
+
+        # Create vertical lines (separators) between the columns
+        self.line1 = QFrame()
+        self.line1.setFrameShape(QFrame.VLine)
+        self.line1.setFrameShadow(QFrame.Sunken)
+        
+        self.line2 = QFrame()
+        self.line2.setFrameShape(QFrame.VLine)
+        self.line2.setFrameShadow(QFrame.Sunken)
+
+        # Add the columns and lines to the horizontal layout
+        self.content_layout.addLayout(self.column1)
+        self.content_layout.addWidget(self.line1)
+        self.content_layout.addLayout(self.column2)
+        self.content_layout.addWidget(self.line2)
+        self.content_layout.addLayout(self.column3)
+
+        # Add your fields to the first column
         self.particleTypeInput = self.addFieldWithExplanation(
             "Particle Type:",
             QComboBox(self),
             explanation="Select the type of particle to simulate.",
+            column=self.column1
         )
         self.particleTypeInput.addItems(["Pion", "Eta"])
 
@@ -60,6 +85,7 @@ class SimulationGUI(QWidget):
             max_value=100000000,
             default_value=8000000,
             explanation="Enter the number of particles to simulate.",
+            column=self.column1
         )
 
         self.ptMaxInput = self.addFieldWithExplanation(
@@ -69,6 +95,7 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=50,
             explanation="Enter the maximum transverse momentum (PT) in GeV.",
+            column=self.column1
         )
 
         self.ptMinInput = self.addFieldWithExplanation(
@@ -78,12 +105,14 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=0,
             explanation="Enter the minimum transverse momentum (PT) in GeV.",
+            column=self.column1
         )
 
         self.weightMethodInput = self.addFieldWithExplanation(
             "Weight Method:",
             QComboBox(self),
             explanation="Select the weighting method.",
+            column=self.column1
         )
         self.weightMethodInput.addItems(["EXP", "POWER", "WSHP", "HAGEDORN"])
 
@@ -92,6 +121,7 @@ class SimulationGUI(QWidget):
             QCheckBox(self),
             default_value=True,
             explanation="Check to apply asymmetric cut.",
+            column=self.column1
         )
 
         self.asymmCutValueInput = self.addFieldWithExplanation(
@@ -101,6 +131,7 @@ class SimulationGUI(QWidget):
             decimals=3,
             default_value=0.6,
             explanation="Enter the value for the asymmetric cut.",
+            column=self.column1
         )
 
         self.clusterOverlapInput = self.addFieldWithExplanation(
@@ -108,6 +139,7 @@ class SimulationGUI(QWidget):
             QCheckBox(self),
             default_value=True,
             explanation="Check to enable cluster overlap.",
+            column=self.column1
         )
 
         self.clusterOverlapProbInput = self.addFieldWithExplanation(
@@ -118,8 +150,10 @@ class SimulationGUI(QWidget):
             step=0.001,
             default_value=0.99,
             explanation="Enter the probability of NO cluster overlap. i.e. 0.99 means 1% overlap probability.",
+            column=self.column1
         )
 
+        # Add fields to the second column
         self.deltaRcutMaxInput = self.addFieldWithExplanation(
             "Delta R Cut Max:",
             QDoubleSpinBox(self),
@@ -127,6 +161,7 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=1.1,
             explanation="Enter the maximum delta R cut value.",
+            column=self.column2
         )
 
         self.pt1cutInput = self.addFieldWithExplanation(
@@ -136,6 +171,7 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=1.5,
             explanation="Enter the cut value for PT1 in GeV.",
+            column=self.column2
         )
 
         self.pt2cutInput = self.addFieldWithExplanation(
@@ -145,6 +181,7 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=1.5,
             explanation="Enter the cut value for PT2 in GeV.",
+            column=self.column2
         )
 
         self.combPtCutInput = self.addFieldWithExplanation(
@@ -154,6 +191,7 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=0,
             explanation="This value is multiplied by the sum of the photon cuts. If the pion has a pt smaller than that value, it is cut.",
+            column=self.column2
         )
 
         self.ptMaxCutInput = self.addFieldWithExplanation(
@@ -163,6 +201,110 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=50,
             explanation="Enter the maximum PT cut value in GeV.",
+            column=self.column2
+        )
+
+        self.PT_Max_binInput = self.addFieldWithExplanation(
+            "PT Max Bin:",
+            QSpinBox(self),
+            max_value=100,
+            default_value=20,
+            explanation="Specify the maximum PT bin.",
+            column=self.column2
+        )
+
+        self.MassNBinsInput = self.addFieldWithExplanation(
+            "Mass N Bins:",
+            QSpinBox(self),
+            max_value=5000,
+            default_value=1200,
+            explanation="Specify the number of mass bins.",
+            column=self.column2
+        )
+
+        self.binresInput = self.addFieldWithExplanation(
+            "Bin Resolution:",
+            QSpinBox(self),
+            max_value=100,
+            default_value=2,
+            explanation="Specify the pT bin resolution.",
+            column=self.column2
+        )
+
+        self.n_binsInput = self.addFieldWithExplanation(
+            "Number of Bins:",
+            QSpinBox(self),
+            max_value=1000,
+            default_value=80,
+            explanation="Specify the number of pT bins.",
+            column=self.column2
+        )
+
+        # Add fields to the third column
+        self.DebugInput = self.addFieldWithExplanation(
+            "Debug Mode:",
+            QCheckBox(self),
+            default_value=False,
+            explanation="Enable or disable debug mode.",
+            column=self.column3
+        )
+
+        self.etCutInput = self.addFieldWithExplanation(
+            "ET Cut (GeV):",
+            QDoubleSpinBox(self),
+            max_value=100,
+            decimals=2,
+            default_value=1.0,
+            explanation="Enter the ET cut value in GeV.",
+            column=self.column3
+        )
+
+        self.Apply_Eta_CutInput = self.addFieldWithExplanation(
+            "Apply Eta Cut:",
+            QCheckBox(self),
+            default_value=False,
+            explanation="Check to apply the eta cut.",
+            column=self.column3
+        )
+
+        self.eta_cut_valInput = self.addFieldWithExplanation(
+            "Eta Cut Value:",
+            QDoubleSpinBox(self),
+            max_value=10,
+            decimals=2,
+            default_value=0.6,
+            explanation="Enter the value for the eta cut.",
+            column=self.column3
+        )
+
+        self.smeared_lower_bin_limitInput = self.addFieldWithExplanation(
+            "Smeared Lower Bin Limit:",
+            QDoubleSpinBox(self),
+            max_value=10,
+            decimals=2,
+            default_value=0.0,
+            explanation="Specify the lower limit for (smeared) mass bins.",
+            column=self.column3
+        )
+
+        self.smeared_upper_bin_limitInput = self.addFieldWithExplanation(
+            "Smeared Upper Bin Limit:",
+            QDoubleSpinBox(self),
+            max_value=10,
+            decimals=2,
+            default_value=1.2,
+            explanation="Specify the upper limit for (smeared) mass bins.",
+            column=self.column3
+        )
+
+        self.smear_factor_sqrtEInput = self.addFieldWithExplanation(
+            "Smear Factor sqrt(E):",
+            QDoubleSpinBox(self),
+            max_value=1,
+            decimals=3,
+            default_value=0.154,
+            explanation="Specify the smearing factor A/sqrt(E).",
+            column=self.column3
         )
 
         self.nclusPtCutInput = self.addFieldWithExplanation(
@@ -172,6 +314,7 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=0.0,
             explanation="Enter the NCLUS PT cut value in GeV.",
+            column=self.column3
         )
 
         self.positSmearingFactorInput = self.addFieldWithExplanation(
@@ -181,6 +324,7 @@ class SimulationGUI(QWidget):
             decimals=2,
             default_value=2.8,
             explanation="Enter the position smearing factor.",
+            column=self.column3
         )
 
         self.saveToTreeInput = self.addFieldWithExplanation(
@@ -188,6 +332,7 @@ class SimulationGUI(QWidget):
             QCheckBox(self),
             default_value=False,
             explanation="Check to save the results to a tree.",
+            column=self.column3
         )
 
         self.SmearFactorconstInput = self.addFieldWithExplanation(
@@ -198,6 +343,7 @@ class SimulationGUI(QWidget):
             step=0.001,
             default_value=0.168,
             explanation="Enter the base constant smearing percent.",
+            column=self.column3
         )
 
         self.nStepsInput = self.addFieldWithExplanation(
@@ -206,6 +352,7 @@ class SimulationGUI(QWidget):
             max_value=100,
             default_value=1,
             explanation="Enter the number of constant smearing steps for the simulation to run over. Currently the only itterative value is the constant smearing factor.",
+            column=self.column3
         )
 
         self.stepSizeInput = self.addFieldWithExplanation(
@@ -216,18 +363,19 @@ class SimulationGUI(QWidget):
             step=0.0001,
             default_value=0.001,
             explanation="Enter the step size for the simulation.",
+            column=self.column3
         )
 
         self.outputFormatInput = self.addFieldWithExplanation(
             "Output Format:",
             QComboBox(self),
             explanation="Select the format for saving the output.",
+            column=self.column3
         )
         self.outputFormatInput.addItems(["PDF", "PNG", "JPEG"])
 
         self.runButton = QPushButton("Run Simulation", self)
-        self.runButton.clicked.connect(self.runSimulation)
-        self.layout.addWidget(self.runButton)
+        self.main_layout.addWidget(self.runButton)
 
         self.setStyleSheet(
             """
@@ -257,6 +405,7 @@ class SimulationGUI(QWidget):
         step=None,
         default_value=None,
         explanation=None,
+        column=None,  # New parameter to specify the column
     ):
         label = QLabel(label_text, self)
         explanation_label = QLabel(self)
@@ -280,7 +429,7 @@ class SimulationGUI(QWidget):
 
         container = QWidget()
         container.setLayout(layout)
-        self.layout.addWidget(container)
+        column.addWidget(container)  # Add the container to the specified column
 
         if isinstance(widget, QDoubleSpinBox):
             if max_value is not None:
@@ -303,7 +452,7 @@ class SimulationGUI(QWidget):
                 widget.setChecked(default_value)
 
         return widget
-
+    
     def loadParams(self):
         if not os.path.exists("guiconfig"):
             os.makedirs("guiconfig")
@@ -423,7 +572,14 @@ class SimulationGUI(QWidget):
             f"-pt1cut={pt1cut} -pt2cut={pt2cut} -comb_ptcut={combPtCut} -ptMaxCut={ptMaxCut} "
             f"-nclus_ptCut={nclusPtCut} -posit_smearingFactor={positSmearingFactor} "
             f"-saveToTree={saveToTree} -smear_factor_const={SmearFactorconst} "
-            f"-smear_factor_const_step_size={stepSize} -smear_factor_const_num_steps={nSteps}"
+            f"-smear_factor_const_step_size={stepSize} -smear_factor_const_num_steps={nSteps} "
+            f"-PT_Max_bin={self.PT_Max_binInput.value()} -MassNBins={self.MassNBinsInput.value()} "
+            f"-binres={self.binresInput.value()} -n_bins={self.n_binsInput.value()} "
+            f"-Debug={self.DebugInput.isChecked()} -etCut={self.etCutInput.value()} "
+            f"-Apply_Eta_Cut={self.Apply_Eta_CutInput.isChecked()} -eta_cut_val={self.eta_cut_valInput.value()} "
+            f"-smeared_lower_bin_limit={self.smeared_lower_bin_limitInput.value()} "
+            f"-smeared_upper_bin_limit={self.smeared_upper_bin_limitInput.value()} "
+            f"-smear_factor_sqrtE={self.smear_factor_sqrtEInput.value()} "
         )
 
         print("Running command:", command)
