@@ -376,6 +376,8 @@ class SimulationGUI(QWidget):
 
         self.runButton = QPushButton("Run Simulation", self)
         self.main_layout.addWidget(self.runButton)
+        # Connect the button click to the runSimulation method
+        self.runButton.clicked.connect(self.runSimulation)
 
         self.setStyleSheet(
             """
