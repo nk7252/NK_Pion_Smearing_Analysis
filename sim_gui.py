@@ -460,38 +460,39 @@ class SimulationGUI(QWidget):
         if os.path.exists(self.params_file):
             with open(self.params_file, "r") as file:
                 params = json.load(file)
-                self.particleTypeInput.setCurrentText(
-                    params.get("particleType", "Pion")
-                )
+                self.particleTypeInput.setCurrentText(params.get("particleType", "Pion"))
                 self.nParticlesInput.setValue(params.get("nParticles", 8000000))
                 self.ptMaxInput.setValue(params.get("ptMax", 50))
                 self.ptMinInput.setValue(params.get("ptMin", 0))
-                self.weightMethodInput.setCurrentText(
-                    params.get("weightMethod", "WSHP")
-                )
+                self.weightMethodInput.setCurrentText(params.get("weightMethod", "WSHP"))
                 self.asymmCutInput.setChecked(params.get("applyAsymmCut", True))
                 self.asymmCutValueInput.setValue(params.get("asymmCutValue", 0.6))
                 self.clusterOverlapInput.setChecked(params.get("clusterOverlap", True))
-                self.clusterOverlapProbInput.setValue(
-                    params.get("clusterOverlapProb", 0.99)
-                )
+                self.clusterOverlapProbInput.setValue(params.get("clusterOverlapProb", 0.99))
                 self.deltaRcutMaxInput.setValue(params.get("deltaRcutMax", 1.1))
                 self.pt1cutInput.setValue(params.get("pt1cut", 1.5))
                 self.pt2cutInput.setValue(params.get("pt2cut", 1.5))
                 self.combPtCutInput.setValue(params.get("combPtCut", 0))
                 self.ptMaxCutInput.setValue(params.get("ptMaxCut", 50))
+                self.PT_Max_binInput.setValue(params.get("PT_Max_bin", 20))
+                self.MassNBinsInput.setValue(params.get("MassNBins", 1200))
+                self.binresInput.setValue(params.get("binres", 2))
+                self.n_binsInput.setValue(params.get("n_bins", 80))
+                self.DebugInput.setChecked(params.get("Debug", False))
+                self.etCutInput.setValue(params.get("etCut", 1.0))
+                self.Apply_Eta_CutInput.setChecked(params.get("Apply_Eta_Cut", False))
+                self.eta_cut_valInput.setValue(params.get("eta_cut_val", 0.6))
+                self.smeared_lower_bin_limitInput.setValue(params.get("smeared_lower_bin_limit", 0.0))
+                self.smeared_upper_bin_limitInput.setValue(params.get("smeared_upper_bin_limit", 1.2))
+                self.smear_factor_sqrtEInput.setValue(params.get("smear_factor_sqrtE", 0.154))
                 self.nclusPtCutInput.setValue(params.get("nclusPtCut", 0.0))
-                self.positSmearingFactorInput.setValue(
-                    params.get("positSmearingFactor", 2.8)
-                )
+                self.positSmearingFactorInput.setValue(params.get("positSmearingFactor", 2.8))
                 self.saveToTreeInput.setChecked(params.get("saveToTree", False))
-                self.SmearFactorconstInput.setValue(
-                    params.get("SmearFactorconst", 0.168)
-                )
-                self.nStepsInput.setValue(params.get("nSteps", 25))
+                self.SmearFactorconstInput.setValue(params.get("SmearFactorconst", 0.168))
+                self.nStepsInput.setValue(params.get("nSteps", 1))
                 self.stepSizeInput.setValue(params.get("stepSize", 0.001))
                 self.outputFormatInput.setCurrentText(params.get("outputFormat", "PDF"))
-
+            
     def saveParams(self):
         if not os.path.exists("guiconfig"):
             os.makedirs("guiconfig")
@@ -511,6 +512,17 @@ class SimulationGUI(QWidget):
             "pt2cut": self.pt2cutInput.value(),
             "combPtCut": self.combPtCutInput.value(),
             "ptMaxCut": self.ptMaxCutInput.value(),
+            "PT_Max_bin": self.PT_Max_binInput.value(),
+            "MassNBins": self.MassNBinsInput.value(),
+            "binres": self.binresInput.value(),
+            "n_bins": self.n_binsInput.value(),
+            "Debug": self.DebugInput.isChecked(),
+            "etCut": self.etCutInput.value(),
+            "Apply_Eta_Cut": self.Apply_Eta_CutInput.isChecked(),
+            "eta_cut_val": self.eta_cut_valInput.value(),
+            "smeared_lower_bin_limit": self.smeared_lower_bin_limitInput.value(),
+            "smeared_upper_bin_limit": self.smeared_upper_bin_limitInput.value(),
+            "smear_factor_sqrtE": self.smear_factor_sqrtEInput.value(),
             "nclusPtCut": self.nclusPtCutInput.value(),
             "positSmearingFactor": self.positSmearingFactorInput.value(),
             "saveToTree": self.saveToTreeInput.isChecked(),
@@ -560,9 +572,20 @@ class SimulationGUI(QWidget):
         SmearFactorconst = self.SmearFactorconstInput.value()
         nSteps = self.nStepsInput.value()
         stepSize = self.stepSizeInput.value()
+        PT_Max_bin = self.PT_Max_binInput.value()
+        MassNBins = self.MassNBinsInput.value()
+        binres = self.binresInput.value()
+        n_bins = self.n_binsInput.value()
+        Debug = "true" if self.DebugInput.isChecked() else "false"
+        etCut = self.etCutInput.value()
+        Apply_Eta_Cut = "true" if self.Apply_Eta_CutInput.isChecked() else "false"
+        eta_cut_val = self.eta_cut_valInput.value()
+        smeared_lower_bin_limit = self.smeared_lower_bin_limitInput.value()
+        smeared_upper_bin_limit = self.smeared_upper_bin_limitInput.value()
+        smear_factor_sqrtE = self.smear_factor_sqrtEInput.value()
         outputFormat = self.outputFormatInput.currentText().lower()
 
-        script = "gen_res"
+        script = "gen_res"  # Replace this with your actual script name
 
         command = (
             f"./{script} -particleType={particleType} -nParticles={nParticles} -PT_Max={ptMax} "
@@ -573,41 +596,51 @@ class SimulationGUI(QWidget):
             f"-nclus_ptCut={nclusPtCut} -posit_smearingFactor={positSmearingFactor} "
             f"-saveToTree={saveToTree} -smear_factor_const={SmearFactorconst} "
             f"-smear_factor_const_step_size={stepSize} -smear_factor_const_num_steps={nSteps} "
-            f"-PT_Max_bin={self.PT_Max_binInput.value()} -MassNBins={self.MassNBinsInput.value()} "
-            f"-binres={self.binresInput.value()} -n_bins={self.n_binsInput.value()} "
-            f"-Debug={self.DebugInput.isChecked()} -etCut={self.etCutInput.value()} "
-            f"-Apply_Eta_Cut={self.Apply_Eta_CutInput.isChecked()} -eta_cut_val={self.eta_cut_valInput.value()} "
-            f"-smeared_lower_bin_limit={self.smeared_lower_bin_limitInput.value()} "
-            f"-smeared_upper_bin_limit={self.smeared_upper_bin_limitInput.value()} "
-            f"-smear_factor_sqrtE={self.smear_factor_sqrtEInput.value()} "
+            f"-PT_Max_bin={PT_Max_bin} -MassNBins={MassNBins} "
+            f"-binres={binres} -n_bins={n_bins} "
+            f"-Debug={Debug} -etCut={etCut} "
+            f"-Apply_Eta_Cut={Apply_Eta_Cut} -eta_cut_val={eta_cut_val} "
+            f"-smeared_lower_bin_limit={smeared_lower_bin_limit} "
+            f"-smeared_upper_bin_limit={smeared_upper_bin_limit} "
+            f"-smear_factor_sqrtE={smear_factor_sqrtE}"
         )
 
         print("Running command:", command)
-
         os.system(command)
 
         params = {
-            "Particle Type": self.particleTypeInput.currentText(),
-            "Number of Particles": self.nParticlesInput.value(),
-            "PT Max (GeV)": self.ptMaxInput.value(),
-            "PT Min (GeV)": self.ptMinInput.value(),
-            "Weight Method": self.weightMethodInput.currentText(),
-            "Apply Asymm Cut": self.asymmCutInput.isChecked(),
-            "Asymm Cut Value": self.asymmCutValueInput.value(),
-            "Cluster Overlap": self.clusterOverlapInput.isChecked(),
-            "Cluster Overlap Probability": self.clusterOverlapProbInput.value(),
-            "Delta R Cut Max": self.deltaRcutMaxInput.value(),
-            "PT1 Cut (GeV)": self.pt1cutInput.value(),
-            "PT2 Cut (GeV)": self.pt2cutInput.value(),
-            "Combined PT Cut factor": self.combPtCutInput.value(),
-            "PT Max Cut (GeV)": self.ptMaxCutInput.value(),
-            "NCLUS PT Cut (GeV)": self.nclusPtCutInput.value(),
-            "Position Smearing Factor (mm)": self.positSmearingFactorInput.value(),
-            "Save to Tree": self.saveToTreeInput.isChecked(),
-            "Base Constant Smearing (%)": self.SmearFactorconstInput.value(),
-            "Number of Steps": self.nStepsInput.value(),
-            "Step Size": self.stepSizeInput.value(),
-            "Output Format": self.outputFormatInput.currentText(),
+            "Particle Type": particleType,
+            "Number of Particles": nParticles,
+            "PT Max (GeV)": ptMax,
+            "PT Min (GeV)": ptMin,
+            "Weight Method": weightMethod,
+            "Apply Asymm Cut": applyAsymmCut,
+            "Asymm Cut Value": asymmCutValue,
+            "Cluster Overlap": clusterOverlap,
+            "Cluster Overlap Probability": clusterOverlapProb,
+            "Delta R Cut Max": deltaRcutMax,
+            "PT1 Cut (GeV)": pt1cut,
+            "PT2 Cut (GeV)": pt2cut,
+            "Combined PT Cut factor": combPtCut,
+            "PT Max Cut (GeV)": ptMaxCut,
+            "NCLUS PT Cut (GeV)": nclusPtCut,
+            "Position Smearing Factor (mm)": positSmearingFactor,
+            "Save to Tree": saveToTree,
+            "Base Constant Smearing (%)": SmearFactorconst,
+            "Number of Steps": nSteps,
+            "Step Size": stepSize,
+            "PT Max Bin": PT_Max_bin,
+            "Mass N Bins": MassNBins,
+            "Bin Resolution": binres,
+            "Number of Bins": n_bins,
+            "Debug": Debug,
+            "ET Cut (GeV)": etCut,
+            "Apply Eta Cut": Apply_Eta_Cut,
+            "Eta Cut Value": eta_cut_val,
+            "Smeared Lower Bin Limit": smeared_lower_bin_limit,
+            "Smeared Upper Bin Limit": smeared_upper_bin_limit,
+            "Smear Factor sqrt(E)": smear_factor_sqrtE,
+            "Output Format": outputFormat,
             "Run Number": run_number,
             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
