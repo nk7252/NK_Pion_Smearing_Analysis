@@ -570,11 +570,35 @@ TF1* ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max, const std:
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4& originalPhoton, int method, double randomE) {
     Pythia8::Vec4 newPhoton;
     Pythia8::Rndm rndm;
-    if (method == 2) {
+    if (method == 1) {
         newPhoton.e(randomE);
         newPhoton.px(originalPhoton.px() * (randomE / originalPhoton.e()));
         newPhoton.py(originalPhoton.py() * (randomE / originalPhoton.e()));
         newPhoton.pz(originalPhoton.pz() * (randomE / originalPhoton.e()));
+    }
+    if (method == 2) {
+        // Set the energy
+        newPhoton.e(randomE);
+
+        // Scale the momentum components according to the new energy
+        double scale = randomE / originalPhoton.e();
+        newPhoton.px(originalPhoton.px() * scale);
+        newPhoton.py(originalPhoton.py() * scale);
+        newPhoton.pz(originalPhoton.pz() * scale);
+
+        // Explicitly enforce the massless condition: E^2 = px^2 + py^2 + pz^2
+        double newE = sqrt(newPhoton.px() * newPhoton.px() +
+                           newPhoton.py() * newPhoton.py() +
+                           newPhoton.pz() * newPhoton.pz());
+        
+        // Adjust the energy to match the massless condition
+        newPhoton.e(newE);
+    }
+    // Check for any residual mass due to numerical issues
+    if (fabs(newPhoton.mCalc()) > 1e-6) 
+    { 
+        // Allowing a tiny tolerance for floating-point precision
+        std::cerr << "Error: Clustered photon has mass" << std::endl;
     }
     return newPhoton + originalPhoton;
 }

@@ -301,7 +301,7 @@ class SimulationGUI(QWidget):
             "Smear Factor sqrt(E):",
             QDoubleSpinBox(self),
             max_value=1,
-            decimals=3,
+            decimals=4,
             default_value=0.154,
             explanation="Specify the smearing factor A/sqrt(E).",
             column=self.column3

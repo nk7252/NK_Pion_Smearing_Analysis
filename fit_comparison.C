@@ -93,7 +93,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   bool var_bins = false;
   int rebinFactor = 1;
   bool dynamic_left = true;
-  int startBin = 9;
+  int startBin = 1;
   int endBin_global = -1;
   int projectionBins = 1;
   double scale_factor = 1.0;
@@ -116,7 +116,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   //bottom right (0.66, 0.2, 0.90, 0.4)
   TLegend *legend1 = new TLegend(0.2, 0.7, 0.44, 0.9);//pion mean
   TLegend *legend2 = new TLegend(0.2, 0.2, 0.44, 0.4);//pion width
-  TLegend *legend3 = new TLegend(0.2, 0.2, 0.44, 0.4);//eta mean
+  TLegend *legend3 = new TLegend(0.66, 0.7, 0.90, 0.9);//eta mean
   TLegend *legend4 = new TLegend(0.2, 0.7, 0.44, 0.9);//eta width
   TLegend *legend5 = new TLegend(0.2, 0.7, 0.44, 0.9);//mass ratio
   legend1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
@@ -157,6 +157,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   int MarkerColor = 1; 
   int filecounter = 0;
 
+  std::cout << "Unweighted files: " << unweightedFileNames.size() << std::endl;
   // Loop through unweighted files(pythia,data)
   for (size_t j = 0; j < unweightedFileNames.size(); ++j)
   {
@@ -228,18 +229,18 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // fitting background only
       TF1 *leftRightFit;
       leftRightFit = new TF1("leftRightFit", poly5BG, limits[0], limits[1], 6);
-      histF->Fit(leftRightFit, "RE");
+      histF->Fit(leftRightFit, "REQ");
 
       // Fit first Gaussian in the specified range
       TF1 *gausFit = new TF1("gausFit", "gaus", limits[2], limits[3]);
       gausFit->SetParLimits(1, 0.11, 0.19);
       gausFit->SetParLimits(2, 0.01, 0.25);
-      histF->Fit(gausFit, "RE");
+      histF->Fit(gausFit, "REQ");
       // Fit second Gaussian in the specified range
       TF1 *gausFit2 = new TF1("gausFit2", "gaus", limits[6], limits[7]);
       gausFit2->SetParLimits(1, 0.50, 0.64);
       gausFit2->SetParLimits(2, 0.03, 0.25);
-      histF->Fit(gausFit2, "RE");
+      histF->Fit(gausFit2, "REQ");
 
       // combined fit setup
       TF1 *combinedFit;
@@ -261,7 +262,21 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       // Fit the combined function
       combinedFit->SetNpx(1000);
-      histF->Fit(combinedFit, "RE");
+      histF->Fit(combinedFit, "REQ");
+
+      // Check if the fit returns NaN or Inf
+      bool fitFailed = false;
+      for (int i = 0; i < combinedFit->GetNpar(); i++) {
+          double param = combinedFit->GetParameter(i);
+          if (std::isnan(param) || std::isinf(param)) {
+              fitFailed = true;
+              break;
+          }
+      }
+      if (fitFailed) {
+          std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
+          continue;
+      }
 
       // Get the fit parameters
       double Pmean = combinedFit->GetParameter(1);
@@ -311,7 +326,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     MarkerStyle+=1;
     
     MarkerColor+=1;
-    if(MarkerColor==5) MarkerColor+=1;//avoid yellow
+    if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
     pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
     // pionmeanGraph[filecounter]->SetMarkerSize(1.5);
@@ -352,6 +367,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     filecounter++;
   }
   
+  std::cout << "SPMC files: " << SPMC_FileNames.size() << std::endl;
   // Loop through SPMC files
   for (size_t j = 0; j < SPMC_FileNames.size(); ++j)
   {
@@ -452,7 +468,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     MarkerStyle+=1;
     MarkerColor+=1;
-    if(MarkerColor==5) MarkerColor+=1;//avoid yellow
+    if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
     pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
     // pionmeanGraph[filecounter]->SetMarkerSize(1.5);
@@ -474,6 +490,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     filecounter++;
   }
 
+  std::cout << "FastMC files: " << FastMC_FileNames.size() << std::endl;
   // Repeat the same for FastMC files
   //*
   for (size_t j = 0; j < FastMC_FileNames.size(); ++j)
@@ -551,7 +568,21 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gausFit->SetParLimits(1, 0.11, 0.19);
       gausFit->SetParLimits(2, 0.01, 0.25);
       gausFit->SetNpx(1000);
-      histF->Fit(gausFit, "RE");
+      histF->Fit(gausFit, "REQ");
+
+      // Check if the fit returns NaN or Inf
+      bool fitFailed = false;
+      for (int i = 0; i < gausFit->GetNpar(); i++) {
+          double param = gausFit->GetParameter(i);
+          if (std::isnan(param) || std::isinf(param)) {
+              fitFailed = true;
+              break;
+          }
+      }
+      if (fitFailed) {
+          std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
+          continue;
+      }
 
       // Get the fit parameters
       double Pmean = gausFit->GetParameter(1);
@@ -578,7 +609,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     MarkerStyle+=1;
     MarkerColor+=1;
-    if(MarkerColor==5) MarkerColor+=1;//avoid yellow
+    if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
     pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
     // pionmeanGraph[j]->SetMarkerSize(1.5);
@@ -651,8 +682,21 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gausFit->SetParLimits(1, 0.50, 0.64);
       gausFit->SetParLimits(2, 0.03, 0.25);
       gausFit->SetNpx(1000);
-      histF->Fit(gausFit, "RE");
+      histF->Fit(gausFit, "REQ");
 
+      // Check if the fit returns NaN or Inf
+      bool fitFailed = false;
+      for (int i = 0; i < gausFit->GetNpar(); i++) {
+          double param = gausFit->GetParameter(i);
+          if (std::isnan(param) || std::isinf(param)) {
+              fitFailed = true;
+              break;
+          }
+      }
+      if (fitFailed) {
+          std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
+          continue;
+      }
       double Emean = gausFit->GetParameter(1);
       double Esigma = gausFit->GetParameter(2);
       double EmeanErr = gausFit->GetParError(1);
@@ -683,7 +727,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     MarkerStyle+=1;
     MarkerColor+=1;
-    if(MarkerColor==5) MarkerColor+=1;//avoid yellow
+    if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
     etameanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     etameanGraph[filecounter]->SetMarkerColor(MarkerColor);  
     // etameanGraph[j]->SetMarkerSize(1.5);
@@ -714,7 +758,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     filecounter++;
   }
   //*/
-
+  
+  std::cout << "Run2024 files: " << Run2024_FileNames.size() << std::endl;
  //data, pre made graphs
   if(Run2024_FileNames.size()>0){
     for (size_t j = 0; j < Run2024_FileNames.size(); ++j){
@@ -774,7 +819,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       
       MarkerStyle+=1;
       MarkerColor+=1;
-      if(MarkerColor==5) MarkerColor+=1;//avoid yellow
+      if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
       //with all off will default to sphenix style
       //newPionMean->SetMarkerStyle(MarkerStyle);
       //newPionMean->SetMarkerColor(MarkerColor);
@@ -803,6 +848,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
   // draw multigraphs
   TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
+  //gPad->SetFillColor(33);
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
   gPionMeans->GetXaxis()->SetLimits(0.01, 10);
   gPionMeans->SetMinimum(0.135);
@@ -821,6 +867,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // gPad->Update();
   // c1->SaveAs(Form("%s/%
   TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
+  //gPad->SetFillColor(33);
   gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
   gPionWidths->GetXaxis()->SetLimits(0.01, 10);
   gPionWidths->SetMinimum(0.05);
@@ -832,6 +879,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   c2->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
+  //gPad->SetFillColor(33);
   gEtaMeans->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
   gEtaMeans->GetXaxis()->SetLimits(0.01, 17);
   gEtaMeans->SetMinimum(0.45);
@@ -844,6 +892,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   c3->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
+  //gPad->SetFillColor(33);
   gEtaWidths->SetTitle("Eta: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Eta Relative Width");
   gEtaWidths->GetXaxis()->SetLimits(0.01, 17);
   gEtaWidths->SetMinimum(0.01);
@@ -856,6 +905,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   c4->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   TCanvas *c5 = new TCanvas("c5", "Canvas5", 800, 600);
+  //gPad->SetFillColor(33);
   gMassRatios->SetTitle("Mass Ratios: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion/Eta Mass Ratio");
   gMassRatios->GetXaxis()->SetLimits(0.01, 10);
   gMassRatios->SetMinimum(0.24);
@@ -864,7 +914,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   legend5->SetTextAlign(32);
   legend5->SetTextSize(0.02);
   legend5->Draw();
-  c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
+  //c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
   // Close the PDF file
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
@@ -881,21 +931,35 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 void fit_comparison()
 {
   //-----------------------------------------
-  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V33.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V31.root"};
-  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_2d", "h_InvMass_smear_2d_100"};
-  std::vector<std::string> unweighted_legendNames = {"Pythia","Pythia_wvfm","Pythia_wvfm+10%smr"};
+  std::vector<std::string> unweighted_fileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V33.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V34.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V36.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root"};
+  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_2d", "h_InvMass_smear_2d_100", "h_InvMass_2d", "h_InvMass_smear_2d_100"};
+  std::vector<std::string> unweighted_legendNames = {"Pythia","Pythia_wvfm_EC","Pythia_wvfm_EC+10%smr","Pythia_wvfm_E","Pythia_wvfm_E+10%smr"};
 
   //-----------------------------------------
-  std::vector<std::string> SPMC_FileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root"};
-  ////,"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"
+  std::vector<std::string> SPMC_FileNames = {};
+  //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root"
+  //,"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"
   std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_0", "h_InvMass_smear_weighted_2d_65",};
   std::vector<std::string> SPMC_legend = {"SPi0+0sm","SPi0+6.5sm"};
 
   //-----------------------------------------
-  std::vector<std::string> FastMC_fileNames = {"pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root", "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root", "pioncode/rootfiles/PionFastMC_0.000000_sqrte_0.000000_const.root"};//
-  std::vector<std::string> FastMC_histNames = {"h101_2", "h101_2", "h101_2"};
-  std::vector<std::string> FastMC_legendNames = {"FastMC: 15.4%/#sqrt{E} #oplus 18%", "FastMC: 15.4%/#sqrt{E} #oplus 12%","FastMC: no smearing"};//"PionFastMC", "EtaFastMC"
-  std::vector<int> FastMC_FileTypes ={0,1,0};//0 for pion, 1 for eta
+  std::vector<std::string> FastMC_fileNames = {
+    "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root",
+    "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root",
+    "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.130000_const.root",
+    "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.150000_const.root",
+    "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.180000_const.root",
+    "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.000000_const.root"
+    };//
+  std::vector<std::string> FastMC_histNames = {"h101_2", "h101_2", "h101_2", "h101_2", "h101_2","h18_2"};
+  std::vector<std::string> FastMC_legendNames = {
+    "FastMC: 15.4%/#sqrt{E} #oplus 18%",
+    "FastMC: 15.4%/#sqrt{E} #oplus 12%",
+    "FastMC: 15.4%/#sqrt{E} #oplus 13%",
+    "FastMC: 15.4%/#sqrt{E} #oplus 15%",
+    "FastMC: 15.4%/#sqrt{E} #oplus 18%",
+    "FastMC_h18: 15.4%/#sqrt{E} #oplus 0%"};//"PionFastMC", "EtaFastMC"
+  std::vector<int> FastMC_FileTypes ={0,1,0,1,1,0};//0 for pion, 1 for eta
 
   //-----------------------------------------
   std::vector<std::string> Run2024_fileNames = {"pioncode/rootfiles/meson_graphs.root"};
