@@ -871,6 +871,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
   gPionWidths->GetXaxis()->SetLimits(0.01, 10);
   gPionWidths->SetMinimum(0.05);
+  gPionWidths->SetMaximum(0.2);
   gPionWidths->Draw("APE");
   legend2->SetFillStyle(0);
   legend2->SetTextAlign(32);
@@ -949,16 +950,16 @@ void fit_comparison()
     "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.130000_const.root",
     "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.150000_const.root",
     "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.180000_const.root",
-    "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.000000_const.root"
+    "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.000000_const.root"
     };//
-  std::vector<std::string> FastMC_histNames = {"h101_2", "h101_2", "h101_2", "h101_2", "h101_2","h18_2"};
+  std::vector<std::string> FastMC_histNames = {"h101_2", "h101_2", "h101_2", "h101_2", "h101_2","h101_2"};
   std::vector<std::string> FastMC_legendNames = {
     "FastMC: 15.4%/#sqrt{E} #oplus 18%",
     "FastMC: 15.4%/#sqrt{E} #oplus 12%",
     "FastMC: 15.4%/#sqrt{E} #oplus 13%",
     "FastMC: 15.4%/#sqrt{E} #oplus 15%",
     "FastMC: 15.4%/#sqrt{E} #oplus 18%",
-    "FastMC_h18: 15.4%/#sqrt{E} #oplus 0%"};//"PionFastMC", "EtaFastMC"
+    "FastMC_h18: 15.4%/#sqrt{E}"};//"PionFastMC", "EtaFastMC"
   std::vector<int> FastMC_FileTypes ={0,1,0,1,1,0};//0 for pion, 1 for eta
 
   //-----------------------------------------
