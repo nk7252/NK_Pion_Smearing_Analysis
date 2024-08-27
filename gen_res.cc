@@ -30,7 +30,7 @@ bool eTCut(const Pythia8::Vec4 &particle, float etCut);
 bool EtaCut(const Pythia8::Vec4 &particle, float EtaCutValue, bool ApplyEtaCut, bool debug);
 bool AsymmCutcheck(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float AsymmCutoff, bool asymcutbool);
 void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &params, bool debug);
-double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2);
+double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bool debug);
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug);
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug);
 
@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
                     gamma_lorentz[1] = pythia.event[Gamma_daughters[1]].p();
                     gamma_lorentz[2] = gamma_lorentz[0] + gamma_lorentz[1];
                     double inv_mass = gamma_lorentz[2].mCalc();
-                    double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
+                    double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1],Debug);
 
                     double scale_factor1 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[0].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
                     double scale_factor2 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[1].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
@@ -571,7 +571,7 @@ int main(int argc, char *argv[])
                             h101_dr[p]->Fill(DeltaR(gamma_All_Cuts[0], gamma_All_Cuts[1]), inv_yield[p]);
                         }
                         // fill photon distance hist
-                        double photon_dist_All_Cuts = DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1]);
+                        double photon_dist_All_Cuts = DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1],Debug);
                         h101_photon_dist_1d[p]->Fill(photon_dist_All_Cuts, inv_yield[p]);
                         h101_photon_dist[p]->Fill(gamma_All_Cuts[2].pT(), photon_dist_All_Cuts, inv_yield[p]);
                         // clustering algorithm check
@@ -855,7 +855,7 @@ void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &
 }
 
 // Function to calculate the Distance between two particles on the projected surface of the emcal
-double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2)
+double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bool debug)
 {
     // Calculate the projected distance between the two photons
     // photon 1
@@ -869,7 +869,7 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2)
     double posy2 = 900 * photon2.py() / photon2.e();
     double posz2 = photon2.pz() / photon2.e();
 
-    if(posz1 - posz2<0.1)
+    if(Debug && posz1 - posz2<0.1)
     {
         std::cerr << "Warning: Photons are too close in z direction: " << posz1 - posz2 << std::endl;
     }
@@ -882,7 +882,7 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2)
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug)
 {
     double tolerance = 1e-6;
-    double distance = DetectorPhotonDistance(photon1, photon2);
+    double distance = DetectorPhotonDistance(photon1, photon2,Debug);
 
     double totalEnergy = photon1.e() + photon2.e();
     double avgEnergy = totalEnergy / 2.0;
@@ -925,7 +925,7 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug)
 {
     double tolerance = 1e-6;
-    double distance = DetectorPhotonDistance(photon1, photon2);
+    double distance = DetectorPhotonDistance(photon1, photon2,Debug);
 
     double totalEnergy = photon1.e() + photon2.e();
     double shiftFactor = exp(-distance / 0.2); // Example factor based on distance
