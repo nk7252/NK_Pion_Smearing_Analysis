@@ -184,7 +184,8 @@ int main(int argc, char *argv[])
     }
 
     // Debugging: Print all parameters after parsing
-    std::cout << "\n Parameters after parsing: \n"<< std::endl;
+    std::cout << "\n Parameters after parsing: \n"
+              << std::endl;
     std::cout << "particleType: " << particleType << std::endl;
     std::cout << "nParticles: " << nParticles << std::endl;
     std::cout << "PT_Max: " << PT_Max << std::endl;
@@ -288,27 +289,31 @@ int main(int argc, char *argv[])
             hpionpt[p] = new TH1D(Form("hpionpt_%i", p), Form("Pt no smear + no weight:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
             htruthphotondistance_1d[p] = new TH1F(Form("htruthphotondistance_1d_%i", p), Form("Photon distance distribution, weighted:%s", WeightNames[p].c_str()), 10000, 0, 10000);
             htruthphotondistance[p] = new TH2F(Form("htruthphotondistance_%i", p), Form("pT vs Photon distance distribution, weighted:%s", WeightNames[p].c_str()), 10000, 0, 10000, 10000, 0, 10000);
-            h2[p] = new TH1D(Form("h2_%i", p), Form("Photon Pt:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
-            h3[p] = new TH1D(Form("h3_%i", p), Form("PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
-            h12[p] = new TH1F(Form("h12_%i", p), Form("Smeared PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
-            h20[p] = new TH1F(Form("h20_%i", p), Form("Smeared Photon pT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
-            h21[p] = new TH1F(Form("h21_%i", p), Form("Photon pT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
-            h18[p] = new TH2F(Form("h18_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h18_1d[p] = new TH1F(Form("h18_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h27[p] = new TH2F(Form("h27_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. cluster:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h28[p] = new TH2F(Form("h28_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. cluster and Asymm Cut:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h29[p] = new TH2F(Form("h29_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Asymm Cut:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h28_v2[p] = new TH2F(Form("h28_v2_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Cluster+Asymm+pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h29_v2[p] = new TH2F(Form("h29_v2_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Asymm+Pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h30[p] = new TH2F(Form("h30_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
-            h30_1d[p] = new TH1F(Form("h30_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
-            h31[p] = new TH2F(Form("h31_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts+pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
-            h31_1d[p] = new TH1F(Form("h31_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts+pos res:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
-            h31_pionspectrum[p] = new TH1F(Form("h31_ps_%i", p), Form("Cuts+pos res, Smeared PT, weighted:%s", WeightNames[p].c_str()), MassNBins, PT_Min, PT_Max_bin);
-            h34[p] = new TH2F(Form("h34_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Position Smearing:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h34_1d[p] = new TH1F(Form("h34_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Position Smearing:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h35[p] = new TH2F(Form("h35_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts+cluster:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
-            h35_1d[p] = new TH1F(Form("h35_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts+cluster:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
+            if (Debug)
+            {
+                h2[p] = new TH1D(Form("h2_%i", p), Form("Photon Pt:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+                h3[p] = new TH1D(Form("h3_%i", p), Form("PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+                h12[p] = new TH1F(Form("h12_%i", p), Form("Smeared PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+                h20[p] = new TH1F(Form("h20_%i", p), Form("Smeared Photon pT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+                h21[p] = new TH1F(Form("h21_%i", p), Form("Photon pT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+                h18[p] = new TH2F(Form("h18_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h18_1d[p] = new TH1F(Form("h18_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h27[p] = new TH2F(Form("h27_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. cluster:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h28[p] = new TH2F(Form("h28_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. cluster and Asymm Cut:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h29[p] = new TH2F(Form("h29_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Asymm Cut:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h28_v2[p] = new TH2F(Form("h28_v2_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Cluster+Asymm+pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h29_v2[p] = new TH2F(Form("h29_v2_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Asymm+Pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h30[p] = new TH2F(Form("h30_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
+                h30_1d[p] = new TH1F(Form("h30_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts, no pos.res no occupancy:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
+                h31[p] = new TH2F(Form("h31_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts+pos res:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
+                h31_1d[p] = new TH1F(Form("h31_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts+pos res:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
+                h31_pionspectrum[p] = new TH1F(Form("h31_ps_%i", p), Form("Cuts+pos res, Smeared PT, weighted:%s", WeightNames[p].c_str()), MassNBins, PT_Min, PT_Max_bin);
+                h34[p] = new TH2F(Form("h34_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Position Smearing:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h34_1d[p] = new TH1F(Form("h34_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Position Smearing:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h35[p] = new TH2F(Form("h35_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Blair's cuts+cluster:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, 0, smeared_upper_bin_limit);
+                h35_1d[p] = new TH1F(Form("h35_1d_%i", p), Form("Smeared Inv Mass, weighted. Blair's cuts+cluster:%s", WeightNames[p].c_str()), MassNBins, 0, smeared_upper_bin_limit);
+            }
+
             h100[p] = new TH2F(Form("h100_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h100_1d[p] = new TH1F(Form("h100_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h101[p] = new TH2F(Form("h101_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
@@ -482,70 +487,73 @@ int main(int argc, char *argv[])
                     gamma_position_smear[2] = gamma_position_smear[0] + gamma_position_smear[1];
 
                     double inv_mass_smeared = gamma_smeared[2].mCalc();
-                    h4->Fill(Pt);
-                    h6->Fill(inv_mass);
-                    h8->Fill(inv_mass_smeared);
-                    h9->Fill(gamma_smeared[2].pT(), inv_mass_smeared);
-                    h10->Fill(gamma_smeared[2].pT());
-                    h17->Fill(gamma_lorentz[0].pT());
-                    h17->Fill(gamma_lorentz[1].pT());
-                    h16->Fill(gamma_smeared[0].pT());
-                    h16->Fill(gamma_smeared[1].pT());
+                    if (Debug)
+                    {
+                        h4->Fill(Pt);
+                        h6->Fill(inv_mass);
+                        h8->Fill(inv_mass_smeared);
+                        h9->Fill(gamma_smeared[2].pT(), inv_mass_smeared);
+                        h10->Fill(gamma_smeared[2].pT());
+                        h17->Fill(gamma_lorentz[0].pT());
+                        h17->Fill(gamma_lorentz[1].pT());
+                        h16->Fill(gamma_smeared[0].pT());
+                        h16->Fill(gamma_smeared[1].pT());
+                    }
 
                     for (int p = 0; p < WeightNames.size(); p++)
                     {
-                        //double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
-                        //htruthphotondistance_1d[p]->Fill(truthphotondistance, inv_yield[p]);
-                        //htruthphotondistance[p]->Fill(gamma_smeared[2].pT(), truthphotondistance, inv_yield[p]);
+                        // double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
+                        // htruthphotondistance_1d[p]->Fill(truthphotondistance, inv_yield[p]);
+                        // htruthphotondistance[p]->Fill(gamma_smeared[2].pT(), truthphotondistance, inv_yield[p]);
+                        if (Debug)
+                        {
+                            h20[p]->Fill(gamma_smeared[0].pT(), inv_yield[p]);
+                            h20[p]->Fill(gamma_smeared[1].pT(), inv_yield[p]);
+                            h21[p]->Fill(gamma_lorentz[0].pT(), inv_yield[p]);
+                            h21[p]->Fill(gamma_lorentz[1].pT(), inv_yield[p]);
+                            h3[p]->Fill(Pt, inv_yield[p]);
+                            h12[p]->Fill(gamma_smeared[2].pT(), inv_yield[p]);
+                            h18[p]->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield[p]);
+                            h18_1d[p]->Fill(inv_mass_smeared, inv_yield[p]);
+                            h27[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield[p]);
+                            h34[p]->Fill(gamma_position_smear[2].pT(), gamma_position_smear[2].mCalc(), inv_yield[p]);
+                            h34_1d[p]->Fill(gamma_position_smear[2].mCalc(), inv_yield[p]);
+                            if (AsymmCutcheck(gamma_smeared[0], gamma_smeared[1], asymmCutValue, applyAsymmCut) == true)
+                            {
+                                h29[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);
+                            }
+                            if (AsymmCutcheck(gamma_cluster_asymm[0], gamma_cluster_asymm[1], asymmCutValue, applyAsymmCut) == true)
+                            {
+                                h28[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield[p]);
+                            }
+                            if (AsymmCutcheck(gamma_position_smear[0], gamma_position_smear[1], asymmCutValue, applyAsymmCut) == true)
+                            {
+                                h29_v2[p]->Fill(gamma_position_smear[2].pT(), gamma_position_smear[2].mCalc(), inv_yield[p]);
+                            }
+                            if (AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true)
+                            {
+                                h28_v2[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+                            }
+                            if (DeltaRcut(gamma_smeared[0], gamma_smeared[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_smeared[0], gamma_smeared[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_smeared[0], pt1cut) == true && pTCut(gamma_smeared[1], pt2cut) == true && nclus_ptCut < gamma_smeared[0].pT() && gamma_smeared[0].pT() < ptMaxCut && nclus_ptCut < gamma_smeared[1].pT() && gamma_smeared[1].pT() < ptMaxCut && gamma_smeared[2].pT() > comb_ptcut * (pt1cut + pt2cut))
+                            {
+                                h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);
+                                h30_1d[p]->Fill(gamma_smeared[2].mCalc(), inv_yield[p]);
+                            }
 
-                        h20[p]->Fill(gamma_smeared[0].pT(), inv_yield[p]);
-                        h20[p]->Fill(gamma_smeared[1].pT(), inv_yield[p]);
-                        h21[p]->Fill(gamma_lorentz[0].pT(), inv_yield[p]);
-                        h21[p]->Fill(gamma_lorentz[1].pT(), inv_yield[p]);
-                        h3[p]->Fill(Pt, inv_yield[p]);
-                        h12[p]->Fill(gamma_smeared[2].pT(), inv_yield[p]);
-                        h18[p]->Fill(gamma_smeared[2].pT(), inv_mass_smeared, inv_yield[p]);
-                        h18_1d[p]->Fill(inv_mass_smeared, inv_yield[p]);
-                        h27[p]->Fill(gamma_cluster[2].pT(), gamma_cluster[2].mCalc(), inv_yield[p]);
-                        h34[p]->Fill(gamma_position_smear[2].pT(), gamma_position_smear[2].mCalc(), inv_yield[p]);
-                        h34_1d[p]->Fill(gamma_position_smear[2].mCalc(), inv_yield[p]);
+                            if (DeltaRcut(gamma_Blair_position[0], gamma_Blair_position[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_Blair_position[0], gamma_Blair_position[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_Blair_position[0], pt1cut) == true && pTCut(gamma_Blair_position[1], pt2cut) == true && nclus_ptCut < gamma_Blair_position[0].pT() && gamma_Blair_position[0].pT() < ptMaxCut && nclus_ptCut < gamma_Blair_position[1].pT() && gamma_Blair_position[1].pT() < ptMaxCut && gamma_Blair_position[2].pT() > comb_ptcut * (pt1cut + pt2cut))
+                            {
+                                h31[p]->Fill(gamma_Blair_position[2].pT(), gamma_Blair_position[2].mCalc(), inv_yield[p]);
+                                h31_1d[p]->Fill(gamma_Blair_position[2].mCalc(), inv_yield[p]);
+                                h31_pionspectrum[p]->Fill(gamma_Blair_position[2].pT(), inv_yield[p]);
+                                hpionpt[p]->Fill(gamma_lorentz[2].pT());
+                                hInvMass_Cutson->Fill(gamma_Blair_position[2].mCalc());
+                            }
 
-                        if (AsymmCutcheck(gamma_smeared[0], gamma_smeared[1], asymmCutValue, applyAsymmCut) == true)
-                        {
-                            h29[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);
-                        }
-                        if (AsymmCutcheck(gamma_cluster_asymm[0], gamma_cluster_asymm[1], asymmCutValue, applyAsymmCut) == true)
-                        {
-                            h28[p]->Fill(gamma_cluster_asymm[2].pT(), gamma_cluster_asymm[2].mCalc(), inv_yield[p]);
-                        }
-                        if (AsymmCutcheck(gamma_position_smear[0], gamma_position_smear[1], asymmCutValue, applyAsymmCut) == true)
-                        {
-                            h29_v2[p]->Fill(gamma_position_smear[2].pT(), gamma_position_smear[2].mCalc(), inv_yield[p]);
-                        }
-                        if (AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true)
-                        {
-                            h28_v2[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
-                        }
-
-                        if (DeltaRcut(gamma_smeared[0], gamma_smeared[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_smeared[0], gamma_smeared[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_smeared[0], pt1cut) == true && pTCut(gamma_smeared[1], pt2cut) == true && nclus_ptCut < gamma_smeared[0].pT() && gamma_smeared[0].pT() < ptMaxCut && nclus_ptCut < gamma_smeared[1].pT() && gamma_smeared[1].pT() < ptMaxCut && gamma_smeared[2].pT() > comb_ptcut * (pt1cut + pt2cut))
-                        {
-                            h30[p]->Fill(gamma_smeared[2].pT(), gamma_smeared[2].mCalc(), inv_yield[p]);
-                            h30_1d[p]->Fill(gamma_smeared[2].mCalc(), inv_yield[p]);
-                        }
-
-                        if (DeltaRcut(gamma_Blair_position[0], gamma_Blair_position[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_Blair_position[0], gamma_Blair_position[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_Blair_position[0], pt1cut) == true && pTCut(gamma_Blair_position[1], pt2cut) == true && nclus_ptCut < gamma_Blair_position[0].pT() && gamma_Blair_position[0].pT() < ptMaxCut && nclus_ptCut < gamma_Blair_position[1].pT() && gamma_Blair_position[1].pT() < ptMaxCut && gamma_Blair_position[2].pT() > comb_ptcut * (pt1cut + pt2cut))
-                        {
-                            h31[p]->Fill(gamma_Blair_position[2].pT(), gamma_Blair_position[2].mCalc(), inv_yield[p]);
-                            h31_1d[p]->Fill(gamma_Blair_position[2].mCalc(), inv_yield[p]);
-                            h31_pionspectrum[p]->Fill(gamma_Blair_position[2].pT(), inv_yield[p]);
-                            hpionpt[p]->Fill(gamma_lorentz[2].pT());
-                            hInvMass_Cutson->Fill(gamma_Blair_position[2].mCalc());
-                        }
-
-                        if (DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_Blair_Cuts[0], pt1cut) == true && pTCut(gamma_Blair_Cuts[1], pt2cut) == true && nclus_ptCut < gamma_Blair_Cuts[0].pT() && gamma_Blair_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_Blair_Cuts[1].pT() && gamma_Blair_Cuts[1].pT() < ptMaxCut && gamma_Blair_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
-                        {
-                            h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
-                            h35_1d[p]->Fill(gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
+                            if (DeltaRcut(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_Blair_Cuts[0], gamma_Blair_Cuts[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_Blair_Cuts[0], pt1cut) == true && pTCut(gamma_Blair_Cuts[1], pt2cut) == true && nclus_ptCut < gamma_Blair_Cuts[0].pT() && gamma_Blair_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_Blair_Cuts[1].pT() && gamma_Blair_Cuts[1].pT() < ptMaxCut && gamma_Blair_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
+                            {
+                                h35[p]->Fill(gamma_Blair_Cuts[2].pT(), gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
+                                h35_1d[p]->Fill(gamma_Blair_Cuts[2].mCalc(), inv_yield[p]);
+                            }
                         }
 
                         if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_All_Cuts[0], pt1cut) == true && pTCut(gamma_All_Cuts[1], pt2cut) == true && nclus_ptCut < gamma_All_Cuts[0].pT() && gamma_All_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_All_Cuts[1].pT() && gamma_All_Cuts[1].pT() < ptMaxCut && gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
@@ -554,7 +562,7 @@ int main(int argc, char *argv[])
                             h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                         }
 
-                        if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && eTCut(gamma_All_Cuts[0], etCut) == true && eTCut(gamma_All_Cuts[1], etCut) == true && nclus_ptCut < gamma_All_Cuts[0].pT() &&gamma_All_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_All_Cuts[1].pT() && gamma_All_Cuts[1].pT() < ptMaxCut && gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
+                        if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && eTCut(gamma_All_Cuts[0], etCut) == true && eTCut(gamma_All_Cuts[1], etCut) == true && nclus_ptCut < gamma_All_Cuts[0].pT() && gamma_All_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_All_Cuts[1].pT() && gamma_All_Cuts[1].pT() < ptMaxCut && gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
                         {
                             h101[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                             h101_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
@@ -598,18 +606,21 @@ int main(int argc, char *argv[])
                         }
                     }
 
-                    try
+                    if (Debug)
                     {
-                        mass_pt_map[floor(Pt) + 1].push_back(inv_mass_smeared);
-                    }
-                    catch (...)
-                    {
-                        mass_pt_map.insert({floor(Pt) + 1, std::vector<double>()});
-                    }
+                        try
+                        {
+                            mass_pt_map[floor(Pt) + 1].push_back(inv_mass_smeared);
+                        }
+                        catch (...)
+                        {
+                            mass_pt_map.insert({floor(Pt) + 1, std::vector<double>()});
+                        }
 
-                    for (int j : Gamma_daughters)
-                    {
-                        h5->Fill(pythia.event[j].pT());
+                        for (int j : Gamma_daughters)
+                        {
+                            h5->Fill(pythia.event[j].pT());
+                        }
                     }
                 }
             }
@@ -884,7 +895,7 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
     photon2.py(photon2.py() * scale2);
     photon2.pz(photon2.pz() * scale2);
 
-    if(debug)
+    if (debug)
     {
         if (std::abs(photon1.mCalc()) > tolerance)
         {
@@ -928,7 +939,7 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::
     photon2.py(photon2.py() * scale2);
     photon2.pz(photon2.pz() * scale2);
 
-    if(debug)
+    if (debug)
     {
         if (std::abs(photon1.mCalc()) > tolerance)
         {
