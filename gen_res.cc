@@ -30,7 +30,6 @@ bool eTCut(const Pythia8::Vec4 &particle, float etCut);
 bool EtaCut(const Pythia8::Vec4 &particle, float EtaCutValue, bool ApplyEtaCut, bool debug);
 bool AsymmCutcheck(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float AsymmCutoff, bool asymcutbool);
 void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &params, bool debug);
-float Detector_ProjDist(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2);
 double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2);
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug);
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug);
@@ -443,6 +442,7 @@ int main(int argc, char *argv[])
                     gamma_lorentz[1] = pythia.event[Gamma_daughters[1]].p();
                     gamma_lorentz[2] = gamma_lorentz[0] + gamma_lorentz[1];
                     double inv_mass = gamma_lorentz[2].mCalc();
+                    double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
 
                     double scale_factor1 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[0].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
                     double scale_factor2 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[1].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
@@ -504,7 +504,7 @@ int main(int argc, char *argv[])
 
                     for (int p = 0; p < WeightNames.size(); p++)
                     {
-                        double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
+
                         htruthphotondistance_1d[p]->Fill(truthphotondistance, inv_yield[p]);
                         htruthphotondistance[p]->Fill(gamma_smeared[2].pT(), truthphotondistance, inv_yield[p]);
                         if (Debug_Hists)
@@ -577,6 +577,8 @@ int main(int argc, char *argv[])
                         // clustering algorithm check
                         auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
                         auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
+                        auto asymmetricPion = asymmetricPhoton1 + asymmetricPhoton2;
+                        auto symmetricPion = symmetricPhoton1 + symmetricPhoton2;
 
                         if (DeltaRcut(asymmetricPhoton1, asymmetricPhoton2, DeltaRcut_MAX) == false &&
                             AsymmCutcheck(asymmetricPhoton1, asymmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&
@@ -590,7 +592,7 @@ int main(int argc, char *argv[])
                             asymmetricPhoton2.pT() > pt2cut &&
                             asymmetricPhoton1.pT() + asymmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
                         {
-                            h101_asymm[p]->Fill(asymmetricPhoton1.pT(), asymmetricPhoton2.pT(), inv_yield[p]);
+                            h101_asymm[p]->Fill(asymmetricPion.pT(), asymmetricPion.mCalc(), inv_yield[p]);
                         }
                         if (DeltaRcut(symmetricPhoton1, symmetricPhoton2, DeltaRcut_MAX) == false &&
                             AsymmCutcheck(symmetricPhoton1, symmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&
@@ -604,7 +606,7 @@ int main(int argc, char *argv[])
                             symmetricPhoton2.pT() > pt2cut &&
                             symmetricPhoton1.pT() + symmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
                         {
-                            h101_symm[p]->Fill(symmetricPhoton1.pT(), symmetricPhoton2.pT(), inv_yield[p]);
+                            h101_symm[p]->Fill(symmetricPion.pT(), symmetricPion.mCalc(), inv_yield[p]);
                         }
                     }
 
@@ -860,12 +862,14 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2)
     double energy1 = photon1.e();
     double posx1 = 900 * photon1.px() / photon1.e();
     double posy1 = 900 * photon1.py() / photon1.e();
+    double posz1 = photon1.pz() / photon1.e();
     // photon 2
     double energy2 = photon2.e();
     double posx2 = 900 * photon2.px() / photon2.e();
     double posy2 = 900 * photon2.py() / photon2.e();
+    double posz2 = photon2.pz() / photon2.e();
 
-    double distance = sqrt(pow(posx1 - posx2, 2) + pow(posy1 - posy2, 2));
+    double distance = sqrt(pow(posx1 - posx2, 2) + pow(posy1 - posy2, 2) + pow(posz1 - posz2, 2));
 
     return distance;
 }
