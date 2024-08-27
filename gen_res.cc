@@ -869,7 +869,7 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bo
     double posy2 = 900 * photon2.py() / photon2.e();
     double posz2 = photon2.pz() / photon2.e();
 
-    if(double_t && posz1 - posz2<0.1)
+    if(double_t && (posz1 - posz2<0.1))
     {
         std::cerr << "Warning: Photons are too close in z direction: " << posz1 - posz2 << std::endl;
     }
