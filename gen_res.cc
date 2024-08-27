@@ -240,18 +240,17 @@ int main(int argc, char *argv[])
             tree = new TTree("tree", "tree");
             tree->SetMaxTreeSize(500 * 1024 * 1024);
         }
-        if(Debug_Hists)
-        {
-            TH1 *h4 = new TH1F("h4", "PT, unweighted", n_bins, PT_Min, PT_Max_bin);
-            TH1 *h5 = new TH1F("h5", "Photon Pt, unweighted", n_bins, PT_Min, PT_Max_bin);
-            TH1 *h6 = new TH1F("h6", "inv mass of gamma pair", MassNBins, 0, 1);
-            TH1 *h8 = new TH1F("h8", "inv mass of Photon pair, smeared", MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            TH2F *h9 = new TH2F("h9", "Smeared Pt vs Smeared Inv Mass", n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            TH1 *h10 = new TH1F("h10", "Smeared PT", n_bins, PT_Min, PT_Max_bin);
-            TH1 *h16 = new TH1F("h16", "Smeared Photon pT", n_bins, PT_Min, PT_Max_bin);
-            TH1 *h17 = new TH1F("h17", "Photon pT", n_bins, PT_Min, PT_Max_bin);
-            TH1 *hInvMass_Cutson = new TH1F("hInvMass_Cutson", "PT,nSmeared+no_weight+cuts+pr", MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-        }
+
+        TH1 *h4 = new TH1F("h4", "PT, unweighted", n_bins, PT_Min, PT_Max_bin);
+        TH1 *h5 = new TH1F("h5", "Photon Pt, unweighted", n_bins, PT_Min, PT_Max_bin);
+        TH1 *h6 = new TH1F("h6", "inv mass of gamma pair", MassNBins, 0, 1);
+        TH1 *h8 = new TH1F("h8", "inv mass of Photon pair, smeared", MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+        TH2F *h9 = new TH2F("h9", "Smeared Pt vs Smeared Inv Mass", n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+        TH1 *h10 = new TH1F("h10", "Smeared PT", n_bins, PT_Min, PT_Max_bin);
+        TH1 *h16 = new TH1F("h16", "Smeared Photon pT", n_bins, PT_Min, PT_Max_bin);
+        TH1 *h17 = new TH1F("h17", "Photon pT", n_bins, PT_Min, PT_Max_bin);
+        TH1 *hInvMass_Cutson = new TH1F("hInvMass_Cutson", "PT,nSmeared+no_weight+cuts+pr", MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+
 
         std::vector<TH1 *> hpionpt(WeightNames.size());
         std::vector<TH1 *> htruthphotondistance_1d(WeightNames.size());
