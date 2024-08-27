@@ -869,7 +869,7 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bo
     double posy2 = 900 * photon2.py() / photon2.e();
     double posz2 = photon2.pz() / photon2.e();
 
-    if(Debug && posz1 - posz2<0.1)
+    if(double_t && posz1 - posz2<0.1)
     {
         std::cerr << "Warning: Photons are too close in z direction: " << posz1 - posz2 << std::endl;
     }
@@ -882,7 +882,7 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bo
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug)
 {
     double tolerance = 1e-6;
-    double distance = DetectorPhotonDistance(photon1, photon2,Debug);
+    double distance = DetectorPhotonDistance(photon1, photon2, debug);
 
     double totalEnergy = photon1.e() + photon2.e();
     double avgEnergy = totalEnergy / 2.0;
@@ -925,7 +925,7 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug)
 {
     double tolerance = 1e-6;
-    double distance = DetectorPhotonDistance(photon1, photon2,Debug);
+    double distance = DetectorPhotonDistance(photon1, photon2, debug);
 
     double totalEnergy = photon1.e() + photon2.e();
     double shiftFactor = exp(-distance / 0.2); // Example factor based on distance
