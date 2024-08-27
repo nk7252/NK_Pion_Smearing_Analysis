@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     int smear_factor_const_num_steps = 1;
     // output params
     bool saveToTree = false;
-    Debug_Hists = false;
+    bool Debug_Hists = false;
 
     // Parse command-line arguments
     std::map<std::string, std::string> params;
