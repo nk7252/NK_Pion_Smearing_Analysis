@@ -504,9 +504,9 @@ int main(int argc, char *argv[])
 
                     for (int p = 0; p < WeightNames.size(); p++)
                     {
-                        // double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
-                        // htruthphotondistance_1d[p]->Fill(truthphotondistance, inv_yield[p]);
-                        // htruthphotondistance[p]->Fill(gamma_smeared[2].pT(), truthphotondistance, inv_yield[p]);
+                        double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
+                        htruthphotondistance_1d[p]->Fill(truthphotondistance, inv_yield[p]);
+                        htruthphotondistance[p]->Fill(gamma_smeared[2].pT(), truthphotondistance, inv_yield[p]);
                         if (Debug_Hists)
                         {
                             h20[p]->Fill(gamma_smeared[0].pT(), inv_yield[p]);
