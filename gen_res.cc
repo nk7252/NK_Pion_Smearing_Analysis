@@ -32,8 +32,8 @@ bool AsymmCutcheck(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float AsymmCu
 void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &params, bool debug);
 float Detector_ProjDist(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2);
 double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2);
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2);
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2);
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug);
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug);
 
 int main(int argc, char *argv[])
 {
@@ -834,7 +834,6 @@ void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &
     }
 }
 
-
 // Function to calculate the Distance between two particles on the projected surface of the emcal
 double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2)
 {
@@ -853,7 +852,7 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2)
     return distance;
 }
 
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2)
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug)
 {
     double tolerance = 1e-6;
     double distance = DetectorPhotonDistance(photon1, photon2);
@@ -862,25 +861,41 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
     double avgEnergy = totalEnergy / 2.0;
     double shiftFactor = exp(-distance / 100.0); // Example factor based on distance
 
+    double originalPhoton1E = photon1.e();
+    double originalPhoton2E = photon2.e();
+
     photon1.e((photon1.e() * (1.0 - shiftFactor)) + (avgEnergy * shiftFactor));
     photon2.e((photon2.e() * (1.0 - shiftFactor)) + (avgEnergy * shiftFactor));
 
-    photon1 *= (photon1.e() / photon1.pAbs());
-    photon2 *= (photon2.e() / photon2.pAbs());
+    // Scale the momentum components according to the new energy
+    double scale1 = photon1.e() / originalPhoton1E;
+    double scale2 = photon2.e() / originalPhoton2E;
 
-    if (std::abs(photon1.mCalc()) > tolerance)
-    {
-        std::cerr << "Warning: Photon1 has non-zero mass after scaling: " << photon1.mCalc() << std::endl;
-    }
-    if (std::abs(photon2.mCalc()) > tolerance)
-    {
-        std::cerr << "Warning: Photon2 has non-zero mass after scaling: " << photon2.mCalc() << std::endl;
-    }
+    photon1.px(photon1.px() * scale1);
+    photon1.py(photon1.py() * scale1);
+    photon1.pz(photon1.pz() * scale1);
 
+    photon2.px(photon2.px() * scale2);
+    photon2.py(photon2.py() * scale2);
+    photon2.pz(photon2.pz() * scale2);
+
+    if(debug)
+    {
+        if (std::abs(photon1.mCalc()) > tolerance)
+        {
+            std::cerr << "Warning: Photon1 has non-zero mass after scaling: " << photon1.mCalc() << std::endl;
+            std::cerr << "Photon1: " << photon1.e() << " " << photon1.px() << " " << photon1.py() << " " << photon1.pz() << std::endl;
+        }
+        if (std::abs(photon2.mCalc()) > tolerance)
+        {
+            std::cerr << "Warning: Photon2 has non-zero mass after scaling: " << photon2.mCalc() << std::endl;
+            std::cerr << "Photon2: " << photon2.e() << " " << photon2.px() << " " << photon2.py() << " " << photon2.pz() << std::endl;
+        }
+    }
     return std::make_pair(photon1, photon2);
 }
 
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2)
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug)
 {
     double tolerance = 1e-6;
     double distance = DetectorPhotonDistance(photon1, photon2);
@@ -889,19 +904,37 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::
     double shiftFactor = exp(-distance / 100.0); // Example factor based on distance
     double energyShift = (photon1.e() - photon2.e()) * shiftFactor;
 
+    // Store original energies for scaling momentum
+    double originalPhoton1E = photon1.e();
+    double originalPhoton2E = photon2.e();
+
     photon1.e(photon1.e() + energyShift);
     photon2.e(photon2.e() - energyShift);
 
-    photon1 *= (photon1.e() / photon1.pAbs());
-    photon2 *= (photon2.e() / photon2.pAbs());
+    // Scale the momentum components according to the new energy
+    double scale1 = photon1.e() / originalPhoton1E;
+    double scale2 = photon2.e() / originalPhoton2E;
 
-    if (std::abs(photon1.mCalc()) > tolerance)
+    photon1.px(photon1.px() * scale1);
+    photon1.py(photon1.py() * scale1);
+    photon1.pz(photon1.pz() * scale1);
+
+    photon2.px(photon2.px() * scale2);
+    photon2.py(photon2.py() * scale2);
+    photon2.pz(photon2.pz() * scale2);
+
+    if(debug)
     {
-        std::cerr << "Warning: Photon1 has non-zero mass after scaling: " << photon1.mCalc() << std::endl;
-    }
-    if (std::abs(photon2.mCalc()) > tolerance)
-    {
-        std::cerr << "Warning: Photon2 has non-zero mass after scaling: " << photon2.mCalc() << std::endl;
+        if (std::abs(photon1.mCalc()) > tolerance)
+        {
+            std::cerr << "Warning: Photon1 has non-zero mass after scaling: " << photon1.mCalc() << std::endl;
+            std::cerr << "Photon1: " << photon1.e() << " " << photon1.px() << " " << photon1.py() << " " << photon1.pz() << std::endl;
+        }
+        if (std::abs(photon2.mCalc()) > tolerance)
+        {
+            std::cerr << "Warning: Photon2 has non-zero mass after scaling: " << photon2.mCalc() << std::endl;
+            std::cerr << "Photon2: " << photon2.e() << " " << photon2.px() << " " << photon2.py() << " " << photon2.pz() << std::endl;
+        }
     }
 
     return std::make_pair(photon1, photon2);
