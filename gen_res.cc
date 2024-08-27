@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
         for (int p = 0; p < WeightNames.size(); p++)
         {
             htruthphotondistance_1d[p] = new TH1F(Form("htruthphotondistance_1d_%i", p), Form("Photon distance distribution, weighted:%s", WeightNames[p].c_str()), 10000, 0, 10000);
-            htruthphotondistance[p] = new TH2F(Form("htruthphotondistance_%i", p), Form("pT vs Photon distance distribution, weighted:%s", WeightNames[p].c_str()), 10000, 0, 10000, 10000, 0, 10000);
+            htruthphotondistance[p] = new TH2F(Form("htruthphotondistance_%i", p), Form("pT vs Photon distance distribution, weighted:%s", WeightNames[p].c_str()),  n_bins, 0, PT_Max_bin, 10000, 0, 10000);
             if (Debug_Hists)
             {
                 hpionpt[p] = new TH1D(Form("hpionpt_%i", p), Form("Pt no smear + no weight:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
             h101_1d[p] = new TH1F(Form("h101_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h101_dr[p] = new TH1F(Form("h101_dr_%i", p), Form("dR distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 2);
             h101_photon_dist_1d[p] = new TH1F(Form("h101_photon_dist_1d_%i", p), Form("Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 10000);
-            h101_photon_dist[p] = new TH2F(Form("h101_photon_dist_%i", p), Form("pT vs Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 10000, 10000, 0, 10000);
+            h101_photon_dist[p] = new TH2F(Form("h101_photon_dist_%i", p), Form("pT vs Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()),  n_bins, 0, PT_Max_bin, 10000, 0, 10000);
             h101_asymm[p] = new TH2F(Form("h101_asymm_%i", p), Form("More asymm:Smeared Pt vs Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h101_symm[p] = new TH2F(Form("h101_symm_%i", p), Form("More symm: Smeared Pt vs Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
         }
