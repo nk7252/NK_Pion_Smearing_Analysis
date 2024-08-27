@@ -561,8 +561,9 @@ int main(int argc, char *argv[])
                         // fill photon distance hist
                         h101_photon_dist[p]->Fill(DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1]), inv_yield[p]);
                         // clustering algorithm check
-                        auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1]);
-                        auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1]);
+                        auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
+                        auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
+
                         if (DeltaRcut(asymmetricPhoton1, asymmetricPhoton2, DeltaRcut_MAX) == false &&
                             AsymmCutcheck(asymmetricPhoton1, asymmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&
                             eTCut(asymmetricPhoton1, etCut) == true &&
