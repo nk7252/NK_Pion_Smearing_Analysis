@@ -494,9 +494,9 @@ int main(int argc, char *argv[])
 
                     for (int p = 0; p < WeightNames.size(); p++)
                     {
-                        double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
-                        htruthphotondistance_1d[p]->Fill(truthphotondistance, inv_yield[p]);
-                        htruthphotondistance[p]->Fill(gamma_smeared[2].pT(), truthphotondistance, inv_yield[p]);
+                        //double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
+                        //htruthphotondistance_1d[p]->Fill(truthphotondistance, inv_yield[p]);
+                        //htruthphotondistance[p]->Fill(gamma_smeared[2].pT(), truthphotondistance, inv_yield[p]);
 
                         h20[p]->Fill(gamma_smeared[0].pT(), inv_yield[p]);
                         h20[p]->Fill(gamma_smeared[1].pT(), inv_yield[p]);
@@ -554,24 +554,16 @@ int main(int argc, char *argv[])
                             h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                         }
 
-                        if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false &&
-                            AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true &&
-                            eTCut(gamma_All_Cuts[0], etCut) == true &&
-                            eTCut(gamma_All_Cuts[1], etCut) == true &&
-                            nclus_ptCut < gamma_All_Cuts[0].pT() &&
-                            gamma_All_Cuts[0].pT() < ptMaxCut &&
-                            nclus_ptCut < gamma_All_Cuts[1].pT() &&
-                            gamma_All_Cuts[1].pT() < ptMaxCut &&
-                            gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
+                        if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && eTCut(gamma_All_Cuts[0], etCut) == true && eTCut(gamma_All_Cuts[1], etCut) == true && nclus_ptCut < gamma_All_Cuts[0].pT() &&gamma_All_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_All_Cuts[1].pT() && gamma_All_Cuts[1].pT() < ptMaxCut && gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
                         {
                             h101[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                             h101_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                             h101_dr[p]->Fill(DeltaR(gamma_All_Cuts[0], gamma_All_Cuts[1]), inv_yield[p]);
                         }
                         // fill photon distance hist
-                        double photon_dist_All_Cuts = DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1]);
-                        h101_photon_dist_1d[p]->Fill(photon_dist_All_Cuts, inv_yield[p]);
-                        h101_photon_dist[p]->Fill(gamma_All_Cuts[2].pT(), photon_dist_All_Cuts, inv_yield[p]);
+                        //double photon_dist_All_Cuts = DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1]);
+                        //h101_photon_dist_1d[p]->Fill(photon_dist_All_Cuts, inv_yield[p]);
+                        //h101_photon_dist[p]->Fill(gamma_All_Cuts[2].pT(), photon_dist_All_Cuts, inv_yield[p]);
                         // clustering algorithm check
                         auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
                         auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
