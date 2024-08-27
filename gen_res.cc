@@ -24,6 +24,7 @@ TF1 *ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max, const std:
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4 &originalPhoton, int method, double randomE);
 Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx, double smearingFactory, double smearingFactorz);
 bool DeltaRcut(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float DeltaRcutMax);
+float DeltaR(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2);
 bool pTCut(const Pythia8::Vec4 &particle, float ptCut);
 bool eTCut(const Pythia8::Vec4 &particle, float etCut);
 bool EtaCut(const Pythia8::Vec4 &particle, float EtaCutValue, bool ApplyEtaCut, bool debug);
@@ -31,8 +32,8 @@ bool AsymmCutcheck(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float AsymmCu
 void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &params, bool debug);
 float Detector_ProjDist(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2);
 double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2);
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, double tolerance = 1e-6)
-    std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, double tolerance = 1e-6);
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2);
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2);
 
 int main(int argc, char *argv[])
 {
@@ -767,6 +768,13 @@ bool DeltaRcut(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float DeltaRcutMa
     return deltaR > DeltaRcutMax;
 }
 
+float DeltaR(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2)
+{
+    double dEta = Photon1.eta() - Photon2.eta();
+    double dPhi = acos(cos(Photon1.phi() - Photon2.phi()));
+    return sqrt(dEta * dEta + dPhi * dPhi);
+}
+
 bool pTCut(const Pythia8::Vec4 &particle, float ptCut)
 {
     double pT = particle.pT();
@@ -826,6 +834,7 @@ void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &
     }
 }
 
+
 // Function to calculate the Distance between two particles on the projected surface of the emcal
 double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2)
 {
@@ -844,8 +853,9 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2)
     return distance;
 }
 
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, double tolerance = 1e-6)
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2)
 {
+    double tolerance = 1e-6;
     double distance = DetectorPhotonDistance(photon1, photon2);
 
     double totalEnergy = photon1.e() + photon2.e();
@@ -870,8 +880,9 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
     return std::make_pair(photon1, photon2);
 }
 
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, double tolerance = 1e-6)
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2)
 {
+    double tolerance = 1e-6;
     double distance = DetectorPhotonDistance(photon1, photon2);
 
     double totalEnergy = photon1.e() + photon2.e();
