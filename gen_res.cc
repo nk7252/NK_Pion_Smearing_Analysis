@@ -250,6 +250,8 @@ int main(int argc, char *argv[])
         TH1 *hInvMass_Cutson = new TH1F("hInvMass_Cutson", "PT,nSmeared+no_weight+cuts+pr", MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
 
         std::vector<TH1 *> hpionpt(WeightNames.size());
+        std::vector<TH1 *> htruthphotondistance_1d(WeightNames.size());
+        std::vector<TH2F *> htruthphotondistance(WeightNames.size());
         std::vector<TH1 *> h2(WeightNames.size());
         std::vector<TH1 *> h3(WeightNames.size());
         std::vector<TH1 *> h12(WeightNames.size());
@@ -276,13 +278,16 @@ int main(int argc, char *argv[])
         std::vector<TH2F *> h101(WeightNames.size());
         std::vector<TH1F *> h101_1d(WeightNames.size());
         std::vector<TH1F *> h101_dr(WeightNames.size());
-        std::vector<TH1F *> h101_photon_dist(WeightNames.size());
+        std::vector<TH1F *> h101_photon_dist_1d(WeightNames.size());
+        std::vector<TH2F *> h101_photon_dist(WeightNames.size());
         std::vector<TH2F *> h101_asymm(WeightNames.size());
         std::vector<TH2F *> h101_symm(WeightNames.size());
 
         for (int p = 0; p < WeightNames.size(); p++)
         {
             hpionpt[p] = new TH1D(Form("hpionpt_%i", p), Form("Pt no smear + no weight:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
+            htruthphotondistance_1d[p] = new TH1F(Form("htruthphotondistance_1d_%i", p), Form("Photon distance distribution, weighted:%s", WeightNames[p].c_str()), 10000, 0, 10000);
+            htruthphotondistance[p] = new TH2F(Form("htruthphotondistance_%i", p), Form("pT vs Photon distance distribution, weighted:%s", WeightNames[p].c_str()), 10000, 0, 10000, 10000, 0, 10000);
             h2[p] = new TH1D(Form("h2_%i", p), Form("Photon Pt:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
             h3[p] = new TH1D(Form("h3_%i", p), Form("PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
             h12[p] = new TH1F(Form("h12_%i", p), Form("Smeared PT, weighted:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
@@ -308,8 +313,9 @@ int main(int argc, char *argv[])
             h100_1d[p] = new TH1F(Form("h100_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. All Cuts+effects:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h101[p] = new TH2F(Form("h101_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h101_1d[p] = new TH1F(Form("h101_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h101_dr[p] = new TH1F(Form("h101_dr_%i", p), Form("dR distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 1000);
-            h101_photon_dist[p] = new TH1F(Form("h101_photon_dist_%i", p), Form("Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 1000);
+            h101_dr[p] = new TH1F(Form("h101_dr_%i", p), Form("dR distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 2);
+            h101_photon_dist_1d[p] = new TH1F(Form("h101_photon_dist_1d_%i", p), Form("Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 10000);
+            h101_photon_dist[p] = new TH2F(Form("h101_photon_dist_%i", p), Form("pT vs Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 10000, 10000, 0, 10000);
             h101_asymm[p] = new TH2F(Form("h101_asymm_%i", p), Form("More asymm:Smeared Pt vs Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h101_symm[p] = new TH2F(Form("h101_symm_%i", p), Form("More symm: Smeared Pt vs Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
         }
@@ -488,6 +494,10 @@ int main(int argc, char *argv[])
 
                     for (int p = 0; p < WeightNames.size(); p++)
                     {
+                        double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1]);
+                        htruthphotondistance_1d[p]->Fill(truthphotondistance, inv_yield[p]);
+                        htruthphotondistance[p]->Fill(gamma_smeared[2].pT(), truthphotondistance, inv_yield[p]);
+
                         h20[p]->Fill(gamma_smeared[0].pT(), inv_yield[p]);
                         h20[p]->Fill(gamma_smeared[1].pT(), inv_yield[p]);
                         h21[p]->Fill(gamma_lorentz[0].pT(), inv_yield[p]);
@@ -559,7 +569,9 @@ int main(int argc, char *argv[])
                             h101_dr[p]->Fill(DeltaR(gamma_All_Cuts[0], gamma_All_Cuts[1]), inv_yield[p]);
                         }
                         // fill photon distance hist
-                        h101_photon_dist[p]->Fill(DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1]), inv_yield[p]);
+                        double photon_dist_All_Cuts = DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1]);
+                        h101_photon_dist_1d[p]->Fill(photon_dist_All_Cuts, inv_yield[p]);
+                        h101_photon_dist[p]->Fill(gamma_All_Cuts[2].pT(), photon_dist_All_Cuts, inv_yield[p]);
                         // clustering algorithm check
                         auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
                         auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
@@ -860,7 +872,7 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
 
     double totalEnergy = photon1.e() + photon2.e();
     double avgEnergy = totalEnergy / 2.0;
-    double shiftFactor = exp(-distance / 100.0); // Example factor based on distance
+    double shiftFactor = exp(-distance / 0.2); // Example factor based on distance
 
     double originalPhoton1E = photon1.e();
     double originalPhoton2E = photon2.e();
@@ -902,7 +914,7 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::
     double distance = DetectorPhotonDistance(photon1, photon2);
 
     double totalEnergy = photon1.e() + photon2.e();
-    double shiftFactor = exp(-distance / 100.0); // Example factor based on distance
+    double shiftFactor = exp(-distance / 0.2); // Example factor based on distance
     double energyShift = (photon1.e() - photon2.e()) * shiftFactor;
 
     // Store original energies for scaling momentum
