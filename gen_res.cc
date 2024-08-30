@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     std::map<double, std::vector<double>> mass_pt_map;
     TF1 *myFunc = ChooseSpectrumFunction(weightMethod, PT_Min, PT_Max, particleType);
 
-    std::vector<std::string> WeightNames = {weightMethodStr};//"EXP", "POWER", "WSHP", "HAGEDORN"
+    std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP", "HAGEDORN"};//weightMethodStr
 
     for (int smear_factor_itt = 0; smear_factor_itt < smear_factor_const_num_steps; smear_factor_itt++)
     {
