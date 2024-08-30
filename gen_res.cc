@@ -236,6 +236,7 @@ int main(int argc, char *argv[])
     TF1 *myFunc = ChooseSpectrumFunction(weightMethod, PT_Min, PT_Max, particleType);
 
     std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP", "HAGEDORN"};//weightMethodStr
+    std::vector<std::string> ClusterScalingNames = {"EXP", "RATIONAL", "H_TANH"};//different 
 
     for (int smear_factor_itt = 0; smear_factor_itt < smear_factor_const_num_steps; smear_factor_itt++)
     {
@@ -293,8 +294,8 @@ int main(int argc, char *argv[])
         std::vector<TH1F *> h101_dr(WeightNames.size());
         std::vector<TH1F *> h101_photon_dist_1d(WeightNames.size());
         std::vector<TH2F *> h101_photon_dist(WeightNames.size());
-        std::vector<TH2F *> h101_asymm(WeightNames.size());
-        std::vector<TH2F *> h101_symm(WeightNames.size());
+        std::vector<std::vector<TH2F *>> h101_asymm(WeightNames.size());
+        std::vector<std::vector<TH2F *>> h101_symm(WeightNames.size());
 
         for (int p = 0; p < WeightNames.size(); p++)
         {
@@ -333,8 +334,12 @@ int main(int argc, char *argv[])
             h101_dr[p] = new TH1F(Form("h101_dr_%i", p), Form("dR distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 2);
             h101_photon_dist_1d[p] = new TH1F(Form("h101_photon_dist_1d_%i", p), Form("Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 2000);
             h101_photon_dist[p] = new TH2F(Form("h101_photon_dist_%i", p), Form("pT vs Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()),  n_bins, 0, PT_Max_bin, 10000, 0, 2000);
-            h101_asymm[p] = new TH2F(Form("h101_asymm_%i", p), Form("More asymm:Smeared Pt vs Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-            h101_symm[p] = new TH2F(Form("h101_symm_%i", p), Form("More symm: Smeared Pt vs Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            for (int c = 0; c < ClusterScalingNames.size(); c++)
+            {
+                h101_asymm[p][c] = new TH2F(Form("h101_%i_asymm_%i", p,c), Form("More asymm(%s):Pt vs Inv Mass, weighted, eT cuts:%s",ClusterScalingNames[c].c_str(), WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h101_symm[p][c] = new TH2F(Form("h101_%i_symm_%i", p,c), Form("More symm(%s):Pt vs Inv Mass, weighted, eT cuts:%s",ClusterScalingNames[c].c_str(), WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+            }
+            
         }
 
         std::random_device rd;
@@ -586,39 +591,23 @@ int main(int argc, char *argv[])
                         h101_photon_dist_1d[p]->Fill(photon_dist_All_Cuts, inv_yield[p]);
                         h101_photon_dist[p]->Fill(gamma_All_Cuts[2].pT(), photon_dist_All_Cuts, inv_yield[p]);
                         // clustering algorithm check
-                        auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1],scaling_method_int, Debug);
-                        auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1],scaling_method_int, Debug);
-                        auto asymmetricPion = asymmetricPhoton1 + asymmetricPhoton2;
-                        auto symmetricPion = symmetricPhoton1 + symmetricPhoton2;
+                        for (int c = 0; c < ClusterScalingNames.size(); c++)
+                        {
+                            auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1],c, Debug);
+                            auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1],c, Debug);
+                            auto asymmetricPion = asymmetricPhoton1 + asymmetricPhoton2;
+                            auto symmetricPion = symmetricPhoton1 + symmetricPhoton2;
 
-                        if (DeltaRcut(asymmetricPhoton1, asymmetricPhoton2, DeltaRcut_MAX) == false &&
-                            AsymmCutcheck(asymmetricPhoton1, asymmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&
-                            eTCut(asymmetricPhoton1, etCut) == true &&
-                            eTCut(asymmetricPhoton2, etCut) == true &&
-                            nclus_ptCut < asymmetricPhoton1.pT() &&
-                            asymmetricPhoton1.pT() < ptMaxCut &&
-                            nclus_ptCut < asymmetricPhoton2.pT() &&
-                            asymmetricPhoton2.pT() < ptMaxCut &&
-                            asymmetricPhoton1.pT() > pt1cut &&
-                            asymmetricPhoton2.pT() > pt2cut &&
-                            asymmetricPhoton1.pT() + asymmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
-                        {
-                            h101_asymm[p]->Fill(asymmetricPion.pT(), asymmetricPion.mCalc(), inv_yield[p]);
+                            if (DeltaRcut(asymmetricPhoton1, asymmetricPhoton2, DeltaRcut_MAX) == false &&AsymmCutcheck(asymmetricPhoton1, asymmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&eTCut(asymmetricPhoton1, etCut) == true &&eTCut(asymmetricPhoton2, etCut) == true &&nclus_ptCut < asymmetricPhoton1.pT() &&asymmetricPhoton1.pT() < ptMaxCut &&nclus_ptCut < asymmetricPhoton2.pT() &&asymmetricPhoton2.pT() < ptMaxCut &&asymmetricPhoton1.pT() > pt1cut &&asymmetricPhoton2.pT() > pt2cut &&asymmetricPhoton1.pT() + asymmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
+                            {
+                                h101_asymm[p][c]->Fill(asymmetricPion.pT(), asymmetricPion.mCalc(), inv_yield[p]);
+                            }
+                            if (DeltaRcut(symmetricPhoton1, symmetricPhoton2, DeltaRcut_MAX) == false &&AsymmCutcheck(symmetricPhoton1, symmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&eTCut(symmetricPhoton1, etCut) == true &&eTCut(symmetricPhoton2, etCut) == true &&nclus_ptCut < symmetricPhoton1.pT() &&symmetricPhoton1.pT() < ptMaxCut &&nclus_ptCut < symmetricPhoton2.pT() &&symmetricPhoton2.pT() < ptMaxCut &&symmetricPhoton1.pT() > pt1cut &&symmetricPhoton2.pT() > pt2cut &&symmetricPhoton1.pT() + symmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
+                            {
+                                h101_symm[p][c]->Fill(symmetricPion.pT(), symmetricPion.mCalc(), inv_yield[p]);
+                            }
                         }
-                        if (DeltaRcut(symmetricPhoton1, symmetricPhoton2, DeltaRcut_MAX) == false &&
-                            AsymmCutcheck(symmetricPhoton1, symmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&
-                            eTCut(symmetricPhoton1, etCut) == true &&
-                            eTCut(symmetricPhoton2, etCut) == true &&
-                            nclus_ptCut < symmetricPhoton1.pT() &&
-                            symmetricPhoton1.pT() < ptMaxCut &&
-                            nclus_ptCut < symmetricPhoton2.pT() &&
-                            symmetricPhoton2.pT() < ptMaxCut &&
-                            symmetricPhoton1.pT() > pt1cut &&
-                            symmetricPhoton2.pT() > pt2cut &&
-                            symmetricPhoton1.pT() + symmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
-                        {
-                            h101_symm[p]->Fill(symmetricPion.pT(), symmetricPion.mCalc(), inv_yield[p]);
-                        }
+                        
                     }
 
                     if (Debug_Hists)
