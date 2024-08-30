@@ -951,7 +951,8 @@ void fit_comparison()
     "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.150000_const.root",
     "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.180000_const.root",
     "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.000000_const.root"
-    };//
+    };
+  //
   std::vector<std::string> FastMC_histNames = {"h101_2", "h101_2", "h101_2", "h101_2", "h101_2","h101_2"};
   std::vector<std::string> FastMC_legendNames = {
     "FastMC: 15.4%/#sqrt{E} #oplus 18%",
