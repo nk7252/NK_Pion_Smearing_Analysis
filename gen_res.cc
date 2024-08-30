@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     bool saveToTree = false;
     // untracked general parameters
     bool Debug_Hists = false;
-    int scaling_method_int=1;
+    //int scaling_method_int=1;
 
     // Parse command-line arguments
     std::map<std::string, std::string> params;
@@ -294,8 +294,10 @@ int main(int argc, char *argv[])
         std::vector<TH1F *> h101_dr(WeightNames.size());
         std::vector<TH1F *> h101_photon_dist_1d(WeightNames.size());
         std::vector<TH2F *> h101_photon_dist(WeightNames.size());
-        std::vector<std::vector<TH2F *>> h101_asymm(WeightNames.size());
-        std::vector<std::vector<TH2F *>> h101_symm(WeightNames.size());
+        std::vector<std::vector<TH2F *>> h101_asymm(WeightNames.size(), std::vector<TH2F *>(ClusterScalingNames.size()));
+        std::vector<std::vector<TH2F *>> h101_symm(WeightNames.size(), std::vector<TH2F *>(ClusterScalingNames.size()));
+        //std::vector<TH2F *> h101_asymm(WeightNames.size());
+        //std::vector<TH2F *> h101_symm(WeightNames.size());
 
         for (int p = 0; p < WeightNames.size(); p++)
         {
