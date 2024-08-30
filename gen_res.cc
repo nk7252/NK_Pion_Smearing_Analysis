@@ -19,6 +19,13 @@
 #include "Pythia8/Pythia.h" // Include Pythia headers.
 using namespace Pythia8;    // Let Pythia8:: be implicit;
 
+//methods for cluster overlap scaling.
+enum ScalingMethod 
+{
+    EXPONENTIAL,
+    RATIONAL,
+    HYPERBOLIC_TANGENT
+};
 // Forward declarations
 TF1 *ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max, const std::string &particleType);
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4 &originalPhoton, int method, double randomE);
@@ -31,8 +38,10 @@ bool EtaCut(const Pythia8::Vec4 &particle, float EtaCutValue, bool ApplyEtaCut, 
 bool AsymmCutcheck(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float AsymmCutoff, bool asymcutbool);
 void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &params, bool debug);
 double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bool debug);
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug);
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug);
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2,int method_int, bool debug);
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2,int method_int, bool debug);
+double EnergySharingScale(double distance, ScalingMethod method);
+
 
 int main(int argc, char *argv[])
 {
@@ -60,7 +69,7 @@ int main(int argc, char *argv[])
     float comb_ptcut = 0;
     float ptMaxCut = 100;
     float nclus_ptCut = 0.0;
-    // untracked general parameters
+    
     int PT_Max_bin = 20; // normally this, but now we want to match fun4all PT_Max;
     int MassNBins = 1200;
     int binres = 2;
@@ -90,7 +99,9 @@ int main(int argc, char *argv[])
     int smear_factor_const_num_steps = 1;
     // output params
     bool saveToTree = false;
+    // untracked general parameters
     bool Debug_Hists = false;
+    int scaling_method_int=1;
 
     // Parse command-line arguments
     std::map<std::string, std::string> params;
@@ -224,7 +235,7 @@ int main(int argc, char *argv[])
     std::map<double, std::vector<double>> mass_pt_map;
     TF1 *myFunc = ChooseSpectrumFunction(weightMethod, PT_Min, PT_Max, particleType);
 
-    std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP", "HAGEDORN"};
+    std::vector<std::string> WeightNames = {weightMethodStr};//"EXP", "POWER", "WSHP", "HAGEDORN"
 
     for (int smear_factor_itt = 0; smear_factor_itt < smear_factor_const_num_steps; smear_factor_itt++)
     {
@@ -575,8 +586,8 @@ int main(int argc, char *argv[])
                         h101_photon_dist_1d[p]->Fill(photon_dist_All_Cuts, inv_yield[p]);
                         h101_photon_dist[p]->Fill(gamma_All_Cuts[2].pT(), photon_dist_All_Cuts, inv_yield[p]);
                         // clustering algorithm check
-                        auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
-                        auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
+                        auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1],scaling_method_int, Debug);
+                        auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1],scaling_method_int, Debug);
                         auto asymmetricPion = asymmetricPhoton1 + asymmetricPhoton2;
                         auto symmetricPion = symmetricPhoton1 + symmetricPhoton2;
 
@@ -880,14 +891,33 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bo
     return distance;
 }
 
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug)
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, int method_int, bool debug)
 {
     double tolerance = 1e-6;
     double distance = DetectorPhotonDistance(photon1, photon2, debug);
 
+    //three choices, inverse exponential, hyberbolic tangent, or rational 
+    ScalingMethod method;// = EXPONENTIAL;
+    switch (method_int) 
+    {
+        case 0:
+            method = EXPONENTIAL;
+            break;
+        case 1:
+            method = RATIONAL;
+            break;
+        case 2:
+            method = HYPERBOLIC_TANGENT;
+            break;
+        default:
+            std::cerr << "Error: Unknown scaling method." << std::endl;
+            break;
+    }
+    
+    double shiftFactor = EnergySharingScale(distance, method);
+
     double totalEnergy = photon1.e() + photon2.e();
     double avgEnergy = totalEnergy / 2.0;
-    double shiftFactor = exp(-distance / 0.2); // Example factor based on distance
 
     double originalPhoton1E = photon1.e();
     double originalPhoton2E = photon2.e();
@@ -923,13 +953,31 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
     return std::make_pair(photon1, photon2);
 }
 
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, bool debug)
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2,int method_int, bool debug)
 {
     double tolerance = 1e-6;
     double distance = DetectorPhotonDistance(photon1, photon2, debug);
 
     double totalEnergy = photon1.e() + photon2.e();
-    double shiftFactor = exp(-distance / 0.2); // Example factor based on distance
+    //three choices, inverse exponential, hyberbolic tangent, or rational 
+    ScalingMethod method;// = EXPONENTIAL;
+    switch (method_int) 
+    {
+        case 0:
+            method = EXPONENTIAL;
+            break;
+        case 1:
+            method = RATIONAL;
+            break;
+        case 2:
+            method = HYPERBOLIC_TANGENT;
+            break;
+        default:
+            std::cerr << "Error: Unknown scaling method." << std::endl;
+            break;
+    }
+    
+    double shiftFactor = EnergySharingScale(distance, method);
     double energyShift = (photon1.e() - photon2.e()) * shiftFactor;
 
     // Store original energies for scaling momentum
@@ -966,4 +1014,46 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::
     }
 
     return std::make_pair(photon1, photon2);
+}
+
+double EnergySharingScale(double distance, ScalingMethod method) {
+    double scale = 0.0;
+
+    switch (method) {
+        case EXPONENTIAL: {
+            //0.3*exp(-distance / 0.2); // exponential
+            //parameters for the Exponential method
+            double expParam1 = 0.5; //finite energy sharing at low distances
+            double expParam2 = 50.0; //distance at which scale = expParam*1/e~expParam*0.37
+            // Exponential scaling: scale = expParam1 * exp(-distance / expParam2)
+            scale = expParam1 * exp(-distance / expParam2);
+            break;
+        }
+
+        case RATIONAL: {
+            //double shiftFactor = A / (1.0 + pow(distance / d0, n)); // rational
+            //parameters for the Rational method
+            double rationalParam1 = 0.5; //finite energy sharing at low distances
+            double rationalParam2 = 50.0; // distance scaling factor. no idea what this should be
+            double rationalParam3 = 1.3; //A parameter that controls the steepness of the decline
+            // Rational scaling: scale = rationalParam1 / (distance + rationalParam2)
+            scale = rationalParam1 / (1 + pow(distance/rationalParam2,rationalParam3));
+            break;
+        }
+
+        case HYPERBOLIC_TANGENT: {
+            //double shiftFactor = A * tanh((distance - d0) / d1); // hyperbolic tangent
+            //parameters for the Hyperbolic Tangent method
+            double tanhParam1 = 0.5; //finite energy sharing at low distances
+            double tanhParam2 = 10.0; //sets the scale of the distance at which the energy sharing is = param1. lower = less sharing at high distances
+            scale = tanhParam1 * tanh(tanhParam2 / distance);
+            break;
+        }
+
+        default:
+            std::cerr << "Error: Unknown scaling method." << std::endl;
+            break;
+    }
+
+    return scale;
 }
