@@ -1077,7 +1077,11 @@ void fit_comparison()
     };
   //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root"
   //,"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"
-  std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_0", "h_InvMass_smear_weighted_2d_125","h_InvMass_smear_weighted_2d_125","h_InvMass_smear_weighted_2d_0"};
+  std::vector<std::string> SPMC_histNames = {
+    "h_InvMass_smear_weighted_2d_0", 
+    "h_InvMass_smear_weighted_2d_0",
+    "h_InvMass_smear_weighted_2d_125",
+    "h_InvMass_smear_weighted_2d_125"};
   std::vector<std::string> SPMC_legend = {"SPi0+0sm","SEta+0sm","SEta+12.5sm","SPi0+12.5sm"};
   std::vector<int> SPMC_FileTypes ={0,1,1,0};//0 for pion, 1 for eta
 
