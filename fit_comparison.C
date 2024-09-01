@@ -1069,7 +1069,12 @@ void fit_comparison()
   std::vector<std::string> unweighted_legendNames = {"Pythia","Pythia_wvfm_E","Pythia_wvfm_E+10%smr"};
 
   //-----------------------------------------
-  std::vector<std::string> SPMC_FileNames = {"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V39","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V40","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V41"};
+  std::vector<std::string> SPMC_FileNames = {
+    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38.root",
+    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V39.root",
+    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V40.root",
+    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V41.root"
+    };
   //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root"
   //,"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"
   std::vector<std::string> SPMC_histNames = {"h_InvMass_smear_weighted_2d_0", "h_InvMass_smear_weighted_2d_125","h_InvMass_smear_weighted_2d_125","h_InvMass_smear_weighted_2d_0"};
@@ -1104,7 +1109,7 @@ void fit_comparison()
   std::vector<std::string> Run2024_legendNames = {"Run2024"};
 
   //-----------------------------------------
-  AnalyzeHistograms(unweighted_fileNames, unweighted_histNames, unweighted_legendNames, SPMC_FileNames, SPMC_histNames, SPMC_legend,SPMC_FileTypes, FastMC_fileNames, FastMC_histNames, FastMC_legendNames,FastMC_FileTypes,Run2024_fileNames, Run2024_legendNames);
+  AnalyzeHistograms(unweighted_fileNames, unweighted_histNames, unweighted_legendNames, SPMC_FileNames, SPMC_histNames, SPMC_legend, SPMC_FileTypes, FastMC_fileNames, FastMC_histNames, FastMC_legendNames,FastMC_FileTypes,Run2024_fileNames, Run2024_legendNames);
 
 
   gApplication->Terminate(0);
