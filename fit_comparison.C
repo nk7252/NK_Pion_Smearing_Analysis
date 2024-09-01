@@ -536,7 +536,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
         double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
         TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
-        double eta_pt = (pt_min + pt_max) / 2.0;
+        double Eta_pt = (pt_min + pt_max) / 2.0;
         scale_histogram_errors(histF, scale_factor);
         
         // Fit Eta Gaussian in the specified range
