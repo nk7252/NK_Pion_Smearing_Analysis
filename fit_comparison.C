@@ -760,126 +760,126 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     else if(FastMC_FileTypes[j]==1){//eta
       for (int i = startBin; i <= endBin; i += projectionBins)
       {
-      // Project the histogram along the Y-axis
-      int lastBin = std::min(i + projectionBins - 1, nBinsX);
-      TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
-      /*
-      // Check if the projection has enough entries to perform a fit
-      if (yProjection->GetEntries() < 1000)
-      { // Adjust the threshold as needed
-        delete yProjection;
-        continue;
-      }
-      */
-      TH1D *histF = (TH1D *)yProjection;
-      // re binning
-      if (var_bins && !nuBins.empty())
-      {
-        std::cout << "Rebinning histogram with non-uniform edges" << std::endl;
-        histF = rebinHistogram(histF, nuBins); // nuBins
-      }
-      else if (rebinFactor > 1)
-      {
-        histF->Rebin(rebinFactor);
-      }
-
-      histF->Scale(1. / 2, "width");
-
-      // Determine the leftmost point with a value in the projection histograms
-      //float leftmost_limit = 0;
-      if (dynamic_left)
-      {
-        for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
+        // Project the histogram along the Y-axis
+        int lastBin = std::min(i + projectionBins - 1, nBinsX);
+        TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
+        /*
+        // Check if the projection has enough entries to perform a fit
+        if (yProjection->GetEntries() < 1000)
+        { // Adjust the threshold as needed
+          delete yProjection;
+          continue;
+        }
+        */
+        TH1D *histF = (TH1D *)yProjection;
+        // re binning
+        if (var_bins && !nuBins.empty())
         {
-          if (histF->GetBinContent(bin) > 0)
+          std::cout << "Rebinning histogram with non-uniform edges" << std::endl;
+          histF = rebinHistogram(histF, nuBins); // nuBins
+        }
+        else if (rebinFactor > 1)
+        {
+          histF->Rebin(rebinFactor);
+        }
+
+        histF->Scale(1. / 2, "width");
+
+        // Determine the leftmost point with a value in the projection histograms
+        //float leftmost_limit = 0;
+        if (dynamic_left)
+        {
+          for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
           {
-            float leftmost_limit = histF->GetBinLowEdge(bin);
-            limits[0] = leftmost_limit;
-            break;
+            if (histF->GetBinContent(bin) > 0)
+            {
+              float leftmost_limit = histF->GetBinLowEdge(bin);
+              limits[0] = leftmost_limit;
+              break;
+            }
           }
         }
+
+        double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
+        double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
+        TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
+        double Eta_pt = (pt_min + pt_max) / 2.0;
+        scale_histogram_errors(histF, scale_factor);
+        
+        // Fit Eta Gaussian in the specified range
+        TF1 *gausFit = new TF1("gausFit", "gaus", limits[6], limits[7]);
+        gausFit->SetParLimits(1, 0.50, 0.64);
+        gausFit->SetParLimits(2, 0.03, 0.25);
+        gausFit->SetNpx(1000);
+        histF->Fit(gausFit, "REQ");
+
+        // Check if the fit returns NaN or Inf
+        bool fitFailed = false;
+        for (int i = 0; i < gausFit->GetNpar(); i++) {
+            double param = gausFit->GetParameter(i);
+            if (std::isnan(param) || std::isinf(param)) {
+                fitFailed = true;
+                break;
+            }
+        }
+        if (fitFailed) {
+            std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
+            continue;
+        }
+        double Emean = gausFit->GetParameter(1);
+        double Esigma = gausFit->GetParameter(2);
+        double EmeanErr = gausFit->GetParError(1);
+        double EsigmaErr = gausFit->GetParError(2);
+        double EWidth = Esigma / Emean;
+        double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
+
+        double MassRatio = Pion_Mean[j] / Emean;
+        double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
+
+        //Eta_Mean.push_back(Emean);
+        //Eta_Width.push_back(EWidth);
+        //Eta_Mean_errors.push_back(EmeanErr);
+        //Eta_Width_errors.push_back(EWidthErr);
+        //pT_Bins.push_back(Eta_pt);
+        //pT_Bins_Errors.push_back(0);
+
+        etameanGraph[filecounter]->SetPoint(bincounter, Eta_pt, Emean);
+        etameanGraph[filecounter]->SetPointError(bincounter, 0, EmeanErr);
+        etawidthGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
+        etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
+        massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
+        massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
+        bincounter++;
+        //std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
+        std::cout << "Bincounter: " << bincounter << std::endl;
       }
 
-      double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
-      double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
-      TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
-      double Eta_pt = (pt_min + pt_max) / 2.0;
-      scale_histogram_errors(histF, scale_factor);
-      
-      // Fit Eta Gaussian in the specified range
-      TF1 *gausFit = new TF1("gausFit", "gaus", limits[6], limits[7]);
-      gausFit->SetParLimits(1, 0.50, 0.64);
-      gausFit->SetParLimits(2, 0.03, 0.25);
-      gausFit->SetNpx(1000);
-      histF->Fit(gausFit, "REQ");
+      MarkerStyle+=1;
+      MarkerColor+=1;
+      if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
+      etameanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+      etameanGraph[filecounter]->SetMarkerColor(MarkerColor);  
+      // etameanGraph[j]->SetMarkerSize(1.5);
+      // etameanGraph[j]->SetLineColor(MarkerColor);
+      // etameanGraph[j]->SetLineWidth(2);
+      // etameanGraph[j]->SetLineStyle(1);
+      // etameanGraph[j]->SetFillColor(0);
+      // etameanGraph[j]->SetFillStyle(0);
 
-      // Check if the fit returns NaN or Inf
-      bool fitFailed = false;
-      for (int i = 0; i < gausFit->GetNpar(); i++) {
-          double param = gausFit->GetParameter(i);
-          if (std::isnan(param) || std::isinf(param)) {
-              fitFailed = true;
-              break;
-          }
-      }
-      if (fitFailed) {
-          std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
-          continue;
-      }
-      double Emean = gausFit->GetParameter(1);
-      double Esigma = gausFit->GetParameter(2);
-      double EmeanErr = gausFit->GetParError(1);
-      double EsigmaErr = gausFit->GetParError(2);
-      double EWidth = Esigma / Emean;
-      double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
+      etawidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+      etawidthGraph[filecounter]->SetMarkerColor(MarkerColor);
 
-      double MassRatio = Pion_Mean[j] / Emean;
-      double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
+      massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+      massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
 
-      //Eta_Mean.push_back(Emean);
-      //Eta_Width.push_back(EWidth);
-      //Eta_Mean_errors.push_back(EmeanErr);
-      //Eta_Width_errors.push_back(EWidthErr);
-      //pT_Bins.push_back(Eta_pt);
-      //pT_Bins_Errors.push_back(0);
+      gEtaMeans->Add(etameanGraph[filecounter], "PE");
+      legend3->AddEntry(etameanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
-      etameanGraph[filecounter]->SetPoint(bincounter, Eta_pt, Emean);
-      etameanGraph[filecounter]->SetPointError(bincounter, 0, EmeanErr);
-      etawidthGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
-      etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
-      massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
-      massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
-      bincounter++;
-      //std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
-      std::cout << "Bincounter: " << bincounter << std::endl;
-    }
+      gEtaWidths->Add(etawidthGraph[filecounter], "PE");
+      legend4->AddEntry(etawidthGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
-    MarkerStyle+=1;
-    MarkerColor+=1;
-    if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
-    etameanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-    etameanGraph[filecounter]->SetMarkerColor(MarkerColor);  
-    // etameanGraph[j]->SetMarkerSize(1.5);
-    // etameanGraph[j]->SetLineColor(MarkerColor);
-    // etameanGraph[j]->SetLineWidth(2);
-    // etameanGraph[j]->SetLineStyle(1);
-    // etameanGraph[j]->SetFillColor(0);
-    // etameanGraph[j]->SetFillStyle(0);
-
-    etawidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-    etawidthGraph[filecounter]->SetMarkerColor(MarkerColor);
-
-    massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-    massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
-
-    gEtaMeans->Add(etameanGraph[filecounter], "PE");
-    legend3->AddEntry(etameanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
-
-    gEtaWidths->Add(etawidthGraph[filecounter], "PE");
-    legend4->AddEntry(etawidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
-
-    gMassRatios->Add(massRatioGraph[filecounter], "PE");
-    legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+      gMassRatios->Add(massRatioGraph[filecounter], "PE");
+      legend5->AddEntry(massRatioGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
     }
 
