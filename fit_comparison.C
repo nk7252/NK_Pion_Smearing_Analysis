@@ -110,7 +110,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // Create a PDF to save the canvases
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
-  dummyCanvas->Print("pioncode/canvas_pdf/fit_results.pdf[");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf[");
   //top right (0.66, 0.7, 0.90, 0.9)
   //top left (0.2, 0.7, 0.44, 0.9)
   //bottom left (0.2, 0.2, 0.44, 0.4)
@@ -120,11 +120,15 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TLegend *legend3 = new TLegend(0.66, 0.7, 0.90, 0.9);//eta mean
   TLegend *legend4 = new TLegend(0.2, 0.7, 0.44, 0.9);//eta width
   TLegend *legend5 = new TLegend(0.2, 0.7, 0.44, 0.9);//mass ratio
+  TLegend *legend6 = new TLegend(0.2, 0.7, 0.44, 0.9);//pion resolution
+  TLegend *legend7 = new TLegend(0.2, 0.7, 0.44, 0.9);//eta resolution
   legend1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
   legend2->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
   legend3->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
   legend4->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
   legend5->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+  legend6->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+  legend7->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
   
 
   std::vector<double> Pion_Mean, Pion_Width, Eta_Mean, Eta_Width, Mass_Ratio;
@@ -395,16 +399,21 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     // Print the fit parameters on a new canvas
     TCanvas *PfitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
     TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-    PparamsText->AddText("Fitted Resolution Parameters:");
+    PparamsText->AddText("Pion Fitted Resolution Parameters:");
+    PparamsText->AddText(unweighted_legendNames[j].c_str());
     PparamsText->AddText(Form("Stochastic term (a): %.4f", PresolutionFit->GetParameter(0)));
     //paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
     PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
     PparamsText->Draw();
 
+    
+    gPResolutions->Add(PresolutionGraph[filecounter], "PE");
+    legend6->AddEntry(PresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
     // Save the plot to the PDF
-    PresCanvas->Print("pioncode/canvas_pdf/fit_results.pdf");
+    PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     PresCanvas->Close();
-    PfitParamsCanvas->Print("pioncode/canvas_pdf/fit_results.pdf");
+    PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     PfitParamsCanvas->Close();
 
     //------------------------------------------------------------------------------------------------
@@ -421,15 +430,19 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     TCanvas *EfitParamsCanvas = new TCanvas("EfitParamsCanvas", "Fit Parameters", 800, 600);
     TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-    EparamsText->AddText("Fitted Resolution Parameters:");
+    EparamsText->AddText("Eta Fitted Resolution Parameters:");
+    EparamsText->AddText(unweighted_legendNames[j].c_str());
     EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
     //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
     EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
     EparamsText->Draw();
 
-    EresCanvas->Print("pioncode/canvas_pdf/fit_results.pdf");
+    gEResolutions->Add(PresolutionGraph[filecounter], "PE");
+    legend7->AddEntry(PresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
+    EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     EresCanvas->Close();
-    EfitParamsCanvas->Print("pioncode/canvas_pdf/fit_results.pdf");
+    EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     EfitParamsCanvas->Close();
 
     file.Close();
@@ -1115,13 +1128,36 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   legend5->Draw();
   //c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
-  //TCanvas *c6 = new TCanvas("c6", "Canvas6", 800, 600);
+  TCanvas *c6 = new TCanvas("c6", "Canvas6", 800, 600);
   //gPad->SetFillColor(33);
+  gPResolutions->SetTitle("Pion: Smeared pT vs Resolution;#it{pT}_{#gamma#gamma} (GeV); Pion Resolution");
+  gPResolutions->GetXaxis()->SetLimits(0.01, 10);
+  gPResolutions->SetMinimum(0.01);
+  //gPResolutions->SetMaximum(0.3);
+  gPResolutions->Draw("APE");
+  legend6->SetFillStyle(0);
+  legend6->SetTextAlign(32);
+  legend6->SetTextSize(0.02);
+  legend6->Draw();
+  c6->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+
+  TCanvas *c7 = new TCanvas("c7", "Canvas7", 800, 600);
+  //gPad->SetFillColor(33);
+  gEResolutions->SetTitle("Eta: Smeared pT vs Resolution;#it{pT}_{#gamma#gamma} (GeV); Eta Resolution");
+  gEResolutions->GetXaxis()->SetLimits(0.01, 17);
+  gEResolutions->SetMinimum(0.01);
+  //gEResolutions->SetMaximum(0.3);
+  gEResolutions->Draw("APE");
+  legend7->SetFillStyle(0);
+  legend7->SetTextAlign(32);
+  legend7->SetTextSize(0.02);
+  legend7->Draw();
+  c7->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
 
 
   // Close the PDF file
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
-  dummyCanvas->Print("pioncode/canvas_pdf/fit_results.pdf]");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf]");
 
   TFile outputFile("pioncode/rootfiles/ptdifferential_overlay.root", "RECREATE");
   gPionMeans->Write("gPionMean");
