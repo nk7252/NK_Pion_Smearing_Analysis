@@ -577,6 +577,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       pionwidthGraph[filecounter]->SetMarkerColor(MarkerColor);
       PresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       PresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
+      PresolutionGraph[filecounter]->SetLineColor(MarkerColor);
 
 
       gPionMeans->Add(pionmeanGraph[filecounter], "PE");
@@ -614,8 +615,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       
       gPResolutions->Add(PresolutionGraph[filecounter], "PE");
-      legend6->AddEntry(PresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
-
+      legend6->AddEntry(PresolutionGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
       // Save the plot to the PDF
       PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
       PresCanvas->Close();
@@ -742,12 +742,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
+      EresolutionGraph[filecounter]->SetLineColor(MarkerColor);
 
       gEtaMeans->Add(etameanGraph[filecounter], "PE");
-      legend3->AddEntry(etameanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+      legend3->AddEntry(etameanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
       gEtaWidths->Add(etawidthGraph[filecounter], "PE");
-      legend4->AddEntry(etawidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+      legend4->AddEntry(etawidthGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
       //gMassRatios->Add(massRatioGraph[filecounter], "PE");
       //legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
@@ -776,7 +777,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       EparamsText->Draw();
 
       gEResolutions->Add(EresolutionGraph[filecounter], "PE");
-      legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+      legend7->AddEntry(EresolutionGraph[filecounter],  SPMC_legendNames[j].c_str(), "P");
 
       EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
       EresCanvas->Close();
