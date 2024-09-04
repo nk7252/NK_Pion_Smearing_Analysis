@@ -577,7 +577,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       pionwidthGraph[filecounter]->SetMarkerColor(MarkerColor);
       PresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       PresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
-      PresolutionGraph[filecounter]->SetLineColor(MarkerColor);
+      //PresolutionGraph[filecounter]->SetLineColor(MarkerColor);
 
 
       gPionMeans->Add(pionmeanGraph[filecounter], "PE");
@@ -742,7 +742,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
-      EresolutionGraph[filecounter]->SetLineColor(MarkerColor);
+      //EresolutionGraph[filecounter]->SetLineColor(MarkerColor);
 
       gEtaMeans->Add(etameanGraph[filecounter], "PE");
       legend3->AddEntry(etameanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
