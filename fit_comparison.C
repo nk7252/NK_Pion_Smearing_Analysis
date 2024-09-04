@@ -11,7 +11,10 @@
 #include <TGraphErrors.h>
 #include <TCanvas.h>
 #include <TLegend.h>
+#include <TPaveText.h>
 #include <TStyle.h>
+#include <TApplication.h>
+#include <TROOT.h>
 #include <Math/MinimizerOptions.h>
 #include <Math/Factory.h>
 #include <Math/Functor.h>
