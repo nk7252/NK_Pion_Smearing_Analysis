@@ -450,6 +450,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     EfitParamsCanvas->Close();
 
     file.Close();
+    std::cout << "Finished processing file: " << unweightedFileNames[j] << std::endl;
     filecounter++;
   }
   
@@ -530,7 +531,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         gausFit->SetParLimits(1, 0.11, 0.19);
         gausFit->SetParLimits(2, 0.01, 0.25);
         gausFit->SetNpx(1000);
-        histF->Fit(gausFit, "RE");
+        histF->Fit(gausFit, "REQ");
 
         // Get the fit parameters
         double Pmean = gausFit->GetParameter(1);
@@ -715,7 +716,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
         bincounter++;
         //std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
-        std::cout << "Bincounter: " << bincounter << std::endl;
+        //std::cout << "Bincounter: " << bincounter << std::endl;
       }
 
       MarkerStyle+=1;
@@ -781,6 +782,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     }
 
     file.Close();
+    std::cout << "Finished processing file: " << SPMC_FileNames[j] << std::endl;
     filecounter++;
   }
 
@@ -1129,6 +1131,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     }
 
     file.Close();
+    std::cout << "Finished processing file: " << FastMC_FileNames[j] << std::endl;
     filecounter++;
   }
 
