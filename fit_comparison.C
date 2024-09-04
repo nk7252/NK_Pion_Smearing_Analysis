@@ -441,8 +441,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     EparamsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
     EparamsText->Draw();
 
-    gEResolutions->Add(PresolutionGraph[filecounter], "PE");
-    legend7->AddEntry(PresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+    gEResolutions->Add(EresolutionGraph[filecounter], "PE");
+    legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
     EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     EresCanvas->Close();
@@ -1136,7 +1136,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   //gPad->SetFillColor(33);
   gPResolutions->SetTitle("Pion: Smeared pT vs Resolution;#it{pT}_{#gamma#gamma} (GeV); Pion Resolution");
   gPResolutions->GetXaxis()->SetLimits(0.01, 10);
-  gPResolutions->SetMinimum(0.01);
+  gPResolutions->SetMinimum(0.1);
   //gPResolutions->SetMaximum(0.3);
   gPResolutions->Draw("APE");
   legend6->SetFillStyle(0);
@@ -1149,7 +1149,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   //gPad->SetFillColor(33);
   gEResolutions->SetTitle("Eta: Smeared pT vs Resolution;#it{pT}_{#gamma#gamma} (GeV); Eta Resolution");
   gEResolutions->GetXaxis()->SetLimits(0.01, 17);
-  gEResolutions->SetMinimum(0.01);
+  gEResolutions->SetMinimum(0.04);
   //gEResolutions->SetMaximum(0.3);
   gEResolutions->Draw("APE");
   legend7->SetFillStyle(0);
