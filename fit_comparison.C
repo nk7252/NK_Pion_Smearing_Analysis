@@ -93,9 +93,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   bool var_bins = false;
   int rebinFactor = 1;
   bool dynamic_left = true;
-  int startBin = 1;
+  int startBin = 9;
   int endBin_global = -1;
-  int projectionBins = 1;
+  int projectionBins = 4;
   double scale_factor = 1.0;
   double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05,0.35, 0.52, 0.68, 0.35, 1.0};
   /*
@@ -1062,11 +1062,11 @@ void fit_comparison()
 {
   //-----------------------------------------
   std::vector<std::string> unweighted_fileNames = {
-    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
+
     "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V36.root",
-    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root"};
-  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d","h_InvMass_2d", "h_InvMass_smear_2d_100"};
-  std::vector<std::string> unweighted_legendNames = {"Pythia","Pythia_wvfm_E","Pythia_wvfm_E+10%smr"};
+    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root"};//    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
+  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_smear_2d_100"};//"h_InvMass_2d",
+  std::vector<std::string> unweighted_legendNames = {"Pythia_wvfm_E","Pythia_wvfm_E+10%smr"};//"Pythia",
 
   //-----------------------------------------
   std::vector<std::string> SPMC_FileNames = {
