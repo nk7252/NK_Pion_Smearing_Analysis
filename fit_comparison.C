@@ -392,7 +392,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     // Create a canvas to plot the resolution graph and fit
     TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
-    PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
+    PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); Pion #sigma / #mu");
     PresolutionGraph[filecounter]->Draw("APE");
     PresolutionFit->Draw("same");
 
@@ -404,6 +404,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     PparamsText->AddText(Form("Stochastic term (a): %.4f", PresolutionFit->GetParameter(0)));
     //paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
     PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
+    //add goodness of fit
+    paramsText->AddText(Form("Chi2/ndf: %.4f", PresolutionFit->GetChisquare() / PresolutionFit->GetNDF()));
     PparamsText->Draw();
 
     
@@ -435,6 +437,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
     //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
     EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
+    //add goodness of fit
+    paramsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
     EparamsText->Draw();
 
     gEResolutions->Add(PresolutionGraph[filecounter], "PE");
