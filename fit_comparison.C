@@ -376,31 +376,34 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     legend5->AddEntry(massRatioGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
     // Define a function for the energy resolution fit
-    TF1 *resolutionFit = new TF1("resolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
-    resolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
+    TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+    PresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
+    TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+    EresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
     // Fit the resolution graph
-    resolutionGraph->Fit(resolutionFit, "R");  // Fit and constrain to the range of pT
+    PresolutionGraph->Fit(PresolutionFit, "R");  // Fit and constrain to the range of pT
+    EresolutionGraph->Fit(EresolutionFit, "R");
 
     // Create a canvas to plot the resolution graph and fit
-    TCanvas *resCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
-    resolutionGraph->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
-    resolutionGraph->Draw("APE");
-    resolutionFit->Draw("same");
+    TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
+    PresolutionGraph->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
+    PresolutionGraph->Draw("APE");
+    PresolutionFit->Draw("same");
 
     // Print the fit parameters on a new canvas
-    TCanvas *fitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
-    TPaveText *paramsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-    paramsText->AddText("Fitted Resolution Parameters:");
-    paramsText->AddText(Form("Stochastic term (a): %.4f", resolutionFit->GetParameter(0)));
-    //paramsText->AddText(Form("Noise term (b): %.4f", resolutionFit->GetParameter(2)));
-    paramsText->AddText(Form("Constant term (c): %.4f", resolutionFit->GetParameter(1)));
-    paramsText->Draw();
+    TCanvas *PfitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
+    TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
+    PparamsText->AddText("Fitted Resolution Parameters:");
+    PparamsText->AddText(Form("Stochastic term (a): %.4f", PresolutionFit->GetParameter(0)));
+    //paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
+    PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
+    PparamsText->Draw();
 
     // Save the plot to the PDF
-    resCanvas->Print("fit_results.pdf");
-    resCanvas->Close();
-    fitParamsCanvas->Print("fit_results.pdf");
-    fitParamsCanvas->Close();
+    PresCanvas->Print("fit_results.pdf");
+    PresCanvas->Close();
+    PfitParamsCanvas->Print("fit_results.pdf");
+    PfitParamsCanvas->Close();
 
     file.Close();
     filecounter++;
