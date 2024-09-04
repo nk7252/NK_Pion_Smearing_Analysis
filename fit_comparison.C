@@ -120,8 +120,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TLegend *legend3 = new TLegend(0.66, 0.7, 0.90, 0.9);//eta mean
   TLegend *legend4 = new TLegend(0.2, 0.7, 0.44, 0.9);//eta width
   TLegend *legend5 = new TLegend(0.2, 0.7, 0.44, 0.9);//mass ratio
-  TLegend *legend6 = new TLegend(0.2, 0.7, 0.44, 0.9);//pion resolution
-  TLegend *legend7 = new TLegend(0.2, 0.7, 0.44, 0.9);//eta resolution
+  TLegend *legend6 = new TLegend(0.66, 0.7, 0.90, 0.9);//pion resolution
+  TLegend *legend7 = new TLegend(0.66, 0.7, 0.90, 0.9);//eta resolution
   legend1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
   legend2->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
   legend3->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
