@@ -418,9 +418,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     legend6->AddEntry(PresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
     // Save the plot to the PDF
-    PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    PresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     PresCanvas->Close();
-    PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    PfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     PfitParamsCanvas->Close();
 
     //------------------------------------------------------------------------------------------------
@@ -449,9 +449,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     gEResolutions->Add(EresolutionGraph[filecounter], "PE");
     legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
-    EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    EresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     EresCanvas->Close();
-    EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    EfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     EfitParamsCanvas->Close();
 
     file.Close();
@@ -594,13 +594,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       // Fit the resolution graph
       PresolutionGraph[filecounter]->Fit(PresolutionFit, "R"); // Fit and constrain to the range of pT
-/*
+
       // Create a canvas to plot the resolution graph and fit
       TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
       PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); Pion #sigma / #mu");
       PresolutionGraph[filecounter]->Draw("APE");
       PresolutionFit->Draw("same");
-
+/*
       // Print the fit parameters on a new canvas
       TCanvas *PfitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
       TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
@@ -612,13 +612,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // add goodness of fit
       PparamsText->AddText(Form("Chi2/ndf: %.4f", PresolutionFit->GetChisquare() / PresolutionFit->GetNDF()));
       PparamsText->Draw();
-
+*/
       gPResolutions->Add(PresolutionGraph[filecounter], "PE");
       legend6->AddEntry(PresolutionGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
       // Save the plot to the PDF
-      PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    */
+      //PresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      //PfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    
     }
 
     else if (SPMC_FileTypes[j] == 1) // eta
