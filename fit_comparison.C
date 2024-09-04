@@ -405,7 +405,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     //paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
     PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
     //add goodness of fit
-    paramsText->AddText(Form("Chi2/ndf: %.4f", PresolutionFit->GetChisquare() / PresolutionFit->GetNDF()));
+    PparamsText->AddText(Form("Chi2/ndf: %.4f", PresolutionFit->GetChisquare() / PresolutionFit->GetNDF()));
     PparamsText->Draw();
 
     
@@ -438,7 +438,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
     EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
     //add goodness of fit
-    paramsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
+    EparamsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
     EparamsText->Draw();
 
     gEResolutions->Add(PresolutionGraph[filecounter], "PE");
