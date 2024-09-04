@@ -417,11 +417,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     // Save the plot to the PDF
     PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    PresCanvas->Close();
-    PresCanvas->Delete();
     PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    PfitParamsCanvas->Close();
-    PfitParamsCanvas->Delete();
 
     //------------------------------------------------------------------------------------------------
     
@@ -450,11 +446,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
     EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    EresCanvas->Close();
-    EresCanvas->Delete();
     EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    EfitParamsCanvas->Close();
-    EfitParamsCanvas->Delete();
 
     file.Close();
     std::cout << "Finished processing file: " << unweightedFileNames[j] << std::endl;
@@ -622,9 +614,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       legend6->AddEntry(PresolutionGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
       // Save the plot to the PDF
       PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      PresCanvas->Close();
       PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      PfitParamsCanvas->Close();
 
     }
 
@@ -784,11 +774,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       legend7->AddEntry(EresolutionGraph[filecounter],  SPMC_legendNames[j].c_str(), "P");
 
       EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      EresCanvas->Close();
-      EresCanvas->Delete();
+      
       EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      EfitParamsCanvas->Close();
-      EfitParamsCanvas->Delete();
     }
 
     file.Close();
