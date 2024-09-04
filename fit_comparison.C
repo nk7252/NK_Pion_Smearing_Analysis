@@ -417,7 +417,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     // Save the plot to the PDF
     PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    PresCanvas->Close();
     PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    PfitParamsCanvas->Close();
 
     //------------------------------------------------------------------------------------------------
     
@@ -446,10 +448,11 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
     EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    EresCanvas->Close();
     EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    EfitParamsCanvas->Close();
 
     file.Close();
-    std::cout << "Finished processing file: " << unweightedFileNames[j] << std::endl;
     filecounter++;
   }
   
@@ -552,8 +555,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         pionwidthGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);
         pionwidthGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr);
         PresolutionGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);  
-        PresolutionGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr); 
-
+        PresolutionGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr);
         bincounter++;
     }
 
@@ -571,10 +573,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       pionwidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       pionwidthGraph[filecounter]->SetMarkerColor(MarkerColor);
+
       PresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       PresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
-      //PresolutionGraph[filecounter]->SetLineColor(MarkerColor);
-
 
       gPionMeans->Add(pionmeanGraph[filecounter], "PE");
       legend1->AddEntry(pionmeanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
@@ -709,11 +710,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
         //massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
         //massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
-        EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);  
-        EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
         bincounter++;
         //std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
-        //std::cout << "Bincounter: " << bincounter << std::endl;
+        std::cout << "Bincounter: " << bincounter << std::endl;
       }
 
       MarkerStyle+=1;
@@ -734,52 +733,17 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       //massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
 
-      EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-      EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
-      //EresolutionGraph[filecounter]->SetLineColor(MarkerColor);
-
       gEtaMeans->Add(etameanGraph[filecounter], "PE");
-      legend3->AddEntry(etameanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+      legend3->AddEntry(etameanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
       gEtaWidths->Add(etawidthGraph[filecounter], "PE");
-      legend4->AddEntry(etawidthGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+      legend4->AddEntry(etawidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
       //gMassRatios->Add(massRatioGraph[filecounter], "PE");
       //legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
-
-      //------------------------------------------------------------------------------------------------
-      
-      // Define a function for the eta energy resolution fit
-      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
-      EresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
-      EresolutionGraph[filecounter]->Fit(EresolutionFit, "R");
-
-      TCanvas *EresCanvas = new TCanvas("EresCanvas", "Resolution Fit", 800, 600);
-      EresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
-      EresolutionGraph[filecounter]->Draw("APE");
-      EresolutionFit->Draw("same");
-
-      TCanvas *EfitParamsCanvas = new TCanvas("EfitParamsCanvas", "Fit Parameters", 800, 600);
-      TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-      EparamsText->AddText("Eta Fitted Resolution Parameters:");
-      EparamsText->AddText(unweighted_legendNames[j].c_str());
-      EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
-      //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
-      EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
-      //add goodness of fit
-      EparamsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
-      EparamsText->Draw();
-
-      gEResolutions->Add(EresolutionGraph[filecounter], "PE");
-      legend7->AddEntry(EresolutionGraph[filecounter],  SPMC_legendNames[j].c_str(), "P");
-
-      EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      
-      EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     }
 
     file.Close();
-    std::cout << "Finished processing file: " << SPMC_FileNames[j] << std::endl;
     filecounter++;
   }
 
@@ -810,160 +774,116 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     // Loop over the x-axis bins
     int bincounter = 1;
     if(FastMC_FileTypes[j]==0){//pion
-      for (int i = startBin; i <= endBin; i += projectionBins)
+    for (int i = startBin; i <= endBin; i += projectionBins)
+    {
+      // Project the histogram along the Y-axis
+      int lastBin = std::min(i + projectionBins - 1, nBinsX);
+      TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
+      // Check if the projection has enough entries to perform a fit
+      if (yProjection->GetEntries() < 1000)
+      { // Adjust the threshold as needed
+        delete yProjection;
+        continue;
+      }
+      TH1D *histF = (TH1D *)yProjection;
+      // re binning
+      if (var_bins && !nuBins.empty())
       {
-        // Project the histogram along the Y-axis
-        int lastBin = std::min(i + projectionBins - 1, nBinsX);
-        TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
-        // Check if the projection has enough entries to perform a fit
-        if (yProjection->GetEntries() < 1000)
-        { // Adjust the threshold as needed
-          delete yProjection;
-          continue;
-        }
-        TH1D *histF = (TH1D *)yProjection;
-        // re binning
-        if (var_bins && !nuBins.empty())
-        {
-          std::cout << "Rebinning histogram with non-uniform edges" << std::endl;
-          histF = rebinHistogram(histF, nuBins); // nuBins
-        }
-        else if (rebinFactor > 1)
-        {
-          histF->Rebin(rebinFactor);
-        }
-
-        histF->Scale(1. / 2, "width");
-
-        // Determine the leftmost point with a value in the projection histograms
-        //float leftmost_limit = 0;
-        if (dynamic_left)
-        {
-          for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
-          {
-            if (histF->GetBinContent(bin) > 0)
-            {
-              float leftmost_limit = histF->GetBinLowEdge(bin);
-              limits[0] = leftmost_limit;
-              break;
-            }
-          }
-        }
-
-        double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
-        double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
-        TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
-        double pion_pt = (pt_min + pt_max) / 2.0;
-        scale_histogram_errors(histF, scale_factor);
-        
-        // Fit Pion Gaussian in the specified range
-        TF1 *gausFit = new TF1("gausFit", "gaus", limits[2], limits[3]);
-        gausFit->SetParLimits(1, 0.11, 0.19);
-        gausFit->SetParLimits(2, 0.01, 0.25);
-        gausFit->SetNpx(1000);
-        histF->Fit(gausFit, "REQ");
-
-        // Check if the fit returns NaN or Inf
-        bool fitFailed = false;
-        for (int i = 0; i < gausFit->GetNpar(); i++) {
-            double param = gausFit->GetParameter(i);
-            if (std::isnan(param) || std::isinf(param)) {
-                fitFailed = true;
-                break;
-            }
-        }
-        if (fitFailed) {
-            std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
-            continue;
-        }
-
-        // Get the fit parameters
-        double Pmean = gausFit->GetParameter(1);
-        double Psigma = gausFit->GetParameter(2);
-        double PmeanErr = gausFit->GetParError(1);
-        double PsigmaErr = gausFit->GetParError(2);
-        double PWidth = Psigma / Pmean;
-        double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
-
-        Pion_Mean.push_back(Pmean);
-        Pion_Width.push_back(PWidth);
-        Pion_Mean_errors.push_back(PmeanErr);
-        Pion_Width_errors.push_back(PWidthErr);
-
-        //pT_Bins.push_back(pion_pt);
-        //pT_Bins_Errors.push_back(0);
-
-        pionmeanGraph[filecounter]->SetPoint(bincounter, pion_pt, Pmean);
-        pionmeanGraph[filecounter]->SetPointError(bincounter, 0, PmeanErr);
-        pionwidthGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);
-        pionwidthGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr);
-        PresolutionGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);  
-        PresolutionGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr); 
-
-        bincounter++;
+        std::cout << "Rebinning histogram with non-uniform edges" << std::endl;
+        histF = rebinHistogram(histF, nuBins); // nuBins
+      }
+      else if (rebinFactor > 1)
+      {
+        histF->Rebin(rebinFactor);
       }
 
-      MarkerStyle+=1;
-      MarkerColor+=1;
-      if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
-      pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-      pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
-      // pionmeanGraph[j]->SetMarkerSize(1.5);
-      // pionmeanGraph[j]->SetLineColor(MarkerColor);
-      // pionmeanGraph[j]->SetLineWidth(2);
-      // pionmeanGraph[j]->SetLineStyle(1);
-      // pionmeanGraph[j]->SetFillColor(0);
-      // pionmeanGraph[j]->SetFillStyle(0);
+      histF->Scale(1. / 2, "width");
 
-      pionwidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-      pionwidthGraph[filecounter]->SetMarkerColor(MarkerColor);
+      // Determine the leftmost point with a value in the projection histograms
+      //float leftmost_limit = 0;
+      if (dynamic_left)
+      {
+        for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
+        {
+          if (histF->GetBinContent(bin) > 0)
+          {
+            float leftmost_limit = histF->GetBinLowEdge(bin);
+            limits[0] = leftmost_limit;
+            break;
+          }
+        }
+      }
 
-      PresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-      PresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
-
-
-      gPionMeans->Add(pionmeanGraph[filecounter], "PE");
-      legend1->AddEntry(pionmeanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
-
-      gPionWidths->Add(pionwidthGraph[filecounter], "PE");
-      legend2->AddEntry(pionwidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
-
-      //------------------------------------------------------------------------------------------------
-
-      // Define a function for the pion energy resolution fit
-      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
-      PresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
-
-      // Fit the resolution graph
-      PresolutionGraph[filecounter]->Fit(PresolutionFit, "R");  // Fit and constrain to the range of pT
-
-      // Create a canvas to plot the resolution graph and fit
-      TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
-      PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); Pion #sigma / #mu");
-      PresolutionGraph[filecounter]->Draw("APE");
-      PresolutionFit->Draw("same");
-
-      // Print the fit parameters on a new canvas
-      TCanvas *PfitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
-      TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-      PparamsText->AddText("Pion Fitted Resolution Parameters:");
-      PparamsText->AddText(unweighted_legendNames[j].c_str());
-      PparamsText->AddText(Form("Stochastic term (a): %.4f", PresolutionFit->GetParameter(0)));
-      //paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
-      PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
-      //add goodness of fit
-      PparamsText->AddText(Form("Chi2/ndf: %.4f", PresolutionFit->GetChisquare() / PresolutionFit->GetNDF()));
-      PparamsText->Draw();
-
+      double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
+      double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
+      TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
+      double pion_pt = (pt_min + pt_max) / 2.0;
+      scale_histogram_errors(histF, scale_factor);
       
-      gPResolutions->Add(PresolutionGraph[filecounter], "PE");
-      legend6->AddEntry(PresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+      // Fit Pion Gaussian in the specified range
+      TF1 *gausFit = new TF1("gausFit", "gaus", limits[2], limits[3]);
+      gausFit->SetParLimits(1, 0.11, 0.19);
+      gausFit->SetParLimits(2, 0.01, 0.25);
+      gausFit->SetNpx(1000);
+      histF->Fit(gausFit, "REQ");
 
-      // Save the plot to the PDF
-      PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      PresCanvas->Close();
-      PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      PfitParamsCanvas->Close();
+      // Check if the fit returns NaN or Inf
+      bool fitFailed = false;
+      for (int i = 0; i < gausFit->GetNpar(); i++) {
+          double param = gausFit->GetParameter(i);
+          if (std::isnan(param) || std::isinf(param)) {
+              fitFailed = true;
+              break;
+          }
+      }
+      if (fitFailed) {
+          std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
+          continue;
+      }
+
+      // Get the fit parameters
+      double Pmean = gausFit->GetParameter(1);
+      double Psigma = gausFit->GetParameter(2);
+      double PmeanErr = gausFit->GetParError(1);
+      double PsigmaErr = gausFit->GetParError(2);
+      double PWidth = Psigma / Pmean;
+      double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
+
+      Pion_Mean.push_back(Pmean);
+      Pion_Width.push_back(PWidth);
+      Pion_Mean_errors.push_back(PmeanErr);
+      Pion_Width_errors.push_back(PWidthErr);
+
+      //pT_Bins.push_back(pion_pt);
+      //pT_Bins_Errors.push_back(0);
+
+      pionmeanGraph[filecounter]->SetPoint(bincounter, pion_pt, Pmean);
+      pionmeanGraph[filecounter]->SetPointError(bincounter, 0, PmeanErr);
+      pionwidthGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);
+      pionwidthGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr);
+      bincounter++;
+    }
+
+    MarkerStyle+=1;
+    MarkerColor+=1;
+    if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
+    pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
+    // pionmeanGraph[j]->SetMarkerSize(1.5);
+    // pionmeanGraph[j]->SetLineColor(MarkerColor);
+    // pionmeanGraph[j]->SetLineWidth(2);
+    // pionmeanGraph[j]->SetLineStyle(1);
+    // pionmeanGraph[j]->SetFillColor(0);
+    // pionmeanGraph[j]->SetFillStyle(0);
+
+    pionwidthGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    pionwidthGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    gPionMeans->Add(pionmeanGraph[filecounter], "PE");
+    legend1->AddEntry(pionmeanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+
+    gPionWidths->Add(pionwidthGraph[filecounter], "PE");
+    legend2->AddEntry(pionwidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
     }
     else if(FastMC_FileTypes[j]==1){//eta
       for (int i = startBin; i <= endBin; i += projectionBins)
@@ -1057,8 +977,6 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
         massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
         massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
-        EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);  
-        EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
         bincounter++;
         //std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
         std::cout << "Bincounter: " << bincounter << std::endl;
@@ -1082,9 +1000,6 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
 
-      EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-      EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
-
       gEtaMeans->Add(etameanGraph[filecounter], "PE");
       legend3->AddEntry(etameanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
@@ -1094,41 +1009,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gMassRatios->Add(massRatioGraph[filecounter], "PE");
       legend5->AddEntry(massRatioGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
-      //------------------------------------------------------------------------------------------------
-    
-      // Define a function for the eta energy resolution fit
-      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
-      EresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
-      EresolutionGraph[filecounter]->Fit(EresolutionFit, "R");
-
-      TCanvas *EresCanvas = new TCanvas("EresCanvas", "Resolution Fit", 800, 600);
-      EresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
-      EresolutionGraph[filecounter]->Draw("APE");
-      EresolutionFit->Draw("same");
-
-      TCanvas *EfitParamsCanvas = new TCanvas("EfitParamsCanvas", "Fit Parameters", 800, 600);
-      TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-      EparamsText->AddText("Eta Fitted Resolution Parameters:");
-      EparamsText->AddText(unweighted_legendNames[j].c_str());
-      EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
-      //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
-      EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
-      //add goodness of fit
-      EparamsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
-      EparamsText->Draw();
-
-      gEResolutions->Add(EresolutionGraph[filecounter], "PE");
-      legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
-
-      EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      EresCanvas->Close();
-      EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      EfitParamsCanvas->Close();
-
     }
 
     file.Close();
-    std::cout << "Finished processing file: " << FastMC_FileNames[j] << std::endl;
     filecounter++;
   }
 
@@ -1335,13 +1218,13 @@ void fit_comparison()
 {
   //-----------------------------------------
   std::vector<std::string> unweighted_fileNames = {
+
     "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V36.root",
     "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root"};//    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
   std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_smear_2d_100"};//"h_InvMass_2d",
   std::vector<std::string> unweighted_legendNames = {"Pythia_wvfm_E","Pythia_wvfm_E+10%smr"};//"Pythia",
 
   //-----------------------------------------
-
   std::vector<std::string> SPMC_FileNames = {
     "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38.root",
     "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V39.root",
