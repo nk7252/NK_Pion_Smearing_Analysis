@@ -156,6 +156,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     etameanGraph[j] = new TGraphErrors();
     etawidthGraph[j] = new TGraphErrors();
     massRatioGraph[j] = new TGraphErrors();
+    PresolutionGraph[j] = new TGraphErrors();
+    EresolutionGraph[j] = new TGraphErrors();
   }
 
   int MarkerStyle = 24;
