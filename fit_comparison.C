@@ -375,19 +375,19 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     gMassRatios->Add(massRatioGraph[filecounter], "PE");
     legend5->AddEntry(massRatioGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
-    // Define a function for the energy resolution fit
+    //------------------------------------------------------------------------------------------------
+
+    // Define a function for the pion energy resolution fit
     TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
     PresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
-    TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
-    EresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
+
     // Fit the resolution graph
-    PresolutionGraph->Fit(PresolutionFit, "R");  // Fit and constrain to the range of pT
-    EresolutionGraph->Fit(EresolutionFit, "R");
+    PresolutionGraph[filecounter]->Fit(PresolutionFit, "R");  // Fit and constrain to the range of pT
 
     // Create a canvas to plot the resolution graph and fit
     TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
-    PresolutionGraph->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
-    PresolutionGraph->Draw("APE");
+    PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
+    PresolutionGraph[filecounter]->Draw("APE");
     PresolutionFit->Draw("same");
 
     // Print the fit parameters on a new canvas
@@ -404,6 +404,31 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     PresCanvas->Close();
     PfitParamsCanvas->Print("fit_results.pdf");
     PfitParamsCanvas->Close();
+
+    //------------------------------------------------------------------------------------------------
+    
+    // Define a function for the eta energy resolution fit
+    TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+    EresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
+    EresolutionGraph[filecounter]->Fit(EresolutionFit, "R");
+
+    TCanvas *EresCanvas = new TCanvas("EresCanvas", "Resolution Fit", 800, 600);
+    EresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
+    EresolutionGraph[filecounter]->Draw("APE");
+    EresolutionFit->Draw("same");
+
+    TCanvas *EfitParamsCanvas = new TCanvas("EfitParamsCanvas", "Fit Parameters", 800, 600);
+    TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
+    EparamsText->AddText("Fitted Resolution Parameters:");
+    EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
+    //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
+    EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
+    EparamsText->Draw();
+
+    EresCanvas->Print("fit_results.pdf");
+    EresCanvas->Close();
+    EfitParamsCanvas->Print("fit_results.pdf");
+    EfitParamsCanvas->Close();
 
     file.Close();
     filecounter++;
