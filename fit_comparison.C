@@ -110,6 +110,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // Create a PDF to save the canvases
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
+  dummyCanvas->Print("fit_results.pdf[");
   //top right (0.66, 0.7, 0.90, 0.9)
   //top left (0.2, 0.7, 0.44, 0.9)
   //bottom left (0.2, 0.2, 0.44, 0.4)
@@ -136,12 +137,16 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TMultiGraph *gEtaMeans = new TMultiGraph();
   TMultiGraph *gEtaWidths = new TMultiGraph();
   TMultiGraph *gMassRatios = new TMultiGraph();
+  TMultiGraph *gPResolutions = new TMultiGraph();
+  TMultiGraph *gEResolutions = new TMultiGraph();
   int totalfiles = unweightedFileNames.size()+ FastMC_FileNames.size() + SPMC_FileNames.size() + Run2024_FileNames.size();
   std::vector<TGraphErrors *> pionmeanGraph(totalfiles);
   std::vector<TGraphErrors *> pionwidthGraph(totalfiles);
   std::vector<TGraphErrors *> etameanGraph(totalfiles);
   std::vector<TGraphErrors *> etawidthGraph(totalfiles);
   std::vector<TGraphErrors *> massRatioGraph(totalfiles);
+  std::vector<TGraphErrors *> PresolutionGraph(totalfiles);
+  std::vector<TGraphErrors *> EresolutionGraph(totalfiles);
 
   // Initialize the graphs
   for (size_t j = 0; j < totalfiles; ++j)
@@ -319,12 +324,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
       massRatioGraph[filecounter]->SetPoint(bincounter, pion_pt, MassRatio);
       massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
+      PresolutionGraph[filecounter]->SetPoint(bincounter, pion_pt, PWidth);  
+      PresolutionGraph[filecounter]->SetPointError(bincounter, 0, PWidthErr); 
+      EresolutionGraph[filecounter]->SetPoint(bincounter, pion_pt, EWidth);  
+      EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
       bincounter++;
     }
-
-
     MarkerStyle+=1;
-    
     MarkerColor+=1;
     if(MarkerColor==5 || MarkerColor==10) MarkerColor+=1;//avoid yellow
     pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
@@ -348,6 +354,12 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
 
+    PresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    PresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
+
+    EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+    EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
+
     gPionMeans->Add(pionmeanGraph[filecounter], "PE");
     legend1->AddEntry(pionmeanGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
@@ -362,6 +374,33 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     gMassRatios->Add(massRatioGraph[filecounter], "PE");
     legend5->AddEntry(massRatioGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
+    // Define a function for the energy resolution fit
+    TF1 *resolutionFit = new TF1("resolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+    resolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
+    // Fit the resolution graph
+    resolutionGraph->Fit(resolutionFit, "R");  // Fit and constrain to the range of pT
+
+    // Create a canvas to plot the resolution graph and fit
+    TCanvas *resCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
+    resolutionGraph->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
+    resolutionGraph->Draw("APE");
+    resolutionFit->Draw("same");
+
+    // Print the fit parameters on a new canvas
+    TCanvas *fitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
+    TPaveText *paramsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
+    paramsText->AddText("Fitted Resolution Parameters:");
+    paramsText->AddText(Form("Stochastic term (a): %.4f", resolutionFit->GetParameter(0)));
+    //paramsText->AddText(Form("Noise term (b): %.4f", resolutionFit->GetParameter(2)));
+    paramsText->AddText(Form("Constant term (c): %.4f", resolutionFit->GetParameter(1)));
+    paramsText->Draw();
+
+    // Save the plot to the PDF
+    resCanvas->Print("fit_results.pdf");
+    resCanvas->Close();
+    fitParamsCanvas->Print("fit_results.pdf");
+    fitParamsCanvas->Close();
 
     file.Close();
     filecounter++;
