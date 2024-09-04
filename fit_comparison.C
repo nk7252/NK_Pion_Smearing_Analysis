@@ -1113,8 +1113,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   legend5->Draw();
   //c5->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf");
 
+  //TCanvas *c6 = new TCanvas("c6", "Canvas6", 800, 600);
+  //gPad->SetFillColor(33);
+
+
   // Close the PDF file
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
+  dummyCanvas->Print("fit_results.pdf]");
 
   TFile outputFile("pioncode/rootfiles/ptdifferential_overlay.root", "RECREATE");
   gPionMeans->Write("gPionMean");
