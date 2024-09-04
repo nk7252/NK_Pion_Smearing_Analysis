@@ -418,8 +418,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     // Save the plot to the PDF
     PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     PresCanvas->Close();
+    PresCanvas->Delete();
     PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     PfitParamsCanvas->Close();
+    PfitParamsCanvas->Delete();
 
     //------------------------------------------------------------------------------------------------
     
@@ -449,8 +451,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
     EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     EresCanvas->Close();
+    EresCanvas->Delete();
     EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     EfitParamsCanvas->Close();
+    EfitParamsCanvas->Delete();
 
     file.Close();
     std::cout << "Finished processing file: " << unweightedFileNames[j] << std::endl;
@@ -781,8 +785,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
       EresCanvas->Close();
+      EresCanvas->Delete();
       EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
       EfitParamsCanvas->Close();
+      EfitParamsCanvas->Delete();
     }
 
     file.Close();
