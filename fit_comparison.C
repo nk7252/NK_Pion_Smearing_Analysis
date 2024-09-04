@@ -587,14 +587,14 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       legend2->AddEntry(pionwidthGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
       //------------------------------------------------------------------------------------------------
-    /*
+    
       // Define a function for the pion energy resolution fit
       TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
       PresolutionFit->SetParameters(0.1, 0.02); // Initial guesses for a, b
 
       // Fit the resolution graph
       PresolutionGraph[filecounter]->Fit(PresolutionFit, "R"); // Fit and constrain to the range of pT
-
+/*
       // Create a canvas to plot the resolution graph and fit
       TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
       PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); Pion #sigma / #mu");
