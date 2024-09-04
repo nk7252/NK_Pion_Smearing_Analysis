@@ -110,7 +110,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // Create a PDF to save the canvases
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
-  dummyCanvas->Print("fit_results.pdf[");
+  dummyCanvas->Print("pioncode/canvas_pdf/fit_results.pdf[");
   //top right (0.66, 0.7, 0.90, 0.9)
   //top left (0.2, 0.7, 0.44, 0.9)
   //bottom left (0.2, 0.2, 0.44, 0.4)
@@ -402,9 +402,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     PparamsText->Draw();
 
     // Save the plot to the PDF
-    PresCanvas->Print("fit_results.pdf");
+    PresCanvas->Print("pioncode/canvas_pdf/fit_results.pdf");
     PresCanvas->Close();
-    PfitParamsCanvas->Print("fit_results.pdf");
+    PfitParamsCanvas->Print("pioncode/canvas_pdf/fit_results.pdf");
     PfitParamsCanvas->Close();
 
     //------------------------------------------------------------------------------------------------
@@ -427,9 +427,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
     EparamsText->Draw();
 
-    EresCanvas->Print("fit_results.pdf");
+    EresCanvas->Print("pioncode/canvas_pdf/fit_results.pdf");
     EresCanvas->Close();
-    EfitParamsCanvas->Print("fit_results.pdf");
+    EfitParamsCanvas->Print("pioncode/canvas_pdf/fit_results.pdf");
     EfitParamsCanvas->Close();
 
     file.Close();
@@ -1121,7 +1121,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
   // Close the PDF file
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
-  dummyCanvas->Print("fit_results.pdf]");
+  dummyCanvas->Print("pioncode/canvas_pdf/fit_results.pdf]");
 
   TFile outputFile("pioncode/rootfiles/ptdifferential_overlay.root", "RECREATE");
   gPionMeans->Write("gPionMean");
