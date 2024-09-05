@@ -418,10 +418,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     legend6->AddEntry(PresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
     // Save the plot to the PDF
-    PresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    PresCanvas->Close();
-    PfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    PfitParamsCanvas->Close();
+    //PresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    //PresCanvas->Close();
+    //PfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    //PfitParamsCanvas->Close();
 
     //------------------------------------------------------------------------------------------------
 
@@ -449,10 +449,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     gEResolutions->Add(EresolutionGraph[filecounter], "PE");
     legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
-    EresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    EresCanvas->Close();
-    EfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    EfitParamsCanvas->Close();
+    //EresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    //EresCanvas->Close();
+    //EfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    //EfitParamsCanvas->Close();
 
     file.Close();
     filecounter++;
@@ -593,14 +593,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       PresolutionFit->SetParameters(0.1, 0.02); // Initial guesses for a, b
 
       // Fit the resolution graph
-      PresolutionGraph[filecounter]->Fit(PresolutionFit, "R"); // Fit and constrain to the range of pT
-
+      PresolutionGraph[filecounter]->Fit(PresolutionFit, "R");  // Fit and constrain to the range of pT
+/*
       // Create a canvas to plot the resolution graph and fit
       TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
       PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); Pion #sigma / #mu");
       PresolutionGraph[filecounter]->Draw("APE");
       PresolutionFit->Draw("same");
-/*
       // Print the fit parameters on a new canvas
       TCanvas *PfitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
       TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
@@ -615,13 +614,16 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 */
       gPResolutions->Add(PresolutionGraph[filecounter], "PE");
       legend6->AddEntry(PresolutionGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+
       // Save the plot to the PDF
-      //PresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-      //PfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
-    
+      //PresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      //PresCanvas->Close();
+      //PfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      //PfitParamsCanvas->Close();
+
     }
 
-    else if (SPMC_FileTypes[j] == 1) // eta
+    else if(SPMC_FileTypes[j]==1)//eta
     {
       for (int i = startBin; i <= endBin; i += projectionBins)
       {
@@ -745,8 +747,39 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gEtaWidths->Add(etawidthGraph[filecounter], "PE");
       legend4->AddEntry(etawidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
-      // gMassRatios->Add(massRatioGraph[filecounter], "PE");
-      // legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+      //gMassRatios->Add(massRatioGraph[filecounter], "PE");
+      //legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+
+      //------------------------------------------------------------------------------------------------
+      
+      // Define a function for the eta energy resolution fit
+      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+      EresolutionFit->SetParameters(0.154, 0.02);  // Initial guesses for a, b
+      EresolutionGraph[filecounter]->Fit(EresolutionFit, "R");
+/*
+      TCanvas *EresCanvas = new TCanvas("EresCanvas", "Resolution Fit", 800, 600);
+      EresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
+      EresolutionGraph[filecounter]->Draw("APE");
+      EresolutionFit->Draw("same");
+
+      TCanvas *EfitParamsCanvas = new TCanvas("EfitParamsCanvas", "Fit Parameters", 800, 600);
+      TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
+      EparamsText->AddText("Eta Fitted Resolution Parameters:");
+      EparamsText->AddText(unweighted_legendNames[j].c_str());
+      EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
+      //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
+      EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
+      //add goodness of fit
+      EparamsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
+      EparamsText->Draw();
+*/
+      gEResolutions->Add(EresolutionGraph[filecounter], "PE");
+      legend7->AddEntry(EresolutionGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+
+      //EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      //EresCanvas->Close();
+      //EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      //EfitParamsCanvas->Close();
     }
 
     file.Close();
@@ -1024,6 +1057,38 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       gMassRatios->Add(massRatioGraph[filecounter], "PE");
       legend5->AddEntry(massRatioGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+
+      //------------------------------------------------------------------------------------------------
+    
+      // Define a function for the eta energy resolution fit
+      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+      EresolutionFit->SetParameters(0.1, 0.02);  // Initial guesses for a, b
+      EresolutionGraph[filecounter]->Fit(EresolutionFit, "R");
+/*
+      TCanvas *EresCanvas = new TCanvas("EresCanvas", "Resolution Fit", 800, 600);
+      EresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
+      EresolutionGraph[filecounter]->Draw("APE");
+      EresolutionFit->Draw("same");
+
+      TCanvas *EfitParamsCanvas = new TCanvas("EfitParamsCanvas", "Fit Parameters", 800, 600);
+      TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
+      EparamsText->AddText("Eta Fitted Resolution Parameters:");
+      EparamsText->AddText(unweighted_legendNames[j].c_str());
+      EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
+      //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
+      EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
+      //add goodness of fit
+      EparamsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
+      EparamsText->Draw();
+*/
+      gEResolutions->Add(EresolutionGraph[filecounter], "PE");
+      legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
+
+      //EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      //EresCanvas->Close();
+      //EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      //EfitParamsCanvas->Close();
+
     }
 
     file.Close();
