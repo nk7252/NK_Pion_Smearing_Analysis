@@ -64,13 +64,13 @@ void Spectrum_Fit()
     }
 
     int lowedge = 1;
-    int highedge = 17;
+    int highedge = 16;
     //fit low pt and high pt separately, then funnel parameters into a single fit
     //low pt is a hagedorn function, high pt is a power law
     bool showauxilliaryfits = true;
-    TF1 *lowPtFunc = new TF1("lowPtFunc", "[0] / pow(1 + x / [1], [2])", lowedge, 4.2);
+    TF1 *lowPtFunc = new TF1("lowPtFunc", "[0] / pow(1 + x / [1], [2])", lowedge, 3.9);
     lowPtFunc->SetParameters(53, 1.04, 7.5);
-    TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", 5.6, highedge);
+    TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", 4.9, 16);
     hist->Fit(lowPtFunc, "R");
     hist->Fit(highPtFunc, "R");
 
@@ -100,7 +100,7 @@ void Spectrum_Fit()
     int time = 0;
     while (chi2/ndf > 10) 
     {
-        if (time < 5000) 
+        if (time < 2) //5000
         {
             time += 1;
             hist->Fit(myFunc, "R");
