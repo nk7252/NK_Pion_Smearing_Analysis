@@ -98,7 +98,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   bool dynamic_left = true;
   int startBin = 9;
   int endBin_global = -1;
-  int projectionBins = 1;
+  int projectionBins = 4;
   double scale_factor = 1.0;
   double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
   /*
@@ -390,8 +390,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     //------------------------------------------------------------------------------------------------
 
     // Define a function for the pion energy resolution fit
-    TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+    TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 5);
     PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
+    PresolutionFit->SetParLimits(0, 0.1, 0.18);
+    PresolutionFit->SetParLimits(1, 0.01, 0.2);
     PresolutionFit->SetLineColor(MarkerColor);
     PresolutionGraph[filecounter]->Fit(PresolutionFit, "RE"); // Fit and constrain to the range of pT
 
@@ -406,7 +408,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
     PparamsText->AddText("Pion Fitted Resolution Parameters:");
     PparamsText->AddText(unweighted_legendNames[j].c_str());
-    PparamsText->AddText(Form("Stochastic term (a): %.4f", PresolutionFit->GetParameter(0)));
+    PparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", PresolutionFit->GetParameter(0)));
     // paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
     PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
     // add goodness of fit
@@ -417,16 +419,18 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     legend6->AddEntry(PresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
     // Save the plot to the PDF
-    //PresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    PresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     //PresCanvas->Close();
-    //PfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    PfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     //PfitParamsCanvas->Close();
 
     //------------------------------------------------------------------------------------------------
 
     // Define a function for the eta energy resolution fit
-    TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+    TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 8);
     EresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
+    EresolutionFit->SetParLimits(0, 0.1, 0.18);
+    EresolutionFit->SetParLimits(1, 0.01, 0.2);
     EresolutionFit->SetLineColor(MarkerColor);
     EresolutionGraph[filecounter]->Fit(EresolutionFit, "RE");
 
@@ -439,7 +443,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
     EparamsText->AddText("Eta Fitted Resolution Parameters:");
     EparamsText->AddText(unweighted_legendNames[j].c_str());
-    EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
+    EparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", EresolutionFit->GetParameter(0)));
     // paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
     EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
     // add goodness of fit
@@ -449,9 +453,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     gEResolutions->Add(EresolutionGraph[filecounter], "PE");
     legend7->AddEntry(EresolutionGraph[filecounter], unweighted_legendNames[j].c_str(), "P");
 
-    //EresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    EresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     //EresCanvas->Close();
-    //EfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+    EfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
     //EfitParamsCanvas->Close();
     //finished file
     std::cout << "Finished file: " << unweightedFileNames[j] << std::endl;
@@ -590,8 +594,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
     
       // Define a function for the pion energy resolution fit
-      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 5);
       PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
+      PresolutionFit->SetParLimits(0, 0.1, 0.18);
+      PresolutionFit->SetParLimits(1, 0.01, 0.2);
       PresolutionFit->SetLineColor(MarkerColor);
       PresolutionGraph[filecounter]->Fit(PresolutionFit, "RE");  // Fit and constrain to the range of pT
 /*
@@ -605,13 +611,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
       PparamsText->AddText("Pion Fitted Resolution Parameters:");
       PparamsText->AddText(unweighted_legendNames[j].c_str());
-      PparamsText->AddText(Form("Stochastic term (a): %.4f", PresolutionFit->GetParameter(0)));
+      PparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", PresolutionFit->GetParameter(0)));
       // paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
       PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
       // add goodness of fit
       PparamsText->AddText(Form("Chi2/ndf: %.4f", PresolutionFit->GetChisquare() / PresolutionFit->GetNDF()));
       PparamsText->Draw();
-*/
+//*/
       gPResolutions->Add(PresolutionGraph[filecounter], "PE");
       legend6->AddEntry(PresolutionGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
@@ -758,11 +764,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
       
       // Define a function for the eta energy resolution fit
-      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 15);
       EresolutionFit->SetParameters(0.154, 0.02);  // Initial guesses for a, b
+      EresolutionFit->SetParLimits(0, 0.1, 0.18);
+      EresolutionFit->SetParLimits(1, 0.01, 0.2);
       EresolutionGraph[filecounter]->Fit(EresolutionFit, "RE");
       EresolutionFit->SetLineColor(MarkerColor);
-/*
+///*
       TCanvas *EresCanvas = new TCanvas("EresCanvas", "Resolution Fit", 800, 600);
       EresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
       EresolutionGraph[filecounter]->Draw("APE");
@@ -772,7 +780,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
       EparamsText->AddText("Eta Fitted Resolution Parameters:");
       EparamsText->AddText(SPMC_legendNames[j].c_str());
-      EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
+      EparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", EresolutionFit->GetParameter(0)));
       //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
       EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
       //add goodness of fit
@@ -782,9 +790,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gEResolutions->Add(EresolutionGraph[filecounter], "PE");
       legend7->AddEntry(EresolutionGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
-      //EresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      EresCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
       //EresCanvas->Close();
-      //EfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
+      EfitParamsCanvas->SaveAs("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
       //EfitParamsCanvas->Close();
     }
     std::cout << "Finished file: " << SPMC_FileNames[j] << std::endl;
@@ -943,8 +951,11 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
 
       // Define a function for the pion energy resolution fit
-      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 20);
       PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
+      //set parameter limits
+      PresolutionFit->SetParLimits(0, 0.1, 0.18);
+      PresolutionFit->SetParLimits(1, 0.01, 0.2);
       PresolutionFit->SetLineColor(MarkerColor);
       // Fit the resolution graph
       PresolutionGraph[filecounter]->Fit(PresolutionFit, "RE");  // Fit and constrain to the range of pT
@@ -959,7 +970,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
       PparamsText->AddText("Pion Fitted Resolution Parameters:");
       PparamsText->AddText(FastMC_legendNames[j].c_str());
-      PparamsText->AddText(Form("Stochastic term (a): %.4f", PresolutionFit->GetParameter(0)));
+      PparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", PresolutionFit->GetParameter(0)));
       // paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
       PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
       // add goodness of fit
@@ -1114,8 +1125,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
     
       // Define a function for the eta energy resolution fit
-      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 0.1, 20);
+      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 20);
       EresolutionFit->SetParameters(0.154, 0.02);  // Initial guesses for a, b
+      EresolutionFit->SetParLimits(0, 0.1, 0.18);
+      EresolutionFit->SetParLimits(1, 0.01, 0.2);
       EresolutionFit->SetLineColor(MarkerColor);
       EresolutionGraph[filecounter]->Fit(EresolutionFit, "RE");
 
@@ -1129,7 +1142,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
       EparamsText->AddText("Eta Fitted Resolution Parameters:");
       EparamsText->AddText(FastMC_legendNames[j].c_str());
-      EparamsText->AddText(Form("Stochastic term (a): %.4f", EresolutionFit->GetParameter(0)));
+      EparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", EresolutionFit->GetParameter(0)));
       //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
       EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
       //add goodness of fit
@@ -1247,7 +1260,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
   // gPad->SetFillColor(33);
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
-  gPionMeans->GetXaxis()->SetLimits(0.01, 10);
+  gPionMeans->GetXaxis()->SetLimits(0.01, 20);
   gPionMeans->SetMinimum(0.135);
   gPionMeans->SetMaximum(0.17);
   gPionMeans->Draw("APE");
@@ -1266,7 +1279,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
   // gPad->SetFillColor(33);
   gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
-  gPionWidths->GetXaxis()->SetLimits(0.01, 10);
+  gPionWidths->GetXaxis()->SetLimits(0.01, 20);
   gPionWidths->SetMinimum(0.05);
   gPionWidths->SetMaximum(0.2);
   gPionWidths->Draw("APE");
@@ -1279,7 +1292,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
   // gPad->SetFillColor(33);
   gEtaMeans->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
-  gEtaMeans->GetXaxis()->SetLimits(0.01, 17);
+  gEtaMeans->GetXaxis()->SetLimits(0.01, 20);
   gEtaMeans->SetMinimum(0.45);
   gEtaMeans->SetMaximum(0.7);
   gEtaMeans->Draw("APE");
@@ -1292,7 +1305,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
   // gPad->SetFillColor(33);
   gEtaWidths->SetTitle("Eta: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Eta Relative Width");
-  gEtaWidths->GetXaxis()->SetLimits(0.01, 17);
+  gEtaWidths->GetXaxis()->SetLimits(0.01, 20);
   gEtaWidths->SetMinimum(0.01);
   gEtaWidths->SetMaximum(0.3);
   gEtaWidths->Draw("APE");
@@ -1305,7 +1318,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c5 = new TCanvas("c5", "Canvas5", 800, 600);
   // gPad->SetFillColor(33);
   gMassRatios->SetTitle("Mass Ratios: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion/Eta Mass Ratio");
-  gMassRatios->GetXaxis()->SetLimits(0.01, 10);
+  gMassRatios->GetXaxis()->SetLimits(0.01, 20);
   gMassRatios->SetMinimum(0.24);
   gMassRatios->Draw("APE");
   legend5->SetFillStyle(0);
@@ -1318,8 +1331,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // gPad->SetFillColor(33);
   gPResolutions->SetTitle("Pion: Smeared pT vs Resolution;#it{pT}_{#gamma#gamma} (GeV); Pion Resolution");
   gPResolutions->GetXaxis()->SetLimits(0.01, 20);
-  gPResolutions->SetMinimum(0.1);
-  // gPResolutions->SetMaximum(0.3);
+  gPResolutions->SetMinimum(0.06);
+  gPResolutions->SetMaximum(0.16);
   gPResolutions->Draw("APE");
   legend6->SetFillStyle(0);
   legend6->SetTextAlign(32);
@@ -1357,26 +1370,27 @@ void fit_comparison()
 {
   //-----------------------------------------
   std::vector<std::string> unweighted_fileNames = {
-
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V36.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root"}; //    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
-  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_smear_2d_100"};        //"h_InvMass_2d",
-  std::vector<std::string> unweighted_legendNames = {"Pythia_wvfm_E", "Pythia_wvfm_E+10%smr"};       //"Pythia",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root",}; //    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
+  //
+  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_smear_2d_100", "h_InvMass_smear_2d_125"};        //"h_InvMass_2d",
+  std::vector<std::string> unweighted_legendNames = {"Pythia_wvfm_E", "Pythia_wvfm_E+10%smr", "Pythia_wvfm_E+12.5%smr"};       //"Pythia",
 
   //-----------------------------------------
   std::vector<std::string> SPMC_FileNames = {
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V39.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V40.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V41.root"};
-  //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V13.root"
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V43.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V44.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V45.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",};//42
+  //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38
   //,"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"
   std::vector<std::string> SPMC_histNames = {
       "h_InvMass_smear_weighted_2d_0",
       "h_InvMass_smear_weighted_2d_0",
       "h_InvMass_smear_weighted_2d_125",
+      "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125"};
-  std::vector<std::string> SPMC_legend = {"SPi0+0sm", "SEta+0sm", "SEta+12.5sm", "SPi0+12.5sm"};
+  std::vector<std::string> SPMC_legend = {"SPi0+0sm", "SEta+0sm", "SEta+12.5sm", "SPi0+12.5sm", "SPi0wcuts"};
   std::vector<int> SPMC_FileTypes = {0, 1, 1, 0}; // 0 for pion, 1 for eta
 
   //-----------------------------------------
