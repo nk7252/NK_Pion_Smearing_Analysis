@@ -32,10 +32,10 @@ void Spectrum_Fit()
 
     SetsPhenixStyle();
 
-    TFile *file = new TFile("pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V54.root", "READ");
+    TFile *file = new TFile("pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V55.root", "READ");
     if (!file->IsOpen())
     {
-        std::cerr << "Error opening file: " << "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V54.root" << std::endl;
+        std::cerr << "Error opening file: " << "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V55.root" << std::endl;
         return;
     }
 
@@ -53,7 +53,7 @@ void Spectrum_Fit()
     hist->Scale(1/hist->Integral(), "width");
     //fit the histogram with a power law function
     //rebin the histogram
-    hist->Rebin(8);
+    hist->Rebin(4);
 
     for (int i = 1; i <= hist->GetNbinsX(); i++) {
         double binpT = hist->GetBinCenter(i);       // Get the bin center (pT)
@@ -68,9 +68,11 @@ void Spectrum_Fit()
     //fit low pt and high pt separately, then funnel parameters into a single fit
     //low pt is a hagedorn function, high pt is a power law
     bool showauxilliaryfits = true;
-    TF1 *lowPtFunc = new TF1("lowPtFunc", "[0] / pow(1 + x / [1], [2])", lowedge, 3.9);
+    TF1 *lowPtFunc = new TF1("lowPtFunc", "[0] / pow(1 + x / [1], [2])", lowedge, 4.3);
     lowPtFunc->SetParameters(53, 1.04, 7.5);
-    TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", 4.9, 16);
+    TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", 4.8, 16);
+    lowPtFunc->SetNpx(1000);
+    highPtFunc->SetNpx(1000);
     hist->Fit(lowPtFunc, "R");
     hist->Fit(highPtFunc, "R");
 
@@ -78,29 +80,31 @@ void Spectrum_Fit()
     //combined function with hagedorn for low pt and power law for high pt. Transition using a woods saxon function
 
     TF1  *myFunc = new TF1("myFunc", "((1 / (1 + exp((x - [0]) / [1]))) * [2] / pow(1 + x / [3], [4]) + (1 - (1 / (1 + exp((x - [0]) / [1])))) * [5] / (pow(x, [6])))", lowedge, highedge);
+    
     //myFunc->SetParameters(4.5, 0.114, 229.6, 1.466, 10.654, 14.43, 8.1028);
     //myFunc->SetParameters(265, 2.1, 207.2, 1.968, 12.91, 442, 2);
     //myFunc->SetParameters(265, 2.1, 53.14, 1.89, 12.11, 442, 2);
     //myFunc->SetParameters(229, 14.28, 264, 1.968, 13.08, 648.9, 4.919);
     // use parameters from the low and high pt fits as starting values
-    myFunc->SetParameter(0, 3.5);
+    myFunc->SetParameter(0, 4.5);
     myFunc->SetParameter(1, 0.114);
-    myFunc->SetParLimits(1, 0, 0.13);
+    myFunc->SetParLimits(1, 0, 0.17);
     for (int j=0; j<3; j++) myFunc->SetParameter(j+2, lowPtFunc->GetParameter(j));
     for (int j=0; j<2; j++) myFunc->SetParameter(j+5, highPtFunc->GetParameter(j));
     //set parameter limits for high pt power law
     //myFunc->SetParLimits(5, 0.5*highPtFunc->GetParameter(0), 2.1*highPtFunc->GetParameter(0));
     //myFunc->SetParLimits(6, 0.5*highPtFunc->GetParameter(1), 2.1*highPtFunc->GetParameter(1));
-
+    myFunc->SetNpx(1000);
     hist->Fit(myFunc, "RE");
 
     // if chi^2/ndf is not good enough, continue to fit. break at time intervals so this is not indefinite
     double chi2=myFunc->GetChisquare();
     double ndf=myFunc->GetNDF();
     int time = 0;
+    int maxtime = 5000;//5000
     while (chi2/ndf > 10) 
     {
-        if (time < 2) //5000
+        if (time < maxtime) 
         {
             time += 1;
             hist->Fit(myFunc, "R");
@@ -131,13 +135,15 @@ void Spectrum_Fit()
         double deviation = (data - fit) / fit;
         gRelDev->SetPoint(pointIndex, binpT, deviation);
         
-
-        
-        double deviationerror = sqrt(pow(fiterror/fit, 2) + pow(error/data, 2));
+        double deviationerror = sqrt(pow(data*fiterror/pow(fit,2), 2) + pow(error/data, 2));
+        //need to add correlation term
         gRelDev->SetPointError(pointIndex, 0, deviationerror);
+
         //error debug line 
         std::cout << "binpT: " << binpT << ", fit: " << fit << ", fit error: " << fiterror << ", data: " << data << ", error: " << error << ", deviation: " << deviation << ", deviation error: " << deviationerror << std::endl;
         pointIndex++; // Only increment for valid points
+        //relative errors debug line
+        std::cout <<  " data relative error: " << error/data << ", fit relative error: " << fiterror/fit << ", deviation relative error: " << deviationerror/deviation << std::endl;
     }
     gRelDev->Set(pointIndex); // Sets the number of valid points explicitly
 

@@ -951,7 +951,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
 
       // Define a function for the pion energy resolution fit
-      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 20);
+      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 10);
       PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
       //set parameter limits
       PresolutionFit->SetParLimits(0, 0.1, 0.18);
@@ -1260,7 +1260,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
   // gPad->SetFillColor(33);
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
-  gPionMeans->GetXaxis()->SetLimits(0.01, 20);
+  gPionMeans->GetXaxis()->SetLimits(0.01, 10);
   gPionMeans->SetMinimum(0.135);
   gPionMeans->SetMaximum(0.17);
   gPionMeans->Draw("APE");
@@ -1279,7 +1279,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
   // gPad->SetFillColor(33);
   gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
-  gPionWidths->GetXaxis()->SetLimits(0.01, 20);
+  gPionWidths->GetXaxis()->SetLimits(0.01, 10);
   gPionWidths->SetMinimum(0.05);
   gPionWidths->SetMaximum(0.2);
   gPionWidths->Draw("APE");
@@ -1330,7 +1330,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c6 = new TCanvas("c6", "Canvas6", 800, 600);
   // gPad->SetFillColor(33);
   gPResolutions->SetTitle("Pion: Smeared pT vs Resolution;#it{pT}_{#gamma#gamma} (GeV); Pion Resolution");
-  gPResolutions->GetXaxis()->SetLimits(0.01, 20);
+  gPResolutions->GetXaxis()->SetLimits(0.01, 10);
   gPResolutions->SetMinimum(0.06);
   gPResolutions->SetMaximum(0.16);
   gPResolutions->Draw("APE");
