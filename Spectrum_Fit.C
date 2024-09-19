@@ -7,14 +7,19 @@
 #include <TFile.h>
 #include <TH2.h>
 #include <TF1.h>
+#include <TH1F.h>
+#include <TRandom.h>
+#include <TGraph.h>
 #include <TMultiGraph.h>
 #include <TGraphErrors.h>
 #include <TCanvas.h>
 #include <TLegend.h>
+#include <TBox.h>
 #include <TPaveText.h>
 #include <TStyle.h>
 #include <TApplication.h>
 #include <TROOT.h>
+#include <TFitResult.h>
 #include <Math/MinimizerOptions.h>
 #include <Math/Factory.h>
 #include <Math/Functor.h>
@@ -63,6 +68,12 @@ void Spectrum_Fit()
     //rebin the histogram
     hist->Rebin(2);
 
+    //make legends
+    //top left (0.1, 0.75, 0.4, 0.9)
+    //top right (0.6, 0.75, 0.9, 0.9)
+    TLegend *legend = new TLegend(0.2, 0.75, 0.4, 0.9); // Position (x1, y1, x2, y2)
+    TLegend *legend1 = new TLegend(0.55, 0.75, 0.9, 0.9); // Position (x1, y1, x2, y2)
+
     for (int i = 1; i <= hist->GetNbinsX(); i++) {
         double binpT = hist->GetBinCenter(i);       // Get the bin center (pT)
         double binContent = hist->GetBinContent(i); // Get the bin content
@@ -72,8 +83,8 @@ void Spectrum_Fit()
     }
 
     int lowedge = 1;
-    int highedge = 11;
-    float transition = 3.9;
+    int highedge = 17;
+    float transition = 3.5;
     //fit low pt and high pt separately, then funnel parameters into a single fit
     //low pt is a hagedorn function, high pt is a power law
     bool showauxilliaryfits = true;
@@ -84,8 +95,13 @@ void Spectrum_Fit()
     highPtFunc->SetParameters(404.4, 10);
     lowPtFunc->SetNpx(1000);
     highPtFunc->SetNpx(1000);
-    hist->Fit(lowPtFunc, "R");
-    hist->Fit(highPtFunc, "R");
+    TFitResultPtr fitResultPtrL = hist->Fit(lowPtFunc, "SRE");  // 'S' option returns
+    TFitResultPtr fitResultPtrH = hist->Fit(highPtFunc, "SRE");  // 'S' option returns
+    //hist->Fit(lowPtFunc, "R");
+    //hist->Fit(highPtFunc, "R");
+    // Dereference pointers
+    const ROOT::Fit::FitResult &fitResultL = *fitResultPtrL;  
+    const ROOT::Fit::FitResult &fitResultH = *fitResultPtrH;
 
 
     //combined function with hagedorn for low pt and power law for high pt. Transition using a woods saxon function
@@ -117,9 +133,9 @@ void Spectrum_Fit()
     unsigned int nPoints = hist->GetNbinsX();
 
     // Arrays to hold x values and the corresponding confidence intervals
-    double *x = new double[nPoints];
-    double *ci = new double[nPoints];
-
+    std::vector<double> x(nPoints);
+    std::vector<std::vector<double>> ci(nPoints, std::vector<double>(3));
+    std::vector<std::string> ciNames = {"Low p_{T} Fit (Hagedorn)", "High p_{T} Fit (Power Law)", "Combined Fit (Hagedorn+Power Law)"};
     // Fill the x array with bin centers
     for (unsigned int i = 1; i <= nPoints; ++i)
     {
@@ -127,64 +143,180 @@ void Spectrum_Fit()
     }
 
     // Calculate the confidence intervals using the FitResult method
-    fitResult.GetConfidenceIntervals(nPoints, 1, 1, x, ci, 0.68, false);  // 68% confidence interval
+    fitResult.GetConfidenceIntervals(nPoints, 1, 1, x.data(), &ci[0][0], 0.68, false);  // 68% confidence interval
+    fitResultL.GetConfidenceIntervals(nPoints, 1, 1, x.data(), &ci[0][1], 0.68, false);  // 68% confidence interval
+    fitResultH.GetConfidenceIntervals(nPoints, 1, 1, x.data(), &ci[0][2], 0.68, false);  // 68% confidence interval
 
+    // Number of parameters to fit
+    const int nParams = 7;
+    double params[nParams];    // To hold initial parameters
+    double errors[nParams];    // To hold errors of parameters
 
-    // if chi^2/ndf is not good enough, continue to fit. break at time intervals so this is not indefinite
-    double chi2=myFunc->GetChisquare();
-    double ndf=myFunc->GetNDF();
-    int time = 0;
-    int maxtime = 5000;//5000
-    while (chi2/ndf > 10) 
-    {
-        if (time < maxtime) 
-        {
-            time += 1;
-            hist->Fit(myFunc, "R");
-            chi2=myFunc->GetChisquare();
-            ndf=myFunc->GetNDF();
-        }
-        else
-        {
-            std::cout << "Chi^2/ndf is not good enough. Exiting." << std::endl;
-            break;
-        }
-
+    // Fill arrays with the initial parameters and their errors
+    for (int i = 0; i < nParams; ++i) {
+        params[i] = myFunc->GetParameter(i);
+        errors[i] = myFunc->GetParError(i);
     }
+
+    // Fix one parameter (e.g., transition point)
+    myFunc->FixParameter(0, params[0]);
+
+    // Variables to store the best fit results
+    double bestParams[nParams];
+    double bestChi2 = myFunc->GetChisquare();
+    // Store the current best parameters
+    for (int i = 0; i < nParams; ++i) {
+        bestParams[i] = params[i];
+    }
+
+    // Start iterating over parameter space
+    int iterations = 100;  // Number of iterations to explore the parameter space
+    for (int i = 0; i < iterations; ++i) {
+        // Randomize parameters within their error bounds
+        for (int j = 1; j < nParams; ++j) {  // Start from 1 to avoid changing the fixed parameter
+            params[j] = bestParams[j] + gRandom->Gaus(0, errors[j]);
+
+            // Optionally check that the parameters remain within limits
+            /*
+            if (j == 1) { // For parameter 1
+                params[j] = TMath::Min(TMath::Max(params[j], 0.114 * 0.6), 0.114 * 1.4);  // Keep within set limits
+            }
+            */
+        }
+
+        // Set new parameters to the function
+        for (int j = 1; j < nParams; ++j) {
+            myFunc->SetParameter(j, params[j]);
+        }
+
+        // Perform fit and check chi2
+        hist->Fit(myFunc, "RQN");  // Fit without printing and reinitialization
+        double newChi2 = myFunc->GetChisquare();
+
+        if (newChi2 < bestChi2) {
+            bestChi2 = newChi2;
+            for (int j = 1; j < nParams; ++j) {
+                bestParams[j] = params[j];
+            }
+        }
+    }
+
+    // Set best parameters after exploring the parameter space
+    for (int i = 1; i < nParams; ++i) {
+        myFunc->SetParameter(i, bestParams[i]);
+    }
+
+    // Perform final fit with best parameters
+    hist->Fit(myFunc, "RE");
+
+    // Output the best parameters and chi-square
+    std::cout << "Best Fit Parameters: " << std::endl;
+    for (int i = 0; i < nParams; ++i) {
+        std::cout << "Parameter " << i << ": " << bestParams[i] << std::endl;
+    }
+    std::cout << "Best Chi2: " << bestChi2 << std::endl;
+
+    // characterize statistical uncertainty of the fit
+    double yDefault[nPoints], yUpper[nPoints], yLower[nPoints],yRatioUpper[nPoints][nParams], yRatioLower[nPoints][nParams], ymaxratioU[nPoints], ymaxratioL[nPoints];
+    // Store the default fit values for later ratio computation
+    for (int i = 0; i < nPoints; ++i) {
+        x[i] = hist->GetBinCenter(i);
+        yDefault[i] = myFunc->Eval(x[i]);
+    }
+
+
+    // Loop over each parameter and vary it ±1 sigma to create upper/lower envelopes
+    for (int paramIndex = 1; paramIndex < nParams; ++paramIndex) {
+        // Vary the parameter by +1 sigma and -1 sigma
+        for (int direction = -1; direction <= 1; direction += 2) {
+            myFunc->SetParameter(paramIndex, params[paramIndex] + direction * errors[paramIndex]);
+            hist->Fit(myFunc, "RQ");  // Fit without printing
+
+            for (int i = 0; i < nPoints; ++i) {
+                if(i==0) continue; // Skip the first point
+                double fitValue = myFunc->Eval(x[i]);
+                if (direction == 1) {
+                    // Upper envelope
+                    yUpper[i] = fitValue;
+                } else {
+                    // Lower envelope
+                    yLower[i] = fitValue;
+                }
+                if (yDefault[i] == 0) {
+                    yRatioUpper[i][paramIndex] = 0;
+                    yRatioLower[i][paramIndex] = 0;
+                } else {
+                    yRatioUpper[i][paramIndex] = yUpper[i] / yDefault[i];
+                    yRatioLower[i][paramIndex] = yLower[i] / yDefault[i];
+                }
+                // list for debugging
+                std::cout << "Parameter " << paramIndex << ", Point " << i << ", Direction " << direction << ": " << yRatioUpper[i][paramIndex] << ", " << yRatioLower[i][paramIndex] << std::endl;
+            }
+        }
+        // Reset the parameter to its original value
+        myFunc->SetParameter(paramIndex, params[paramIndex]);
+    }
+    //loop over the parameters and calculate the maximum deviation from the default fit for each point
+
+    for (int i = 0; i < nPoints; ++i) {
+        for (int j = 0; j < nParams; ++j) {
+            double upper = yRatioUpper[i][j];
+            double lower = yRatioLower[i][j];
+
+            if(upper > ymaxratioU[i]) ymaxratioU[i] = upper;
+            if(lower < ymaxratioL[i]) ymaxratioL[i] = lower;
+            //check if the current deviation is larger than the previous maximum
+            //if so, update the maximum
+            //double ymaxlocal = TMath::Max(abs(upper - 1), abs(lower - 1));
+            //if (ymaxlocal > ymaxratio[i]) ymaxratio[i] = ymaxlocal;
+        }
+    }
+
+
     //characterize the relative deviation of the fit from the data
     // find fit-data/data for each bin and plot it on a graph as a function of pT
-    TGraphErrors *gRelDev = new TGraphErrors(hist->GetNbinsX());
+    //make a vector of TGraphErrors to store the relative deviation of each fit from the data
+    std::vector<TGraphErrors *> gRelDev (3);
+    //TGraphErrors *gRelDev = new TGraphErrors(hist->GetNbinsX());
     int pointIndex = 0;
-    for (int i = 1; i <= hist->GetNbinsX(); i++)
-    {
-        double binpT = hist->GetBinCenter(i);
-        double data = hist->GetBinContent(i);
-        double error = hist->GetBinError(i);
-        double fit = myFunc->Eval(binpT);
+    double fitvalue[3][hist->GetNbinsX()];// one for each fit
+    for (int j=0; j<3; j++)
+    {   
+        pointIndex = 0;
+        gRelDev[j] = new TGraphErrors(hist->GetNbinsX());
+        for (int i = 1; i <= hist->GetNbinsX(); i++)
+        {
+            double binpT = hist->GetBinCenter(i);
+            double data = hist->GetBinContent(i);
+            double error = hist->GetBinError(i);
+            double fit = myFunc->Eval(binpT);
+            double sigma_param =0; //placeholder for parameter uncertainty
+            double fitError = ci[i-1][j]; // Use GetErrorY for confidence interval error
+            double fit_sigma_total = sqrt(pow(fitError, 2) + pow(sigma_param, 2));
 
-        double fitError = ci[i - 1]; // Use GetErrorY for confidence interval error
+            if(data == 0 || fit == 0 || binpT < lowedge || binpT > highedge) 
+                continue; // Skip invalid points
 
-        //double fiterror = myFunc->GetParError(i);
-        if(data == 0 || fit == 0 || binpT < lowedge || binpT > highedge) 
-            continue; // Skip invalid points
+            double deviation = (data - fit) / fit;
+            gRelDev[j]->SetPoint(pointIndex, binpT, deviation);
+            
+            double sigma_deviation = sqrt(pow(data*fit_sigma_total/pow(fit,2), 2) + pow(error/data, 2));
 
-        double deviation = (data - fit) / fit;
-        gRelDev->SetPoint(pointIndex, binpT, deviation);
-        
-        double deviationerror = sqrt(pow(data*fitError/pow(fit,2), 2) + pow(error/data, 2));
-        //need to add correlation term
-        gRelDev->SetPointError(pointIndex, 0, deviationerror);
+            //need to add correlation term
+            gRelDev[j]->SetPointError(pointIndex, 0, sigma_deviation);
 
-        //error debug line 
-        std::cout << "binpT: " << binpT << ", fit: " << fit << ", fit error: " << fitError << ", data: " << data << ", error: " << error << ", deviation: " << deviation << ", deviation error: " << deviationerror << std::endl;
-        pointIndex++; // Only increment for valid points
-        //relative errors debug line
-        std::cout <<  " data relative error: " << error/data << ", fit relative error: " << fitError/fit << ", deviation relative error: " << deviationerror/deviation << std::endl;
+            //total fit sigma debug line, only fitError sigma_param and sigma_total
+            std::cout << "Fit error: " << fitError << ", parameter error: " << sigma_param << ", total fit error: " << fit_sigma_total << std::endl;
+            //error debug line 
+            std::cout << "binpT: " << binpT << ", fit: " << fit << ", fit error: " << fit_sigma_total << ", data: " << data << ", error: " << error << ", deviation: " << deviation << ", deviation error: " << sigma_deviation << std::endl;
+            pointIndex++; // Only increment for valid points
+            //relative errors debug line
+            std::cout <<  " data relative error: " << error/data << ", fit relative error: " << fit_sigma_total/fit << ", deviation relative error: " << sigma_deviation/deviation << std::endl;
+            //add a new line to break up the output
+            std::cout << "------------------------------------------------" << std::endl;
+        }
+        gRelDev[j]->Set(pointIndex); // Sets the number of valid points explicitly
     }
-    gRelDev->Set(pointIndex); // Sets the number of valid points explicitly
-    // Clean up dynamically allocated memory
-    delete[] x;
-    delete[] ci;
 
     // woods saxon function for transition between low and high pt
     float transitionwidth = 0.3;
@@ -193,7 +325,7 @@ void Spectrum_Fit()
     transitionFunc->SetNpx(1000);
 
     TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
-    hist->SetTitle("Pion Spectrum; #pi_{0} p_{T} (GeV/c); 1/p_{T}#times dN/dp_{T}");
+    hist->SetTitle("Pion Spectrum; #pi_{0} p_{T} (GeV/c); #frac{dN}{p_{T}dp_{T}}");
     //add statbox with fit information
     //hist->SetStats(0);
     gStyle->SetOptFit(112);
@@ -208,8 +340,7 @@ void Spectrum_Fit()
     lowPtFunc->Draw("same");
     highPtFunc->SetLineColor(kBlue);
     highPtFunc->Draw("same");
-    // Create a legend and add entries for the histogram and the fit
-    TLegend *legend1 = new TLegend(0.55, 0.75, 0.9, 0.9); // Position (x1, y1, x2, y2)
+
     legend1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
     legend1->AddEntry(hist, "Pythia: p+p mb #sqrt{s_{NN}} = 200 GeV", "L");        // Add histogram to the legend
     legend1->AddEntry(myFunc, "Fit (Hagedorn + Power Law)", "L"); // Add the fit to the legend
@@ -226,21 +357,24 @@ void Spectrum_Fit()
     c1->Print("pioncode/canvas_pdf/spectrum_fit.pdf");
 
     TCanvas *c2 = new TCanvas("c2", "Canvas2", 800, 600);
-    gRelDev->SetTitle("Relative Deviation of Fit from Data; #pi_{0} p_{T} (GeV/c); (Data - Fit) / Fit");
-    //add a Tline at deviation=0, across the entire x-axis
-    //set y range
     float reldevrange = 0.6;
-    gRelDev->SetMinimum(-reldevrange);
-    gRelDev->SetMaximum(reldevrange);
-    gRelDev->GetXaxis()->SetLimits(0, 20);
-    gRelDev->Draw("AP");
+    TMultiGraph *mg0 = new TMultiGraph();
+    for (int j=0; j<3; j++){
+        mg0->Add(gRelDev[j]);
+        legend->AddEntry(gRelDev[j], ciNames[j].c_str(), "P"); // Add graph to the legend
+    }
+    mg0->SetTitle("Relative Deviation of Fit from Data; #pi_{0} p_{T} (GeV/c); (Data - Fit) / Fit");
+    mg0->SetMinimum(-reldevrange);
+    mg0->SetMaximum(reldevrange);
+    mg0->GetXaxis()->SetLimits(0, 20);
+    mg0->Draw("APE");
     //draw the transition function
     transitionFunc->SetLineColor(kGray);
     transitionFunc->Draw("same");
 
     // Add a TLine at deviation = 0
-    double xmin = gRelDev->GetXaxis()->GetXmin();
-    double xmax = gRelDev->GetXaxis()->GetXmax();
+    double xmin = gRelDev[0]->GetXaxis()->GetXmin();
+    double xmax = gRelDev[0]->GetXaxis()->GetXmax();
     TLine *line = new TLine(xmin, 0, xmax, 0);
     line->SetLineColor(kBlack); // Optional: Set the color of the line
     //line->SetLineStyle(2); // Optional: Set the line style (e.g., dashed)
@@ -248,8 +382,8 @@ void Spectrum_Fit()
     line->Draw("same");
 
     // Add a filled region to the right of pT = 10
-    double ymin = gRelDev->GetYaxis()->GetXmin(); // Get the y-axis min value
-    double ymax = gRelDev->GetYaxis()->GetXmax(); // Get the y-axis max value
+    double ymin = gRelDev[0]->GetYaxis()->GetXmin(); // Get the y-axis min value
+    double ymax = gRelDev[0]->GetYaxis()->GetXmax(); // Get the y-axis max value
     if(reldevrange){
         ymin = -reldevrange;
         ymax = reldevrange;
@@ -258,12 +392,7 @@ void Spectrum_Fit()
     box->SetFillColor(kRed);   // Set the fill color (e.g., yellow)
     box->SetFillStyle(3004);   // Optional: Set the fill style (diagonal hatching, etc.)
     box->Draw("same");
-
-    //top left (0.1, 0.75, 0.4, 0.9)
-    //top right (0.6, 0.75, 0.9, 0.9)
-    TLegend *legend = new TLegend(0.2, 0.75, 0.4, 0.9); // Position (x1, y1, x2, y2)
     legend->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
-    legend->AddEntry(gRelDev, "Relative Deviation", "P"); // Add graph to the legend
     legend->AddEntry(box, "Low Stats Region", "F"); // Add the filled region to the legend
     legend->SetFillStyle(0);  // Set fill style to 0 (transparent)
     legend->SetBorderSize(0); // Set border size to 0 (remove the border)
@@ -272,8 +401,38 @@ void Spectrum_Fit()
 
     c2->Print("pioncode/canvas_pdf/relative_deviation.pdf");
 
+    // Draw the ratio graph
+    TCanvas *c3 = new TCanvas("c3", "Fit Variation with Shaded Envelope", 800, 600);
+     // Draw yRatioUpper and yRatioLower on the same canvas
+    TMultiGraph *mg = new TMultiGraph();
+    // add tgraphs for each parameter
+    std::vector<TGraph*> graphUpper(nParams);
+    std::vector<TGraph*> graphLower(nParams);
+    for (int j = 0; j < nParams; ++j) {
+        graphUpper[j] = new TGraph(nPoints, x.data(), yRatioUpper[j]);
+        graphLower[j] = new TGraph(nPoints, x.data(), yRatioLower[j]);
+        mg->Add(graphUpper[j]);
+        mg->Add(graphLower[j]);
+    }
+    mg->SetMinimum(0.5);
+    mg->SetMaximum(1.5);
+    //ymaxratio
+    mg->Draw("APE");
+    // Draw the envelope using TBox to shade the area between yLower and yUpper
+    /*
+    for (int i = 0; i < nPoints - 1; ++i) {
+        TBox *box = new TBox(x[i], ymaxratioL[i], x[i + 1], ymaxratioU[i]);//
+        box->SetFillColorAlpha(kGray, 0.5);  // Semi-transparent gray
+        box->Draw("same");
+    }
+    //*/
+
+    c1->Print("FitWithShadedEnvelope.png");
 
 
+
+    //delete[] x;
+    //delete[] ci;
     //gApplication->Terminate(0);
 }
 
