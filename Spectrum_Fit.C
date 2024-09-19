@@ -26,9 +26,17 @@
 
 void Spectrum_Fit()
 {
+    //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+    //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin");
+    //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiFit");
+    //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLSimAn");
+
+
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
-    //ROOT::Math::MinimizerOptions::SetDefaultTolerance(0.001);
-    //ROOT::Math::MinimizerOptions::SetDefaultPrecision(1e-12);
+    ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1000000);
+    ROOT::Math::MinimizerOptions::SetDefaultMaxIterations(10000);
+    ROOT::Math::MinimizerOptions::SetDefaultTolerance(0.001);
+    ROOT::Math::MinimizerOptions::SetDefaultPrecision(1e-12);
 
     SetsPhenixStyle();
 
@@ -64,13 +72,16 @@ void Spectrum_Fit()
     }
 
     int lowedge = 1;
-    int highedge = 16;
+    int highedge = 14;
+    float transition = 3.9;
     //fit low pt and high pt separately, then funnel parameters into a single fit
     //low pt is a hagedorn function, high pt is a power law
     bool showauxilliaryfits = true;
-    TF1 *lowPtFunc = new TF1("lowPtFunc", "[0] / pow(1 + x / [1], [2])", lowedge, 4.3);
-    lowPtFunc->SetParameters(53, 1.04, 7.5);
-    TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", 4.8, 16);
+    TF1 *lowPtFunc = new TF1("lowPtFunc", "[0] / pow(1 + x / [1], [2])", lowedge, transition);
+    lowPtFunc->SetParameters(1525, 0.64, 7.9);
+    //lowPtFunc->SetParameters(53, 1.04, 7.5);
+    TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", transition, 16);
+    highPtFunc->SetParameters(404.4, 10);
     lowPtFunc->SetNpx(1000);
     highPtFunc->SetNpx(1000);
     hist->Fit(lowPtFunc, "R");
@@ -86,16 +97,38 @@ void Spectrum_Fit()
     //myFunc->SetParameters(265, 2.1, 53.14, 1.89, 12.11, 442, 2);
     //myFunc->SetParameters(229, 14.28, 264, 1.968, 13.08, 648.9, 4.919);
     // use parameters from the low and high pt fits as starting values
-    myFunc->SetParameter(0, 4.5);
+    myFunc->SetParameter(0, transition);
     myFunc->SetParameter(1, 0.114);
-    myFunc->SetParLimits(1, 0, 0.17);
+    myFunc->SetParLimits(1, 0.114*0.6,  0.114*1.4);
     for (int j=0; j<3; j++) myFunc->SetParameter(j+2, lowPtFunc->GetParameter(j));
     for (int j=0; j<2; j++) myFunc->SetParameter(j+5, highPtFunc->GetParameter(j));
     //set parameter limits for high pt power law
     //myFunc->SetParLimits(5, 0.5*highPtFunc->GetParameter(0), 2.1*highPtFunc->GetParameter(0));
     //myFunc->SetParLimits(6, 0.5*highPtFunc->GetParameter(1), 2.1*highPtFunc->GetParameter(1));
-    myFunc->SetNpx(1000);
-    hist->Fit(myFunc, "RE");
+    //myFunc->SetNpx(1000);
+    //hist->Fit(myFunc, "RE");
+
+    // Perform the fit and retrieve the fit result pointer
+    TFitResultPtr fitResultPtr = hist->Fit(myFunc, "SRE");  // 'S' option returns TFitResultPtr
+    // Get the FitResult from the TFitResultPtr
+    const ROOT::Fit::FitResult &fitResult = *fitResultPtr;  // Dereference TFitResultPtr
+
+    // Number of points (bins) to calculate the confidence intervals for
+    unsigned int nPoints = hist->GetNbinsX();
+
+    // Arrays to hold x values and the corresponding confidence intervals
+    double *x = new double[nPoints];
+    double *ci = new double[nPoints];
+
+    // Fill the x array with bin centers
+    for (unsigned int i = 1; i <= nPoints; ++i)
+    {
+        x[i - 1] = hist->GetBinCenter(i);
+    }
+
+    // Calculate the confidence intervals using the FitResult method
+    fitResult.GetConfidenceIntervals(nPoints, 1, 1, x, ci, 0.68, false);  // 68% confidence interval
+
 
     // if chi^2/ndf is not good enough, continue to fit. break at time intervals so this is not indefinite
     double chi2=myFunc->GetChisquare();
@@ -128,25 +161,31 @@ void Spectrum_Fit()
         double data = hist->GetBinContent(i);
         double error = hist->GetBinError(i);
         double fit = myFunc->Eval(binpT);
-        double fiterror = myFunc->GetParError(i);
+
+        double fitError = ci[i - 1]; // Use GetErrorY for confidence interval error
+
+        //double fiterror = myFunc->GetParError(i);
         if(data == 0 || fit == 0 || binpT < lowedge || binpT > highedge) 
             continue; // Skip invalid points
 
         double deviation = (data - fit) / fit;
         gRelDev->SetPoint(pointIndex, binpT, deviation);
         
-        double deviationerror = sqrt(pow(data*fiterror/pow(fit,2), 2) + pow(error/data, 2));
+        double deviationerror = sqrt(pow(data*fitError/pow(fit,2), 2) + pow(error/data, 2));
         //need to add correlation term
         gRelDev->SetPointError(pointIndex, 0, deviationerror);
 
         //error debug line 
-        std::cout << "binpT: " << binpT << ", fit: " << fit << ", fit error: " << fiterror << ", data: " << data << ", error: " << error << ", deviation: " << deviation << ", deviation error: " << deviationerror << std::endl;
+        std::cout << "binpT: " << binpT << ", fit: " << fit << ", fit error: " << fitError << ", data: " << data << ", error: " << error << ", deviation: " << deviation << ", deviation error: " << deviationerror << std::endl;
         pointIndex++; // Only increment for valid points
         //relative errors debug line
-        std::cout <<  " data relative error: " << error/data << ", fit relative error: " << fiterror/fit << ", deviation relative error: " << deviationerror/deviation << std::endl;
+        std::cout <<  " data relative error: " << error/data << ", fit relative error: " << fitError/fit << ", deviation relative error: " << deviationerror/deviation << std::endl;
     }
     gRelDev->Set(pointIndex); // Sets the number of valid points explicitly
 
+    // Clean up dynamically allocated memory
+    delete[] x;
+    delete[] ci;
 
     TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
     hist->SetTitle("Pion Spectrum; #pi_{0} p_{T} (GeV/c); 1/p_{T}#times dN/dp_{T}");
