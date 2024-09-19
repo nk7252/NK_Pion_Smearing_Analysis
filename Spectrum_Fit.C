@@ -61,7 +61,7 @@ void Spectrum_Fit()
     hist->Scale(1/hist->Integral(), "width");
     //fit the histogram with a power law function
     //rebin the histogram
-    hist->Rebin(4);
+    hist->Rebin(2);
 
     for (int i = 1; i <= hist->GetNbinsX(); i++) {
         double binpT = hist->GetBinCenter(i);       // Get the bin center (pT)
@@ -72,7 +72,7 @@ void Spectrum_Fit()
     }
 
     int lowedge = 1;
-    int highedge = 14;
+    int highedge = 11;
     float transition = 3.9;
     //fit low pt and high pt separately, then funnel parameters into a single fit
     //low pt is a hagedorn function, high pt is a power law
@@ -80,7 +80,7 @@ void Spectrum_Fit()
     TF1 *lowPtFunc = new TF1("lowPtFunc", "[0] / pow(1 + x / [1], [2])", lowedge, transition);
     lowPtFunc->SetParameters(1525, 0.64, 7.9);
     //lowPtFunc->SetParameters(53, 1.04, 7.5);
-    TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", transition, 16);
+    TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", transition, highedge);
     highPtFunc->SetParameters(404.4, 10);
     lowPtFunc->SetNpx(1000);
     highPtFunc->SetNpx(1000);
@@ -182,10 +182,15 @@ void Spectrum_Fit()
         std::cout <<  " data relative error: " << error/data << ", fit relative error: " << fitError/fit << ", deviation relative error: " << deviationerror/deviation << std::endl;
     }
     gRelDev->Set(pointIndex); // Sets the number of valid points explicitly
-
     // Clean up dynamically allocated memory
     delete[] x;
     delete[] ci;
+
+    // woods saxon function for transition between low and high pt
+    float transitionwidth = 0.3;
+    TF1 *transitionFunc = new TF1("transitionFunc", "[2] / (1 + exp((x - [0]) / [1]))-[2]/2", 0, 20);
+    transitionFunc->SetParameters(myFunc->GetParameter(0), myFunc->GetParameter(1), transitionwidth);//0.15 sets arbitrary height
+    transitionFunc->SetNpx(1000);
 
     TCanvas *c1 = new TCanvas("c1", "Canvas1", 800, 600);
     hist->SetTitle("Pion Spectrum; #pi_{0} p_{T} (GeV/c); 1/p_{T}#times dN/dp_{T}");
@@ -229,12 +234,15 @@ void Spectrum_Fit()
     gRelDev->SetMaximum(reldevrange);
     gRelDev->GetXaxis()->SetLimits(0, 20);
     gRelDev->Draw("AP");
+    //draw the transition function
+    transitionFunc->SetLineColor(kGray);
+    transitionFunc->Draw("same");
 
     // Add a TLine at deviation = 0
     double xmin = gRelDev->GetXaxis()->GetXmin();
     double xmax = gRelDev->GetXaxis()->GetXmax();
     TLine *line = new TLine(xmin, 0, xmax, 0);
-    line->SetLineColor(kGray); // Optional: Set the color of the line
+    line->SetLineColor(kBlack); // Optional: Set the color of the line
     //line->SetLineStyle(2); // Optional: Set the line style (e.g., dashed)
     line->SetLineWidth(3);        // Set the line width (increase value for thicker line)
     line->Draw("same");
