@@ -62,3 +62,5 @@ pion_resolution
 gen_res
 guiconfig/run_counter.json
 guiconfig/run_counter.json
+dst_calo_waveform.list
+dst_truth.list
