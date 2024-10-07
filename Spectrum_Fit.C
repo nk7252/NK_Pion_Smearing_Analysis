@@ -156,6 +156,7 @@ void Spectrum_Fit()
     TGraphErrors *gRelDevLow = new TGraphErrors();
     TGraphErrors *gRelDevHigh = new TGraphErrors();
     // characterize statistical uncertainty of the fit
+    int nParams = myFunc->GetNpar();
     std::vector<double> bestParams(nParams), bestParamsErr(nParams),yDefault(nPoints), yUpper(nPoints), yLower(nPoints), yRatioUpper(nPoints), yRatioLower(nPoints), ymaxratioU(nPoints), ymaxratioL(nPoints);
     double bestChi2 = myFunc->GetChisquare();
     double bestChi2NDF = myFunc->GetChisquare() / myFunc->GetNDF();
