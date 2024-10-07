@@ -69,9 +69,9 @@ void Spectrum_Fit()
 
     // Define fitting ranges and transition point
     int lowedge = 1;
-    int highedge = 11;
-    float transition = 3.9;
-    bool showauxilliaryfits = true;
+    int highedge = 16;
+    float transition = 4.8;
+    bool showauxilliaryfits = false;
 
     // Define the low pT fit function (Hagedorn)
     TF1 *lowPtFunc = new TF1("lowPtFunc", "[0] / pow(1 + x / [1], [2])", lowedge, transition);
@@ -80,7 +80,8 @@ void Spectrum_Fit()
 
     // Define the high pT fit function (Power Law)
     TF1 *highPtFunc = new TF1("highPtFunc", "[0] / (pow(x, [1]))", transition, highedge);
-    highPtFunc->SetParameters(404.4, 10);
+    //highPtFunc->SetParameters(404.4, 10);
+    highPtFunc->SetParameters(141.5, 9.9);
     highPtFunc->SetNpx(1000);
 
     // Fit the histogram with low and high pT functions and get fit results
@@ -96,13 +97,18 @@ void Spectrum_Fit()
     // Initialize combined function parameters
     myFunc->SetParameter(0, transition);
     myFunc->SetParameter(1, 0.114);
-    myFunc->SetParLimits(1, 0.114*0.6,  0.114*1.4);
+    myFunc->SetParLimits(1, 0.114*0.8,  0.114*1.6);
     for (int j=0; j<3; j++) myFunc->SetParameter(j+2, lowPtFunc->GetParameter(j));
     for (int j=0; j<2; j++) myFunc->SetParameter(j+5, highPtFunc->GetParameter(j));
-
+    //myFunc->SetParLimits(5, highPtFunc->GetParameter(0)*0.99, highPtFunc->GetParameter(0)*1.05);
+    //myFunc->SetParLimits(6, highPtFunc->GetParameter(1)*0.999, highPtFunc->GetParameter(1)*1.001);
+    myFunc->FixParameter(5, highPtFunc->GetParameter(0));
+    myFunc->FixParameter(6, highPtFunc->GetParameter(1));
+    myFunc->SetNpx(1000);
     // Perform the fit and retrieve the fit result pointer
     TFitResultPtr fitResultPtr = hist->Fit(myFunc, "SRE");
     const ROOT::Fit::FitResult &fitResult = *fitResultPtr;
+
 
     // Number of points (bins) to calculate the confidence intervals for
     unsigned int nPoints = hist->GetNbinsX();
@@ -149,6 +155,17 @@ void Spectrum_Fit()
     TGraphErrors *gRelDevCombined = new TGraphErrors();
     TGraphErrors *gRelDevLow = new TGraphErrors();
     TGraphErrors *gRelDevHigh = new TGraphErrors();
+    // characterize statistical uncertainty of the fit
+    std::vector<double> bestParams(nParams), bestParamsErr(nParams),yDefault(nPoints), yUpper(nPoints), yLower(nPoints), yRatioUpper(nPoints), yRatioLower(nPoints), ymaxratioU(nPoints), ymaxratioL(nPoints);
+    double bestChi2 = myFunc->GetChisquare();
+    double bestChi2NDF = myFunc->GetChisquare() / myFunc->GetNDF();
+    // Store the current best parameters
+    for (int i = 0; i < nParams; ++i) {
+        bestParams[i] = myFunc->GetParameter(i);
+    }
+
+
+
 
     int pointIndexCombined = 0;
     int pointIndexLow = 0;
@@ -216,7 +233,7 @@ void Spectrum_Fit()
     delete[] ciCombined;
     delete[] ciLow;
     delete[] ciHigh;
-
+    //-------------------------------------------------------------------------------------------------------------- canvas
     // Woods-Saxon function for transition visualization
     float transitionwidth = 0.3;
     TF1 *transitionFunc = new TF1("transitionFunc", "[2] / (1 + exp((x - [0]) / [1])) - [2] / 2", 0, 20);
@@ -314,9 +331,9 @@ void Spectrum_Fit()
     // Create and draw the legend
     TLegend *legend = new TLegend(0.2, 0.75, 0.4, 0.9);
     legend->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
-    legend->AddEntry(gRelDevCombined, "Combined Fit Deviation", "P");
-    legend->AddEntry(gRelDevLow, "Low p_{T} Fit Deviation", "P");
-    legend->AddEntry(gRelDevHigh, "High p_{T} Fit Deviation", "P");
+    legend->AddEntry(gRelDevCombined, "Combined Fit ", "P");
+    legend->AddEntry(gRelDevLow, "Hagedorn", "P");
+    legend->AddEntry(gRelDevHigh, "Power Law", "P");
     legend->AddEntry(box, "Low Stats Region", "F");
     legend->SetFillStyle(0);
     legend->SetBorderSize(0);
