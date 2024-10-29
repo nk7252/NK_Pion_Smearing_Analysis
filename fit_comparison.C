@@ -98,7 +98,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   bool dynamic_left = true;
   int startBin = 9;
   int endBin_global = -1;
-  int projectionBins = 4;
+  int projectionBins = 2;
   double scale_factor = 1.0;
   double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
   /*
@@ -345,6 +345,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     MarkerColor += 1;
     if (MarkerColor == 5 || MarkerColor == 10)
       MarkerColor += 1; // avoid yellow
+    if (MarkerStyle ==26 || MarkerStyle == 32)
+      MarkerStyle += 1; // avoid triangles
     pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
     pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
     // pionmeanGraph[filecounter]->SetMarkerSize(1.5);
@@ -390,10 +392,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     //------------------------------------------------------------------------------------------------
 
     // Define a function for the pion energy resolution fit
-    TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 5);
+    TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 5.5);
     PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
-    PresolutionFit->SetParLimits(0, 0.1, 0.18);
-    PresolutionFit->SetParLimits(1, 0.01, 0.2);
+    //PresolutionFit->SetParLimits(0, 0.1, 0.18);
+    //PresolutionFit->SetParLimits(1, 0.01, 0.2);
     PresolutionFit->SetLineColor(MarkerColor);
     PresolutionGraph[filecounter]->Fit(PresolutionFit, "RE"); // Fit and constrain to the range of pT
 
@@ -570,6 +572,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       MarkerColor += 1;
       if (MarkerColor == 5 || MarkerColor == 10)
         MarkerColor += 1; // avoid yellow
+      if (MarkerStyle ==26 || MarkerStyle == 32)
+      MarkerStyle += 1; // avoid triangles
       pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
       // pionmeanGraph[filecounter]->SetMarkerSize(1.5);
@@ -594,10 +598,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
     
       // Define a function for the pion energy resolution fit
-      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 5);
+      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 5.5);
       PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
-      PresolutionFit->SetParLimits(0, 0.1, 0.18);
-      PresolutionFit->SetParLimits(1, 0.01, 0.2);
+      //PresolutionFit->SetParLimits(0, 0.1, 0.18);
+      //PresolutionFit->SetParLimits(1, 0.01, 0.2);
       PresolutionFit->SetLineColor(MarkerColor);
       PresolutionGraph[filecounter]->Fit(PresolutionFit, "RE");  // Fit and constrain to the range of pT
 /*
@@ -734,6 +738,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       MarkerColor += 1;
       if (MarkerColor == 5 || MarkerColor == 10)
         MarkerColor += 1; // avoid yellow
+      if (MarkerStyle ==26 || MarkerStyle == 32)
+      MarkerStyle += 1; // avoid triangles
       etameanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       etameanGraph[filecounter]->SetMarkerColor(MarkerColor);
       // etameanGraph[j]->SetMarkerSize(1.5);
@@ -927,6 +933,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       MarkerColor += 1;
       if (MarkerColor == 5 || MarkerColor == 10)
         MarkerColor += 1; // avoid yellow
+      if (MarkerStyle ==26 || MarkerStyle == 32)
+      MarkerStyle += 1; // avoid triangles
       pionmeanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       pionmeanGraph[filecounter]->SetMarkerColor(MarkerColor);
       // pionmeanGraph[j]->SetMarkerSize(1.5);
@@ -954,8 +962,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 10);
       PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
       //set parameter limits
-      PresolutionFit->SetParLimits(0, 0.1, 0.18);
-      PresolutionFit->SetParLimits(1, 0.01, 0.2);
+      //PresolutionFit->SetParLimits(0, 0.1, 0.18);
+      PresolutionFit->SetParLimits(1, 0.07, 0.1);
       PresolutionFit->SetLineColor(MarkerColor);
       // Fit the resolution graph
       PresolutionGraph[filecounter]->Fit(PresolutionFit, "RE");  // Fit and constrain to the range of pT
@@ -1095,6 +1103,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       MarkerColor += 1;
       if (MarkerColor == 5 || MarkerColor == 10)
         MarkerColor += 1; // avoid yellow
+      if (MarkerStyle ==26 || MarkerStyle == 32)
+      MarkerStyle += 1; // avoid triangles
       etameanGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       etameanGraph[filecounter]->SetMarkerColor(MarkerColor);
       // etameanGraph[j]->SetMarkerSize(1.5);
@@ -1230,6 +1240,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       MarkerColor += 1;
       if (MarkerColor == 5 || MarkerColor == 10)
         MarkerColor += 1; // avoid yellow
+      if (MarkerStyle ==26 || MarkerStyle == 32)
+      MarkerStyle += 1; // avoid triangles
       // with all off will default to sphenix style
       // newPionMean->SetMarkerStyle(MarkerStyle);
       // newPionMean->SetMarkerColor(MarkerColor);
@@ -1261,7 +1273,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // gPad->SetFillColor(33);
   gPionMeans->SetTitle("Pion: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Pion Peak Position (GeV)");
   gPionMeans->GetXaxis()->SetLimits(0.01, 10);
-  gPionMeans->SetMinimum(0.135);
+  gPionMeans->SetMinimum(0.130);
   gPionMeans->SetMaximum(0.17);
   gPionMeans->Draw("APE");
   legend1->SetFillStyle(0);
@@ -1370,54 +1382,98 @@ void fit_comparison()
 {
   //-----------------------------------------
   std::vector<std::string> unweighted_fileNames = {
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V36.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root",}; //    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V36.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_0000000015_merged_V64.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V65.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V66.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V67.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V69.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V70.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V71.root",
+      }; //    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
   //
-  std::vector<std::string> unweighted_histNames = {"h_InvMass_2d", "h_InvMass_smear_2d_100", "h_InvMass_smear_2d_125"};        //"h_InvMass_2d",
-  std::vector<std::string> unweighted_legendNames = {"Pythia_wvfm_E", "Pythia_wvfm_E+10%smr", "Pythia_wvfm_E+12.5%smr"};       //"Pythia",
+  std::vector<std::string> unweighted_histNames = {
+    //"h_InvMass_2d", "h_InvMass_smear_2d_100", 
+    //"h_InvMass_smear_2d_100",
+    //"h_InvMass_smear_2d_100", "h_InvMass_smear_2d_125",
+     "h_InvMass_smear_2d_115",
+     // "h_InvMass_smear_2d_125", "h_InvMass_smear_2d_125",
+     "h_InvMass_smear_2d_125"};        //"h_InvMass_2d",
+  std::vector<std::string> unweighted_legendNames = {
+    //"Pythia_wvfm", "Pythia_wvfm+10%smr", 
+    //"Pythia_vtx+10%smr",
+    //"Pythia_wvfm_vtx+10%smr", "Pythia_wvfm_vtx+12.5%smr",
+    "Pythia_wvfm_vtx+11.5%smr",
+    //"eT_prob","prob_eT",
+     "70MeV Clustering"};       //"Pythia",
 
   //-----------------------------------------
   std::vector<std::string> SPMC_FileNames = {
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V43.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V44.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V45.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",};//42
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V43.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V44.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V45.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",
+      "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V6.root",
+      "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V7.root",
+      };
+      //
   //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38
   //,"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_200_10000MeV_0000000013_00merged_V14.root"
   std::vector<std::string> SPMC_histNames = {
-      "h_InvMass_smear_weighted_2d_0",
-      "h_InvMass_smear_weighted_2d_0",
+      //"h_InvMass_smear_weighted_2d_0",
+      //"h_InvMass_smear_weighted_2d_0",
+      //"h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125"};
-  std::vector<std::string> SPMC_legend = {"SPi0+0sm", "SEta+0sm", "SEta+12.5sm", "SPi0+12.5sm", "SPi0wcuts"};
-  std::vector<int> SPMC_FileTypes = {0, 1, 1, 0}; // 0 for pion, 1 for eta
+  std::vector<std::string> SPMC_legend = {
+    //"SPi0+0sm", "SEta+0sm", "SEta+12.5sm", 
+    "SPi0+12.5sm", 
+    "SPi0_Weight_pythia+12.5", 
+    "SPi0_tbtzs_Weight_pythia+12.5"};
+
+  std::vector<int> SPMC_FileTypes = {
+    //0, 1, 1, 
+    0,
+    0,
+    0}; // 0 for pion, 1 for eta
 
   //-----------------------------------------
-  std::vector<std::string> FastMC_fileNames = {};
-  /*
+  std::vector<std::string> FastMC_fileNames =
+  //*
   {
-    "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root",
-    "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root",
-    "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.150000_const.root",
-    "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.180000_const.root",
-    "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root",
-    "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root",
-    "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root",
-    "pioncode/rootfiles/PionFastMC_0.154000_sqrte_0.180000_const.root"
-    };
+    "pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+    //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root",
+    //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.150000_const.root",
+    //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.180000_const.root",
+    "pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+    //"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+    "pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+    "pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+  };
     //*/
-  std::vector<std::string> FastMC_histNames = {"h101_2", "h101_2", "h101_2", "h101_2", "h101_2_symm_2", "h101_2_asymm_2", "h101_2_symm_0", "h101_2_symm_1"};
-  std::vector<std::string> FastMC_legendNames = {
-      "FastMC: 15.4%/#sqrt{E} #oplus 18%",
-      "FastMC: 15.4%/#sqrt{E} #oplus 12%",
-      "FastMC: 15.4%/#sqrt{E} #oplus 15%",
-      "FastMC: 15.4%/#sqrt{E} #oplus 18%",
-      "FastMC_symm_E: 15.4%/#sqrt{E} #oplus 18%",
-      "FastMC_asymm_E: 15.4%/#sqrt{E} #oplus 18%",
-      "FastMC_symm_R: 15.4%/#sqrt{E} #oplus 18%",
-      "FastMC_symm_T: 15.4%/#sqrt{E} #oplus 18%"}; //"PionFastMC", "EtaFastMC"
-  std::vector<int> FastMC_FileTypes = {0, 1, 1, 1, 0, 0, 0, 0}; // 0 for pion, 1 for eta
+  std::vector<std::string> FastMC_histNames = {"h100_2", 
+  //"h101_2", "h101_2", "h101_2", 
+  "h101_2_symm_2", 
+  //"h101_2_asymm_2",
+  "h101_2_symm_0", "h101_2_symm_1"};
+  std::vector<std::string> FastMC_legendNames = 
+  {
+    "FastMC: 14%/#sqrt{E} #oplus 4%",
+    //"FastMC: 15.4%/#sqrt{E} #oplus 12%","FastMC: 15.4%/#sqrt{E} #oplus 15%","FastMC: 15.4%/#sqrt{E} #oplus 18%",
+    "FastMC_symm_E: 14%/#sqrt{E} #oplus 4%",
+    //"FastMC_asymm_E: 14%/#sqrt{E} #oplus 4%",
+    "FastMC_symm_R: 14%/#sqrt{E} #oplus 4%",
+    "FastMC_symm_T: 14%/#sqrt{E} #oplus 4%"
+  }; //"PionFastMC", "EtaFastMC"
+  std::vector<int> FastMC_FileTypes = 
+  {
+    0,
+    //1, 1, 1, 
+    0, 
+    //0,
+    0, 0
+  }; // 0 for pion, 1 for eta
   //
   //-----------------------------------------
   std::vector<std::string> Run2024_fileNames = {"pioncode/rootfiles/meson_graphs.root"};

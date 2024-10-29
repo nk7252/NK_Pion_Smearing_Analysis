@@ -1014,8 +1014,9 @@ double EnergySharingScale(double distance, ScalingMethod method) {
         case EXPONENTIAL: {
             //0.3*exp(-distance / 0.2); // exponential
             //parameters for the Exponential method
-            double expParam1 = 0.5; //finite energy sharing at low distances
+            double expParam1 = 0.7; //finite energy sharing at low distances
             double expParam2 = 50.0; //distance at which scale = expParam*1/e~expParam*0.37
+            //higher=higher mass?
             // Exponential scaling: scale = expParam1 * exp(-distance / expParam2)
             scale = expParam1 * exp(-distance / expParam2);
             break;
@@ -1024,7 +1025,7 @@ double EnergySharingScale(double distance, ScalingMethod method) {
         case RATIONAL: {
             //double shiftFactor = A / (1.0 + pow(distance / d0, n)); // rational
             //parameters for the Rational method
-            double rationalParam1 = 0.5; //finite energy sharing at low distances
+            double rationalParam1 = 0.7; //finite energy sharing at low distances
             double rationalParam2 = 50.0; // distance scaling factor. no idea what this should be
             double rationalParam3 = 1.3; //A parameter that controls the steepness of the decline
             // Rational scaling: scale = rationalParam1 / (distance + rationalParam2)
@@ -1035,7 +1036,7 @@ double EnergySharingScale(double distance, ScalingMethod method) {
         case HYPERBOLIC_TANGENT: {
             //double shiftFactor = A * tanh((distance - d0) / d1); // hyperbolic tangent
             //parameters for the Hyperbolic Tangent method
-            double tanhParam1 = 0.5; //finite energy sharing at low distances
+            double tanhParam1 = 0.7; //finite energy sharing at low distances
             double tanhParam2 = 10.0; //sets the scale of the distance at which the energy sharing is = param1. lower = less sharing at high distances
             scale = tanhParam1 * tanh(tanhParam2 / distance);
             break;
