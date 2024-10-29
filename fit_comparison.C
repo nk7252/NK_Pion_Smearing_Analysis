@@ -1089,8 +1089,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
         massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
         massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
-        EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
-        EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
+        //EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
+        //EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
 
         bincounter++;
         // std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
@@ -1119,8 +1119,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
 
-      EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-      EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
+      //EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+      //EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
 
       gEtaMeans->Add(etameanGraph[filecounter], "PE");
       legend3->AddEntry(etameanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
