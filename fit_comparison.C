@@ -392,7 +392,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     //------------------------------------------------------------------------------------------------
 
     // Define a function for the pion energy resolution fit
-    TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 5.5);
+    TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 5.5);
     PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
     //PresolutionFit->SetParLimits(0, 0.1, 0.18);
     //PresolutionFit->SetParLimits(1, 0.01, 0.2);
@@ -429,7 +429,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
     //------------------------------------------------------------------------------------------------
 
     // Define a function for the eta energy resolution fit
-    TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 8);
+    TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 8);
     EresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
     EresolutionFit->SetParLimits(0, 0.1, 0.18);
     EresolutionFit->SetParLimits(1, 0.01, 0.2);
@@ -598,7 +598,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
     
       // Define a function for the pion energy resolution fit
-      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 5.5);
+      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 5.5);
       PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
       //PresolutionFit->SetParLimits(0, 0.1, 0.18);
       //PresolutionFit->SetParLimits(1, 0.01, 0.2);
@@ -770,7 +770,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
       
       // Define a function for the eta energy resolution fit
-      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 15);
+      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 15);
       EresolutionFit->SetParameters(0.154, 0.02);  // Initial guesses for a, b
       EresolutionFit->SetParLimits(0, 0.1, 0.18);
       EresolutionFit->SetParLimits(1, 0.01, 0.2);
@@ -959,7 +959,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
 
       // Define a function for the pion energy resolution fit
-      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 10);
+      TF1 *PresolutionFit = new TF1("PresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 10);
       PresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
       //set parameter limits
       //PresolutionFit->SetParLimits(0, 0.1, 0.18);
@@ -1135,7 +1135,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       //------------------------------------------------------------------------------------------------
     
       // Define a function for the eta energy resolution fit
-      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt([0]*[0]/x + [1]*[1])", 2, 20);
+      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 20);
       EresolutionFit->SetParameters(0.154, 0.02);  // Initial guesses for a, b
       EresolutionFit->SetParLimits(0, 0.1, 0.18);
       EresolutionFit->SetParLimits(1, 0.01, 0.2);
