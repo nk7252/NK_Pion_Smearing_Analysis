@@ -1019,9 +1019,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         {
           histF->Rebin(rebinFactor);
         }
+        std::cout << "Rebinning done" << std::endl;
 
         histF->Scale(1. / 2, "width");
-
+        std::cout << "Scaling done" << std::endl;
         // Determine the leftmost point with a value in the projection histograms
         // float leftmost_limit = 0;
         if (dynamic_left)
