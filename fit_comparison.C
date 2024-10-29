@@ -1425,7 +1425,8 @@ void fit_comparison()
       "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125"};
   std::vector<std::string> SPMC_legend = {
-      //"SPi0+0sm", "SEta+0sm", "SEta+12.5sm",
+      //"SPi0+0sm", "SEta+0sm", 
+      "SEta+12.5sm",
       "SPi0+12.5sm",
       "SPi0_Weight_pythia+12.5",
       "SPi0_tbtzs_Weight_pythia+12.5"};
@@ -1442,7 +1443,7 @@ void fit_comparison()
       //*
       {
           //"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root",
+          //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root",
           //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.150000_const.root",
           //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.180000_const.root",
           //"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",

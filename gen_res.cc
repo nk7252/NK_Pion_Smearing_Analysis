@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     std::string particleType = "Pion";
     // std::string particleType = "Eta";
     int nParticles = 8 * 1000000;
-    int PT_Max = 50;
+    int PT_Max = 40;
     float PT_Min = 0;
     double PT_ratio = PT_Min / PT_Max;
     std::string weightMethodStr = "WSHP";
@@ -71,8 +71,8 @@ int main(int argc, char *argv[])
     float nclus_ptCut = 0.0;
     
     int PT_Max_bin = 20; // normally this, but now we want to match fun4all PT_Max;
-    int MassNBins = 1200;
-    int binres = 2;
+    int MassNBins = 600;
+    int binres = 1;
     int n_bins = 8 * 10; // binres * PT_Max;
     bool Debug = false;  // default should be false ofc.
     float etCut = 1.0;

@@ -5,9 +5,10 @@
 
 void detach_hist() {
     // Open the input ROOT file
-    TFile *inputFile = TFile::Open("pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V53.root", "READ");
+    TFile *inputFile = TFile::Open("pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V47.root", "READ");
     //pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V53.root
-    //pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V44.root
+    //pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V53.root
+    
     if (!inputFile || inputFile->IsZombie()) {
         std::cerr << "Error: Could not open input file." << std::endl;
     }
@@ -27,10 +28,10 @@ void detach_hist() {
     }
 
     // Give the cloned histogram a new name
-    histCopy->SetName("spi0_pt_spectrum");
+    histCopy->SetName("seta_pt_spectrum");
 
     // Open the output ROOT file to save the cloned histogram
-    TFile *outputFile = TFile::Open("pioncode/rootfiles/spi0_spectrum.root", "RECREATE");
+    TFile *outputFile = TFile::Open("pioncode/rootfiles/seta_spectrum.root", "RECREATE");
     if (!outputFile || outputFile->IsZombie()) {
         std::cerr << "Error: Could not create output file." << std::endl;
         inputFile->Close();
