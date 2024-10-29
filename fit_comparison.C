@@ -98,7 +98,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   bool dynamic_left = true;
   int startBin = 9;
   int endBin_global = -1;
-  int projectionBins = 2;
+  int projectionBins = 4;
   double scale_factor = 1.0;
   double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
   /*
@@ -1411,7 +1411,7 @@ void fit_comparison()
   std::vector<std::string> SPMC_FileNames = {
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V43.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V44.root",
-      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V45.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V45.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",
       "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V6.root",
       "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V7.root",
@@ -1422,7 +1422,7 @@ void fit_comparison()
   std::vector<std::string> SPMC_histNames = {
       //"h_InvMass_smear_weighted_2d_0",
       //"h_InvMass_smear_weighted_2d_0",
-      //"h_InvMass_smear_weighted_2d_125",
+      "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125"};
@@ -1433,7 +1433,8 @@ void fit_comparison()
     "SPi0_tbtzs_Weight_pythia+12.5"};
 
   std::vector<int> SPMC_FileTypes = {
-    //0, 1, 1, 
+    //0, 1,
+    1, 
     0,
     0,
     0}; // 0 for pion, 1 for eta
@@ -1442,37 +1443,46 @@ void fit_comparison()
   std::vector<std::string> FastMC_fileNames =
   //*
   {
-    "pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+    //"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
     //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.120000_const.root",
     //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.150000_const.root",
     //"pioncode/rootfiles/EtaFastMC_0.154000_sqrte_0.180000_const.root",
-    "pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
     //"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-    "pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-    "pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+    //"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+    //"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+    //"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
   };
     //*/
-  std::vector<std::string> FastMC_histNames = {"h100_2", 
-  //"h101_2", "h101_2", "h101_2", 
-  "h101_2_symm_2", 
+  std::vector<std::string> FastMC_histNames = 
+  {
+  //"h100_2", 
+  "h101_2",
+  "h101_2",
+  "h101_2", 
+  //"h101_2_symm_2", 
   //"h101_2_asymm_2",
-  "h101_2_symm_0", "h101_2_symm_1"};
+  //"h101_2_symm_0", "h101_2_symm_1"
+  };
   std::vector<std::string> FastMC_legendNames = 
   {
-    "FastMC: 14%/#sqrt{E} #oplus 4%",
-    //"FastMC: 15.4%/#sqrt{E} #oplus 12%","FastMC: 15.4%/#sqrt{E} #oplus 15%","FastMC: 15.4%/#sqrt{E} #oplus 18%",
-    "FastMC_symm_E: 14%/#sqrt{E} #oplus 4%",
+    //"FastMC: 14%/#sqrt{E} #oplus 4%",
+    "FastMC: 15.4%/#sqrt{E} #oplus 12%",
+    "FastMC: 15.4%/#sqrt{E} #oplus 15%",
+    "FastMC: 15.4%/#sqrt{E} #oplus 18%",
+    //"FastMC_symm_E: 14%/#sqrt{E} #oplus 4%",
     //"FastMC_asymm_E: 14%/#sqrt{E} #oplus 4%",
-    "FastMC_symm_R: 14%/#sqrt{E} #oplus 4%",
-    "FastMC_symm_T: 14%/#sqrt{E} #oplus 4%"
+    //"FastMC_symm_R: 14%/#sqrt{E} #oplus 4%",
+    //"FastMC_symm_T: 14%/#sqrt{E} #oplus 4%"
   }; //"PionFastMC", "EtaFastMC"
   std::vector<int> FastMC_FileTypes = 
   {
-    0,
-    //1, 1, 1, 
-    0, 
     //0,
-    0, 0
+    1,
+    1,
+    1, 
+    //0, 
+    //0,
+    //0, 0
   }; // 0 for pion, 1 for eta
   //
   //-----------------------------------------
