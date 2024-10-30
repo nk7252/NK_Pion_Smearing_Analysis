@@ -1127,7 +1127,6 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
 
       gEtaMeans->Add(etameanGraph[filecounter], "PE");
-      FastMC_legendNames
       legend3->AddEntry(etameanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
       gEtaWidths->Add(etawidthGraph[filecounter], "PE");
