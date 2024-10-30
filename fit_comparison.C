@@ -1046,16 +1046,16 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         scale_histogram_errors(histF, scale_factor);
         std::cout << "Pre fit Setup done" << std::endl;
         // Fit Eta Gaussian in the specified range
-        TF1 *gausFit = new TF1("gausFit", "gaus", limits[6], limits[7]);
-        gausFit->SetParLimits(1, 0.50, 0.64);
-        gausFit->SetParLimits(2, 0.03, 0.25);
-        gausFit->SetNpx(1000);
-        histF->Fit(gausFit, "REQ");
+        TF1 *EtagausFit = new TF1("EtagausFit", "gaus", limits[6], limits[7]);
+        EtagausFit->SetParLimits(1, 0.50, 0.64);
+        EtagausFit->SetParLimits(2, 0.03, 0.25);
+        EtagausFit->SetNpx(1000);
+        histF->Fit(EtagausFit, "REQ");
         std::cout << "Fit done" << std::endl;
 
         // Check if the fit returns NaN or Inf
         bool fitFailed = false;
-        for (int i = 0; i < gausFit->GetNpar(); i++)
+        for (int i = 0; i < EtagausFit->GetNpar(); i++)
         {
           double param = gausFit->GetParameter(i);
           if (std::isnan(param) || std::isinf(param))
@@ -1070,10 +1070,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
           continue;
         }
         std::cout << "Fit parameters are good" << std::endl;
-        double Emean = gausFit->GetParameter(1);
-        double Esigma = gausFit->GetParameter(2);
-        double EmeanErr = gausFit->GetParError(1);
-        double EsigmaErr = gausFit->GetParError(2);
+        double Emean = EtagausFit->GetParameter(1);
+        double Esigma = EtagausFit->GetParameter(2);
+        double EmeanErr = EtagausFit->GetParError(1);
+        double EsigmaErr = EtagausFit->GetParError(2);
         double EWidth = Esigma / Emean;
         double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
 
