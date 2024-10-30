@@ -1000,14 +1000,14 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         // Project the histogram along the Y-axis
         int lastBin = std::min(i + projectionBins - 1, nBinsX);
         TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
-        /*
+        ///*
         // Check if the projection has enough entries to perform a fit
         if (yProjection->GetEntries() < 1000)
         { // Adjust the threshold as needed
           delete yProjection;
           continue;
         }
-        */
+        //*/
         TH1D *histF = (TH1D *)yProjection;
         // re binning
         if (var_bins && !nuBins.empty())
@@ -1027,6 +1027,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         // float leftmost_limit = 0;
         if (dynamic_left)
         {
+          std::cout << "Dynamic left" << std::endl;
           for (int bin = 1; bin <= histF->GetNbinsX(); ++bin)
           {
             if (histF->GetBinContent(bin) > 0)
@@ -1090,8 +1091,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
         massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
         massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
-        //EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
-        //EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
+        // EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
+        // EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
 
         bincounter++;
         // std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
@@ -1120,8 +1121,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       massRatioGraph[filecounter]->SetMarkerStyle(MarkerStyle);
       massRatioGraph[filecounter]->SetMarkerColor(MarkerColor);
 
-      //EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
-      //EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
+      // EresolutionGraph[filecounter]->SetMarkerStyle(MarkerStyle);
+      // EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
 
       gEtaMeans->Add(etameanGraph[filecounter], "PE");
       legend3->AddEntry(etameanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
@@ -1133,35 +1134,35 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       legend5->AddEntry(massRatioGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
       //------------------------------------------------------------------------------------------------
-/*
-      // Define a function for the eta energy resolution fit
-      TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 20);
-      EresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
-      EresolutionFit->SetParLimits(0, 0.1, 0.18);
-      EresolutionFit->SetParLimits(1, 0.01, 0.2);
-      EresolutionFit->SetLineColor(MarkerColor);
-      EresolutionGraph[filecounter]->Fit(EresolutionFit, "RE");
+      /*
+            // Define a function for the eta energy resolution fit
+            TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 20);
+            EresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
+            EresolutionFit->SetParLimits(0, 0.1, 0.18);
+            EresolutionFit->SetParLimits(1, 0.01, 0.2);
+            EresolutionFit->SetLineColor(MarkerColor);
+            EresolutionGraph[filecounter]->Fit(EresolutionFit, "RE");
 
-      
-            TCanvas *EresCanvas = new TCanvas("EresCanvas", "Resolution Fit", 800, 600);
-            EresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
-            EresolutionGraph[filecounter]->Draw("APE");
-            EresolutionFit->Draw("same");
 
-            TCanvas *EfitParamsCanvas = new TCanvas("EfitParamsCanvas", "Fit Parameters", 800, 600);
-            TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-            EparamsText->AddText("Eta Fitted Resolution Parameters:");
-            EparamsText->AddText(FastMC_legendNames[j].c_str());
-            EparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", EresolutionFit->GetParameter(0)));
-            //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
-            EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
-            //add goodness of fit
-            EparamsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
-            EparamsText->Draw();
-      
-      gEResolutions->Add(EresolutionGraph[filecounter], "PE");
-      legend7->AddEntry(EresolutionGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
-*/
+                  TCanvas *EresCanvas = new TCanvas("EresCanvas", "Resolution Fit", 800, 600);
+                  EresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); #sigma / #mu");
+                  EresolutionGraph[filecounter]->Draw("APE");
+                  EresolutionFit->Draw("same");
+
+                  TCanvas *EfitParamsCanvas = new TCanvas("EfitParamsCanvas", "Fit Parameters", 800, 600);
+                  TPaveText *EparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
+                  EparamsText->AddText("Eta Fitted Resolution Parameters:");
+                  EparamsText->AddText(FastMC_legendNames[j].c_str());
+                  EparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", EresolutionFit->GetParameter(0)));
+                  //paramsText->AddText(Form("Noise term (b): %.4f", EresolutionFit->GetParameter(2)));
+                  EparamsText->AddText(Form("Constant term (c): %.4f", EresolutionFit->GetParameter(1)));
+                  //add goodness of fit
+                  EparamsText->AddText(Form("Chi2/ndf: %.4f", EresolutionFit->GetChisquare() / EresolutionFit->GetNDF()));
+                  EparamsText->Draw();
+
+            gEResolutions->Add(EresolutionGraph[filecounter], "PE");
+            legend7->AddEntry(EresolutionGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+      */
       // EresCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
       // EresCanvas->Close();
       // EfitParamsCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf");
@@ -1425,7 +1426,7 @@ void fit_comparison()
       "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125"};
   std::vector<std::string> SPMC_legend = {
-      //"SPi0+0sm", "SEta+0sm", 
+      //"SPi0+0sm", "SEta+0sm",
       "SEta+12.5sm",
       "SPi0+12.5sm",
       "SPi0_Weight_pythia+12.5",
