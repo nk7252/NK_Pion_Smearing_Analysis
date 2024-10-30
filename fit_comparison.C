@@ -1077,8 +1077,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         double EWidth = Esigma / Emean;
         double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
 
-        double MassRatio = Pion_Mean[j] / Emean;
-        double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
+        //double MassRatio = Pion_Mean[j] / Emean;
+        //double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
         std::cout << "Fit parameters stored" << std::endl;
         // Eta_Mean.push_back(Emean);
         // Eta_Width.push_back(EWidth);
