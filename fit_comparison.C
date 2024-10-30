@@ -1410,7 +1410,7 @@ void fit_comparison()
   std::vector<std::string> SPMC_FileNames = {
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V43.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V44.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V45.root",
+      "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V14.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",
       "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V6.root",
       "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V7.root",
@@ -1426,8 +1426,8 @@ void fit_comparison()
       "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_125"};
   std::vector<std::string> SPMC_legend = {
-      //"SPi0+0sm", "SEta+0sm",
-      "SEta+12.5sm",
+      //"SPi0+0sm", "SEta+0sm", 
+      "SEta+12.5sm,70mev,lowcut",
       "SPi0+12.5sm",
       "SPi0_Weight_pythia+12.5",
       "SPi0_tbtzs_Weight_pythia+12.5"};
