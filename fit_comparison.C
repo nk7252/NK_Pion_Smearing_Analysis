@@ -1038,19 +1038,20 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
             }
           }
         }
-
+        //std::cout << "Leftmost limit: " << limits[0] << std::endl;
         double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
         double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
         TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
         double Eta_pt = (pt_min + pt_max) / 2.0;
         scale_histogram_errors(histF, scale_factor);
-
+        std::cout << "Pre fit Setup done" << std::endl;
         // Fit Eta Gaussian in the specified range
         TF1 *gausFit = new TF1("gausFit", "gaus", limits[6], limits[7]);
         gausFit->SetParLimits(1, 0.50, 0.64);
         gausFit->SetParLimits(2, 0.03, 0.25);
         gausFit->SetNpx(1000);
         histF->Fit(gausFit, "REQ");
+        std::cout << "Fit done" << std::endl;
 
         // Check if the fit returns NaN or Inf
         bool fitFailed = false;
@@ -1068,6 +1069,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
           std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
           continue;
         }
+        std::cout << "Fit parameters are good" << std::endl;
         double Emean = gausFit->GetParameter(1);
         double Esigma = gausFit->GetParameter(2);
         double EmeanErr = gausFit->GetParError(1);
@@ -1077,7 +1079,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
         double MassRatio = Pion_Mean[j] / Emean;
         double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
-
+        std::cout << "Fit parameters stored" << std::endl;
         // Eta_Mean.push_back(Emean);
         // Eta_Width.push_back(EWidth);
         // Eta_Mean_errors.push_back(EmeanErr);
@@ -1130,8 +1132,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gEtaWidths->Add(etawidthGraph[filecounter], "PE");
       legend4->AddEntry(etawidthGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
-      gMassRatios->Add(massRatioGraph[filecounter], "PE");
-      legend5->AddEntry(massRatioGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+      //gMassRatios->Add(massRatioGraph[filecounter], "PE");
+      //legend5->AddEntry(massRatioGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
       //------------------------------------------------------------------------------------------------
       /*
