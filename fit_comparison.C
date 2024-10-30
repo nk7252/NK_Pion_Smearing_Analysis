@@ -1057,7 +1057,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         bool fitFailed = false;
         for (int i = 0; i < EtagausFit->GetNpar(); i++)
         {
-          double param = gausFit->GetParameter(i);
+          double param = EtagausFit->GetParameter(i);
           if (std::isnan(param) || std::isinf(param))
           {
             fitFailed = true;
@@ -1091,8 +1091,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         etameanGraph[filecounter]->SetPointError(bincounter, 0, EmeanErr);
         etawidthGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
         etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
-        massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
-        massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
+        //massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
+        //massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
         // EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
         // EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
 
