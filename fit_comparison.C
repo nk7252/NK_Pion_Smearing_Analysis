@@ -1127,13 +1127,14 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // EresolutionGraph[filecounter]->SetMarkerColor(MarkerColor);
 
       gEtaMeans->Add(etameanGraph[filecounter], "PE");
-      legend3->AddEntry(etameanGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+      FastMC_legendNames
+      legend3->AddEntry(etameanGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
       gEtaWidths->Add(etawidthGraph[filecounter], "PE");
-      legend4->AddEntry(etawidthGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+      legend4->AddEntry(etawidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
       //gMassRatios->Add(massRatioGraph[filecounter], "PE");
-      //legend5->AddEntry(massRatioGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
+      //legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
       //------------------------------------------------------------------------------------------------
       /*
