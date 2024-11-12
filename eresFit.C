@@ -124,7 +124,7 @@ void eresFit()
         h_sigma->SetBinError(i, sigmaError);
         std::cout << "Mean: " << mean << " +/- " << meanError << std::endl;
         std::cout << "Sigma: " << sigma << " +/- " << sigmaError << std::endl;
-        std::cout << i << " " << x1 << " " << x2 << " " << pTValue << " " << pTError << std::endl;
+        std::cout << "Bin: " << i << " ,pT range:  ( " << x1 << " , " << x2 << ") ,  pT Bin: " << pTValue << " +/- " << pTError << std::endl;
         // Store chi² and chi²/ndf values
         h_chi2->SetBinContent(i, chi2);
         h_chi2_ndf->SetBinContent(i, chi2ndf);
