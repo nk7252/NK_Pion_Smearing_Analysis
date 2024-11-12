@@ -8,6 +8,7 @@
 #include <TGraphErrors.h>
 #include <Math/MinimizerOptions.h>
 #include <iostream>
+#include <vector> // Include the vector library
 
 // local includes
 #include "sPhenixStyle.h"
@@ -65,6 +66,11 @@ void eresFit()
     // Create TGraphErrors to store the relative width (sigma/mean) with proper error propagation
     TGraphErrors *Eres_Graph = new TGraphErrors();
     int graphPoint = 0; // Index for TGraphErrors points
+
+    // Vectors to store pT ranges and chi2/ndf values for the table
+    std::vector<double> pT_low_edges;
+    std::vector<double> pT_high_edges;
+    std::vector<double> chi2ndf_values;
 
     // Open multi-page PDF for viewing all pT bin fits
     TCanvas *c_summary = new TCanvas("c_summary", "Summary of Fits", 800, 600);
@@ -273,6 +279,11 @@ void eresFit()
         h_chi2->SetBinContent(i, chi2);
         h_chi2_ndf->SetBinContent(i, chi2ndf);
 
+        // **Store pT ranges and chi²/ndf values for the table**
+        pT_low_edges.push_back(x1);
+        pT_high_edges.push_back(x2);
+        chi2ndf_values.push_back(chi2ndf);
+
         // Add the relative width data point to the TGraphErrors
         Eres_Graph->SetPoint(graphPoint, pTValue, width);
         Eres_Graph->SetPointError(graphPoint, pTError, widthError);
@@ -319,6 +330,40 @@ void eresFit()
         delete h_proj;
         delete gausFit;
     }
+
+    // **Create a table of Chi^2/NDF values and add it to the PDF**
+
+    // Create the table using TPaveText
+    TPaveText *table = new TPaveText(0.1, 0.1, 0.9, 0.9, "NDC");
+    table->SetBorderSize(1);
+    table->SetFillColor(0);
+    table->SetTextAlign(12);
+    table->SetTextFont(42);
+    table->SetTextSize(0.03);
+
+    // Add a header
+    table->AddText("Chi^{2}/NDF Summary Table");
+    table->AddText(" ");
+
+    // Add column headers
+    table->AddText("p_{T} Range (GeV/c)      Chi^{2}/NDF");
+
+    // Loop over the collected data and add entries to the table
+    for (size_t i = 0; i < chi2ndf_values.size(); ++i)
+    {
+        TString line = Form("%.2f - %.2f              %.2f", pT_low_edges[i], pT_high_edges[i], chi2ndf_values[i]);
+        table->AddText(line);
+    }
+
+    // Clear the c_summary canvas
+    c_summary->cd();
+    c_summary->Clear();
+
+    // Draw the table
+    table->Draw();
+
+    // Save the table to the PDF
+    c_summary->Print("pioncode/canvas_pdf/e_res_fit_monitoring.pdf");
 
     // Close the multi-page PDF for pT bin fits
     c_summary->Print("pioncode/canvas_pdf/e_res_fit_monitoring.pdf]");
