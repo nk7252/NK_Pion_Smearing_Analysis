@@ -12,7 +12,8 @@
 #include "sPhenixStyle.C"
 
 // Main function to perform the fits and generate PDFs
-void eresFit() {
+void eresFit()
+{
     ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
     ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1000000);
@@ -24,30 +25,29 @@ void eresFit() {
 
     // Open the ROOT file containing your histogram
     TFile *file = TFile::Open("pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V21.root");
-    if (!file || file->IsZombie()) {
+    if (!file || file->IsZombie())
+    {
         std::cout << "Error opening file!" << std::endl;
         return;
     }
 
     // Retrieve the 2D histogram (e.g., resolution vs. pT)
-    TH2D *h_res_ptTr = (TH2D*)file->Get("h_res_ptTr");
-    if (!h_res_ptTr) {
+    TH2D *h_res_ptTr = (TH2D *)file->Get("h_res_ptTr");
+    if (!h_res_ptTr)
+    {
         std::cout << "Histogram h_res_ptTr not found!" << std::endl;
         file->Close();
         return;
     }
 
-
-
-
     // Create histograms to store mean and sigma values
     int nBinsX = h_res_ptTr->GetNbinsX();
     double xMin = h_res_ptTr->GetXaxis()->GetXmin();
     double xMax = h_res_ptTr->GetXaxis()->GetXmax();
-    //int nBinsX = h_res_ptTr->GetNbinsX();
+    // int nBinsX = h_res_ptTr->GetNbinsX();
 
     int startBin = 1;
-    int endBin_global = -1;//-1=actual last bin
+    int endBin_global = -1; //-1=actual last bin
     int endBin = endBin_global;
     int projectionBins = 4;
     double scale_factor = 1.0;
@@ -58,24 +58,25 @@ void eresFit() {
     TH1D *h_sigma = new TH1D("h_sigma", "Sigma of Energy Resolution", nBinsX, xMin, xMax);
 
     // Create histograms to store chi² and chi²/ndf values
-    TH1D* h_chi2 = new TH1D("h_chi2", "Chi^{2} of Individual Fits", nBinsX, xMin, xMax);
-    TH1D* h_chi2_ndf = new TH1D("h_chi2_ndf", "Chi^{2}/NDF of Individual Fits", nBinsX, xMin, xMax);
+    TH1D *h_chi2 = new TH1D("h_chi2", "Chi^{2} of Individual Fits", nBinsX, xMin, xMax);
+    TH1D *h_chi2_ndf = new TH1D("h_chi2_ndf", "Chi^{2}/NDF of Individual Fits", nBinsX, xMin, xMax);
 
     // Open multi-page PDF for viewing all pT bin fits
     TCanvas *c_summary = new TCanvas("c_summary", "Summary of Fits", 800, 600);
     c_summary->Print("pioncode/canvas_pdf/e_res_fit_monitoring.pdf[");
 
     // Loop over each pT bin and perform projection and fitting
-    //for (int i = 1; i <= nBinsX; ++i) {
+    // for (int i = 1; i <= nBinsX; ++i) {
     for (int i = startBin; i <= endBin; i += projectionBins)
-    {   
+    {
         // Project the histogram along the Y-axis
         int lastBin = std::min(i + projectionBins - 1, nBinsX);
         // Project the 2D histogram onto the Y-axis (resolution) for the current pT bin
         TH1D *h_proj = h_res_ptTr->ProjectionY(Form("h_proj_%d", i), i, lastBin);
 
         // Skip empty projections
-        if (h_proj->GetEntries() == 0) {
+        if (h_proj->GetEntries() == 0)
+        {
             delete h_proj;
             continue;
         }
@@ -88,104 +89,158 @@ void eresFit() {
 
         // Set the fit range for gausFit dynamically based on the pT bin value
         Double_t fitMin, fitMax;
-        if (projectionBins == 1) 
+        if (projectionBins == 1)
         {
             //*
-            if (pTValue < 0.25) {
-                fitMin = 0.7; fitMax = 1.07;
+            if (pTValue < 0.25)
+            {
+                fitMin = 0.7;
+                fitMax = 1.07;
             }
-            else if (pTValue < 0.5) {
-                fitMin = 0.60; fitMax = 1.07;
+            else if (pTValue < 0.5)
+            {
+                fitMin = 0.60;
+                fitMax = 1.07;
             }
-            else if (pTValue < 1) {
-                fitMin = 0.75; fitMax = 1.07;
+            else if (pTValue < 1)
+            {
+                fitMin = 0.75;
+                fitMax = 1.07;
             }
-            else if (pTValue < 5) {
-                fitMin = 0.89; fitMax = 1.07;
-            } else if (pTValue < 10) {
-                fitMin = 0.89; fitMax = 1.07;
-            } else if (pTValue < 14) {
-                fitMin = 0.89; fitMax = 1.07;
-            } 
-            else if (pTValue < 16.2) {
-                fitMin = 0.89; fitMax = 1.05;
+            else if (pTValue < 5)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
             }
-            else if (pTValue < 18) {
-                fitMin = 0.86; fitMax = 1.02;
+            else if (pTValue < 10)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
             }
-            else {
+            else if (pTValue < 14)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 16.2)
+            {
+                fitMin = 0.89;
+                fitMax = 1.05;
+            }
+            else if (pTValue < 18)
+            {
+                fitMin = 0.86;
+                fitMax = 1.02;
+            }
+            else
+            {
                 continue;
-                //fitMin = 0.90; fitMax = 1.05;
+                // fitMin = 0.90; fitMax = 1.05;
             }
             //*/
         }
         else if (projectionBins == 2)
         {
-            if (pTValue < 0.25) {
-                fitMin = 0.7; fitMax = 1.07;
+            if (pTValue < 0.25)
+            {
+                fitMin = 0.7;
+                fitMax = 1.07;
             }
-            else if (pTValue < 0.5) {
-                fitMin = 0.60; fitMax = 1.07;
+            else if (pTValue < 0.5)
+            {
+                fitMin = 0.60;
+                fitMax = 1.07;
             }
-            else if (pTValue < 1) {
-                fitMin = 0.75; fitMax = 1.07;
+            else if (pTValue < 1)
+            {
+                fitMin = 0.75;
+                fitMax = 1.07;
             }
-            else if (pTValue < 5) {
-                fitMin = 0.89; fitMax = 1.07;
-            } else if (pTValue < 10) {
-                fitMin = 0.89; fitMax = 1.07;
-            } else if (pTValue < 14) {
-                fitMin = 0.89; fitMax = 1.07;
-            } 
-            else if (pTValue < 16.2) {
-                fitMin = 0.89; fitMax = 1.05;
+            else if (pTValue < 5)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
             }
-            else if (pTValue < 18) {
-                fitMin = 0.86; fitMax = 1.02;
+            else if (pTValue < 10)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
             }
-            else {
+            else if (pTValue < 14)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 16.2)
+            {
+                fitMin = 0.89;
+                fitMax = 1.05;
+            }
+            else if (pTValue < 18)
+            {
+                fitMin = 0.86;
+                fitMax = 1.02;
+            }
+            else
+            {
                 continue;
-                //fitMin = 0.90; fitMax = 1.05;
+                // fitMin = 0.90; fitMax = 1.05;
             }
         }
         else if (projectionBins == 4)
         {
-            if (pTValue < 0.25) {
-                fitMin = 0.7; fitMax = 1.07;
+            if (pTValue < 0.25)
+            {
+                fitMin = 0.7;
+                fitMax = 1.07;
             }
-            else if (pTValue < 0.5) {
-                fitMin = 0.60; fitMax = 1.07;
+            else if (pTValue < 0.5)
+            {
+                fitMin = 0.60;
+                fitMax = 1.07;
             }
-            else if (pTValue < 1) {
-                fitMin = 0.75; fitMax = 1.07;
+            else if (pTValue < 1)
+            {
+                fitMin = 0.75;
+                fitMax = 1.07;
             }
-            else if (pTValue < 5) {
-                fitMin = 0.89; fitMax = 1.07;
-            } else if (pTValue < 10) {
-                fitMin = 0.89; fitMax = 1.07;
-            } else if (pTValue < 14) {
-                fitMin = 0.89; fitMax = 1.07;
-            } 
-            else if (pTValue < 16.2) {
-                fitMin = 0.89; fitMax = 1.05;
+            else if (pTValue < 5)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
             }
-            else if (pTValue < 18) {
-                fitMin = 0.86; fitMax = 1.02;
+            else if (pTValue < 10)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
             }
-            else {
+            else if (pTValue < 14)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 16.2)
+            {
+                fitMin = 0.89;
+                fitMax = 1.05;
+            }
+            else if (pTValue < 18)
+            {
+                fitMin = 0.86;
+                fitMax = 1.02;
+            }
+            else
+            {
                 continue;
-                //fitMin = 0.90; fitMax = 1.05;
+                // fitMin = 0.90; fitMax = 1.05;
             }
         }
-        
-        
-
 
         // Define the Gaussian fit function with the dynamic range
         TF1 *gausFit = new TF1("gausFit", "gaus", fitMin, fitMax);
 
         // Perform the fit on the projection
-        h_proj->Fit(gausFit, "REQL"); // "R" for range, "Q" for quiet mode
+        h_proj->Fit(gausFit, "REQ"); // "R" for range, "Q" for quiet mode
 
         // Extract fit parameters
         Double_t mean = gausFit->GetParameter(1);
@@ -252,15 +307,15 @@ void eresFit() {
     c_summary->Print("pioncode/canvas_pdf/e_res_fit_monitoring.pdf]");
 
     // Calculate the relative width (sigma divided by mean)
-    TH1D* h_relwidth = (TH1D*)h_sigma->Clone("h_relwidth");
+    TH1D *h_relwidth = (TH1D *)h_sigma->Clone("h_relwidth");
     h_relwidth->Divide(h_mean);
 
     // Final fit over the entire sigma/mean range
     TCanvas *c_result = new TCanvas("c_result", "Energy Resolution Fit", 800, 600);
     c_result->Print("pioncode/canvas_pdf/energy_resolution_fit_results.pdf["); // Open PDF
-    TF1* fitFunc = new TF1("fitFunc", "sqrt(([0]*[0])/sqrt(x*x + 0.1349768*0.1349768) + [1]*[1])", 0.6, 9);
+    TF1 *fitFunc = new TF1("fitFunc", "sqrt(([0]*[0])/sqrt(x*x + 0.1349768*0.1349768) + [1]*[1])", 0.6, 9);
     fitFunc->SetParNames("sqrt(E) term", "Constant term");
-    //fitFunc->SetParameters(0.15, 0.06);
+    // fitFunc->SetParameters(0.15, 0.06);
     fitFunc->SetParLimits(0, 0.1, 0.2);
     fitFunc->SetParLimits(1, 0.02, 0.08);
 
