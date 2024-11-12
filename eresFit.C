@@ -9,6 +9,7 @@
 #include <Math/MinimizerOptions.h>
 #include <iostream>
 #include <vector> // Include the vector library
+#include <algorithm> // For std::min
 
 // local includes
 #include "sPhenixStyle.h"
@@ -67,10 +68,12 @@ void eresFit()
     TGraphErrors *Eres_Graph = new TGraphErrors();
     int graphPoint = 0; // Index for TGraphErrors points
 
-    // Vectors to store pT ranges and chi2/ndf values for the table
+    // Vectors to store pT ranges, chi2/ndf values, and fit ranges for the table
     std::vector<double> pT_low_edges;
     std::vector<double> pT_high_edges;
     std::vector<double> chi2ndf_values;
+    std::vector<double> fitMin_values;
+    std::vector<double> fitMax_values;
 
     // Open multi-page PDF for viewing all pT bin fits
     TCanvas *c_summary = new TCanvas("c_summary", "Summary of Fits", 800, 600);
@@ -275,14 +278,17 @@ void eresFit()
         std::cout << "Mean: " << mean << " +/- " << meanError << std::endl;
         std::cout << "Sigma: " << sigma << " +/- " << sigmaError << std::endl;
         std::cout << "Bin: " << i << " ,pT range:  ( " << x1 << " , " << x2 << ") ,  pT Bin: " << pTValue << " +/- " << pTError << std::endl;
+
         // Store chi² and chi²/ndf values
         h_chi2->SetBinContent(i, chi2);
         h_chi2_ndf->SetBinContent(i, chi2ndf);
 
-        // **Store pT ranges and chi²/ndf values for the table**
+        // **Store pT ranges, chi²/ndf values, and fit ranges for the table**
         pT_low_edges.push_back(x1);
         pT_high_edges.push_back(x2);
         chi2ndf_values.push_back(chi2ndf);
+        fitMin_values.push_back(fitMin);
+        fitMax_values.push_back(fitMax);
 
         // Add the relative width data point to the TGraphErrors
         Eres_Graph->SetPoint(graphPoint, pTValue, width);
@@ -331,39 +337,54 @@ void eresFit()
         delete gausFit;
     }
 
-    // **Create a table of Chi^2/NDF values and add it to the PDF**
+    // **Create a table of Chi^2/NDF values and fit ranges, limited to 10 entries per page**
 
-    // Create the table using TPaveText
-    TPaveText *table = new TPaveText(0.1, 0.1, 0.9, 0.9, "NDC");
-    table->SetBorderSize(1);
-    table->SetFillColor(0);
-    table->SetTextAlign(12);
-    table->SetTextFont(42);
-    table->SetTextSize(0.03);
+    int entries_per_page = 10;
+    int total_entries = chi2ndf_values.size();
+    int num_pages = (total_entries + entries_per_page - 1) / entries_per_page;
 
-    // Add a header
-    table->AddText("Chi^{2}/NDF Summary Table");
-    table->AddText(" ");
-
-    // Add column headers
-    table->AddText("p_{T} Range (GeV/c)      Chi^{2}/NDF");
-
-    // Loop over the collected data and add entries to the table
-    for (size_t i = 0; i < chi2ndf_values.size(); ++i)
+    for (int page = 0; page < num_pages; ++page)
     {
-        TString line = Form("%.2f - %.2f              %.2f", pT_low_edges[i], pT_high_edges[i], chi2ndf_values[i]);
-        table->AddText(line);
+        // Clear the c_summary canvas
+        c_summary->cd();
+        c_summary->Clear();
+
+        // Create the table using TPaveText
+        TPaveText *table = new TPaveText(0.05, 0.05, 0.95, 0.95, "NDC");
+        table->SetBorderSize(1);
+        table->SetFillColor(0);
+        table->SetTextAlign(12);
+        table->SetTextFont(42);
+        table->SetTextSize(0.03);
+
+        // Add a header
+        table->AddText("Chi^{2}/NDF and Fit Range Summary Table");
+        table->AddText(Form("Page %d", page + 1));
+        table->AddText(" ");
+
+        // Add column headers with fixed-width formatting
+        TString header = Form("%-20s %-15s %-20s", "p_{T} Range (GeV/c)", "Chi^{2}/NDF", "Fit Range");
+        table->AddText(header);
+
+        // Loop over entries in this page
+        for (int i = page * entries_per_page; i < std::min((page + 1) * entries_per_page, total_entries); ++i)
+        {
+            TString line = Form("%-20s %-15.2f %-20s", 
+                                Form("%.2f - %.2f", pT_low_edges[i], pT_high_edges[i]), 
+                                chi2ndf_values[i], 
+                                Form("%.2f - %.2f", fitMin_values[i], fitMax_values[i]));
+            table->AddText(line);
+        }
+
+        // Draw the table
+        table->Draw();
+
+        // Save the table to the PDF
+        c_summary->Print("pioncode/canvas_pdf/e_res_fit_monitoring.pdf");
+
+        // Clean up
+        delete table;
     }
-
-    // Clear the c_summary canvas
-    c_summary->cd();
-    c_summary->Clear();
-
-    // Draw the table
-    table->Draw();
-
-    // Save the table to the PDF
-    c_summary->Print("pioncode/canvas_pdf/e_res_fit_monitoring.pdf");
 
     // Close the multi-page PDF for pT bin fits
     c_summary->Print("pioncode/canvas_pdf/e_res_fit_monitoring.pdf]");
@@ -434,6 +455,8 @@ void eresFit()
     // Clean up
     delete fitFunc;
     delete c_summary_page;
+    delete c_summary;
+    delete c_result;
     file->Close();
     gApplication->Terminate(0);
 }
