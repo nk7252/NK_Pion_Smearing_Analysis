@@ -1,4 +1,4 @@
-#include <TFile.h> 
+#include <TFile.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TF1.h>
@@ -94,9 +94,153 @@ void eresFit()
 
         // Set the fit range for gausFit dynamically based on the pT bin value
         Double_t fitMin, fitMax;
-        // (Your existing dynamic fit range logic remains unchanged)
 
-        // ... (Your existing code for setting fitMin and fitMax based on pTValue)
+        if (projectionBins == 1)
+        {
+            //*
+            if (pTValue < 0.25)
+            {
+                fitMin = 0.7;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 0.5)
+            {
+                fitMin = 0.60;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 1)
+            {
+                fitMin = 0.75;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 5)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 10)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 14)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 16.2)
+            {
+                fitMin = 0.89;
+                fitMax = 1.05;
+            }
+            else if (pTValue < 18)
+            {
+                fitMin = 0.86;
+                fitMax = 1.02;
+            }
+            else
+            {
+                continue;
+                // fitMin = 0.90; fitMax = 1.05;
+            }
+            //*/
+        }
+        else if (projectionBins == 2)
+        {
+            if (pTValue < 0.25)
+            {
+                fitMin = 0.7;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 0.5)
+            {
+                fitMin = 0.60;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 1)
+            {
+                fitMin = 0.75;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 5)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 10)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 14)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 16.2)
+            {
+                fitMin = 0.89;
+                fitMax = 1.05;
+            }
+            else if (pTValue < 18)
+            {
+                fitMin = 0.86;
+                fitMax = 1.02;
+            }
+            else
+            {
+                continue;
+                // fitMin = 0.90; fitMax = 1.05;
+            }
+        }
+        else if (projectionBins == 4)
+        {
+            if (pTValue < 0.25)
+            {
+                fitMin = 0.7;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 0.5)
+            {
+                fitMin = 0.60;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 1)
+            {
+                fitMin = 0.75;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 5)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 10)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 14)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 16.2)
+            {
+                fitMin = 0.89;
+                fitMax = 1.05;
+            }
+            else if (pTValue < 18)
+            {
+                fitMin = 0.86;
+                fitMax = 1.02;
+            }
+            else
+            {
+                continue;
+                // fitMin = 0.90; fitMax = 1.05;
+            }
+        }
 
         // Define the Gaussian fit function with the dynamic range
         TF1 *gausFit = new TF1("gausFit", "gaus", fitMin, fitMax);
@@ -214,12 +358,14 @@ void eresFit()
     c_summary_page->cd(1);
     h_mean->SetTitle("Mean of Energy Resolution");
     h_mean->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+    h_mean->GetYaxis()->SetTitle("Mean");
     h_mean->Draw("E");
 
     // Plot sigma histogram
     c_summary_page->cd(2);
     h_sigma->SetTitle("Sigma of Energy Resolution");
     h_sigma->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+    h_sigma->GetYaxis()->SetTitle("Sigma");
     h_sigma->Draw("E");
 
     // Plot chi² histogram with correct formatting for superscript
