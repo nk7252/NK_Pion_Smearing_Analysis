@@ -8,7 +8,7 @@
 #include <TGraphErrors.h>
 #include <Math/MinimizerOptions.h>
 #include <iostream>
-#include <vector> // Include the vector library
+#include <vector>    // Include the vector library
 #include <algorithm> // For std::min
 
 // local includes
@@ -102,11 +102,11 @@ void eresFit()
         Double_t pTError = (x2 - x1) / 2.0;
 
         // Set the fit range for gausFit dynamically based on the pT bin value
+        
         Double_t fitMin, fitMax;
 
         if (projectionBins == 1)
         {
-            //*
             if (pTValue < 0.25)
             {
                 fitMin = 0.7;
@@ -292,7 +292,7 @@ void eresFit()
 
         // Add the relative width data point to the TGraphErrors
         Eres_Graph->SetPoint(graphPoint, pTValue, width);
-        Eres_Graph->SetPointError(graphPoint, pTError, widthError);
+        Eres_Graph->SetPointError(graphPoint, 0, widthError);//pTError
         graphPoint++;
 
         // Draw and save each bin’s fit in the PDF
@@ -369,9 +369,9 @@ void eresFit()
         // Loop over entries in this page
         for (int i = page * entries_per_page; i < std::min((page + 1) * entries_per_page, total_entries); ++i)
         {
-            TString line = Form("%-20s %-15.2f %-20s", 
-                                Form("%.2f - %.2f", pT_low_edges[i], pT_high_edges[i]), 
-                                chi2ndf_values[i], 
+            TString line = Form("%-20s %-15.2f %-20s",
+                                Form("%.2f - %.2f", pT_low_edges[i], pT_high_edges[i]),
+                                chi2ndf_values[i],
                                 Form("%.2f - %.2f", fitMin_values[i], fitMax_values[i]));
             table->AddText(line);
         }
