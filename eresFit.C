@@ -227,21 +227,21 @@ void eresFit()
             else if (pTValue < 10)
             {
                 fitMin = 0.90;
-                fitMax = 1.03;
+                fitMax = 1.05;
             }
             else if (pTValue < 15)
             {
-                fitMin = 0.86;
-                fitMax = 1.03;
+                fitMin = 0.91;
+                fitMax = 1.05;
             }
             else if (pTValue < 17)
             {
-                fitMin = 0.92;
-                fitMax = 1.05;
+                fitMin = 0.90;
+                fitMax = 1.03;
             }
             else if (pTValue < 18)
             {
-                fitMin = 0.92;
+                fitMin = 0.90;
                 fitMax = 1.05;
             }
             else
