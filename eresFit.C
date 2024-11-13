@@ -216,23 +216,23 @@ void eresFit()
             }
             else if (pTValue < 5)
             {
-                fitMin = 0.83;
-                fitMax = 1.05;
+                fitMin = 0.89;
+                fitMax = 1.03;
             }
             else if (pTValue < 8)
             {
-                fitMin = 0.88;
-                fitMax = 1.05;
+                fitMin = 0.90;
+                fitMax = 1.03;
             }
             else if (pTValue < 10)
             {
-                fitMin = 0.88;
-                fitMax = 1.05;
+                fitMin = 0.90;
+                fitMax = 1.03;
             }
-            else if (pTValue < 14)
+            else if (pTValue < 15)
             {
-                fitMin = 0.88;
-                fitMax = 1.05;
+                fitMin = 0.86;
+                fitMax = 1.03;
             }
             else if (pTValue < 17)
             {
@@ -241,8 +241,8 @@ void eresFit()
             }
             else if (pTValue < 18)
             {
-                fitMin = 0.86;
-                fitMax = 1.02;
+                fitMin = 0.92;
+                fitMax = 1.05;
             }
             else
             {
