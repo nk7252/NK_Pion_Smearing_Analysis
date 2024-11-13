@@ -204,39 +204,39 @@ void eresFit()
         }
         else if (projectionBins == 4)
         {
-            if (pTValue < 0.25)
+            if (pTValue < 1)
             {
-                fitMin = 0.7;
-                fitMax = 1.07;
+                fitMin = 0.8;
+                fitMax = 1.03;
             }
-            else if (pTValue < 0.5)
+            else if (pTValue < 2)
             {
-                fitMin = 0.60;
-                fitMax = 1.07;
-            }
-            else if (pTValue < 1)
-            {
-                fitMin = 0.75;
-                fitMax = 1.07;
+                fitMin = 0.86;
+                fitMax = 1.03;
             }
             else if (pTValue < 5)
             {
-                fitMin = 0.89;
-                fitMax = 1.07;
+                fitMin = 0.72;
+                fitMax = 1.03;
+            }
+            else if (pTValue < 8)
+            {
+                fitMin = 0.92;
+                fitMax = 1.05;
             }
             else if (pTValue < 10)
             {
-                fitMin = 0.89;
-                fitMax = 1.07;
+                fitMin = 0.92;
+                fitMax = 1.05;
             }
             else if (pTValue < 14)
             {
-                fitMin = 0.89;
-                fitMax = 1.07;
+                fitMin = 0.92;
+                fitMax = 1.05;
             }
-            else if (pTValue < 16.2)
+            else if (pTValue < 17)
             {
-                fitMin = 0.89;
+                fitMin = 0.92;
                 fitMax = 1.05;
             }
             else if (pTValue < 18)
