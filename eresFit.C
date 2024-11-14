@@ -28,7 +28,7 @@ void eresFit()
     SetsPhenixStyle();
 
     // Open the ROOT file containing your histogram
-    TFile *file = TFile::Open("pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V21.root");
+    TFile *file = TFile::Open("pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V22.root");
     if (!file || file->IsZombie())
     {
         std::cout << "Error opening file!" << std::endl;
