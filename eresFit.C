@@ -52,7 +52,7 @@ void eresFit()
     int startBin = 1;
     int endBin_global = -1; // -1=actual last bin
     int endBin = endBin_global;
-    int projectionBins = 4;
+    int projectionBins = 1;
     double scale_factor = 1.0;
     if (endBin_global == -1)
         endBin = nBinsX; // Default to the last bin if not specified
