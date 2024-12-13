@@ -23,7 +23,7 @@
 #include "sPhenixStyle.C"
 
 // global bin var
-std::vector<double> nuBins = {0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.24, 0.26, 0.28, 0.3, 0.32, 0.36, 0.40, 0.44, 0.48, 0.50, 0.52, 0.54, 0.56, 0.58, 0.60, 0.62, 0.64, 0.66, 0.68, 0.70, 0.72, 0.76, 0.8, 0.84, 0.88, 0.92, 0.96, 1.0}; //, 1.04, 1.08, 1.12, 1.16, 1.2
+std::vector<double> nuBins; // = {0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.24, 0.26, 0.28, 0.3, 0.32, 0.36, 0.40, 0.44, 0.48, 0.50, 0.52, 0.54, 0.56, 0.58, 0.60, 0.62, 0.64, 0.66, 0.68, 0.70, 0.72, 0.76, 0.8, 0.84, 0.88, 0.92, 0.96, 1.0}; //, 1.04, 1.08, 1.12, 1.16, 1.2
 
 // background subtraction for geant based MC
 double combinedFunctionDoubleGaussPoly5(double *x, double *par)
@@ -94,9 +94,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   SetsPhenixStyle();
   //
   bool var_bins = true;
-  int rebinFactor = 1;
+  int rebinFactor = 10;
   bool dynamic_left = true;
-  int startBin = 9;
+  int startBin = 5;
   int endBin_global = -1;
   int projectionBins = 4;
   double scale_factor = 1.0;
@@ -201,7 +201,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       int lastBin = std::min(i + projectionBins - 1, nBinsX);
       TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
       // Check if the projection has enough entries to perform a fit
-      if (yProjection->GetEntries() < 1000)
+      if (yProjection->GetEntries() < 300)
       { // Adjust the threshold as needed
         delete yProjection;
         continue;
@@ -498,7 +498,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         int lastBin = std::min(i + projectionBins - 1, nBinsX);
         TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
         // Check if the projection has enough entries to perform a fit
-        if (yProjection->GetEntries() < 1000)
+        if (yProjection->GetEntries() < 300)
         { // Adjust the threshold as needed
           delete yProjection;
           continue;
@@ -640,7 +640,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         int lastBin = std::min(i + projectionBins - 1, nBinsX);
         TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
         // Check if the projection has enough entries to perform a fit
-        if (yProjection->GetEntries() < 1000)
+        if (yProjection->GetEntries() < 300)
         { // Adjust the threshold as needed
           delete yProjection;
           continue;
@@ -679,8 +679,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
         double Eta_pt = (pt_min + pt_max) / 2.0;
         scale_histogram_errors(histF, scale_factor);
-        float lower_limit = 0.51;//0.45
-        float upper_limit = 0.65;//0.70
+        float lower_limit = 0.46;//0.45,0.51
+        float upper_limit = 0.61;//0.70,0.66
         /*
         if (Eta_pt >= 5.5 && Eta_pt <= 6.5){
           lower_limit = 0.45;
@@ -872,7 +872,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         int lastBin = std::min(i + projectionBins - 1, nBinsX);
         TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
         // Check if the projection has enough entries to perform a fit
-        if (yProjection->GetEntries() < 1000)
+        if (yProjection->GetEntries() < 300)
         { // Adjust the threshold as needed
           delete yProjection;
           continue;
@@ -1035,7 +1035,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
         ///*
         // Check if the projection has enough entries to perform a fit
-        if (yProjection->GetEntries() < 1000)
+        if (yProjection->GetEntries() < 300)
         { // Adjust the threshold as needed
           delete yProjection;
           continue;
@@ -1341,7 +1341,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
   // gPad->SetFillColor(33);
   gEtaMeans->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
-  gEtaMeans->GetXaxis()->SetLimits(0.01, 20);
+  gEtaMeans->GetXaxis()->SetLimits(0.01, 25);//20
   gEtaMeans->SetMinimum(0.45);
   gEtaMeans->SetMaximum(0.7);
   gEtaMeans->Draw("APE");
@@ -1354,11 +1354,11 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
   // gPad->SetFillColor(33);
   gEtaWidths->SetTitle("Eta: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Eta Relative Width");
-  gEtaWidths->GetXaxis()->SetLimits(0.01, 20);
+  gEtaWidths->GetXaxis()->SetLimits(0.01, 25);//20
   //gEtaWidths->SetMinimum(0.01);
   //gEtaWidths->SetMaximum(0.3);
   gEtaWidths->SetMinimum(0.05);
-  gEtaWidths->SetMaximum(0.11);
+  gEtaWidths->SetMaximum(0.11);//11, 25
   gEtaWidths->Draw("APE");
   legend4->SetFillStyle(0);
   legend4->SetTextAlign(32);
@@ -1394,7 +1394,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c7 = new TCanvas("c7", "Canvas7", 800, 600);
   // gPad->SetFillColor(33);
   gEResolutions->SetTitle("Eta: Smeared pT vs Resolution;#it{pT}_{#gamma#gamma} (GeV); Eta Resolution");
-  gEResolutions->GetXaxis()->SetLimits(0.01, 20);
+  gEResolutions->GetXaxis()->SetLimits(0.01, 25);
   gEResolutions->SetMinimum(0.04);
   // gEResolutions->SetMaximum(0.3);
   gEResolutions->Draw("APE");
@@ -1461,10 +1461,14 @@ void fit_comparison()
       ////"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V44.root",
       ////"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V14.root",
       //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V15.root",
-      //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V17.root",
-      "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V21.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V3.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V3.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V4.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V4.root",
       "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V21.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
       //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V6.root",
       //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V7.root",
   };
@@ -1475,32 +1479,41 @@ void fit_comparison()
       //"h_InvMass_smear_weighted_2d_0",
       //"h_InvMass_smear_weighted_2d_0",
       //"h_InvMass_smear_weighted_2d_125",
-      //"h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_0",
-      "h_truthmatched_mass_2d",
+      "h_truthmatched_mass_weighted_2d",
       "h_InvMass_smear_weighted_2d_125",
+      "h_truthmatched_mass_weighted_2d",
+      "h_truthmatched_mass_etameson_weighted_2d",
       "h_InvMass_smear_weighted_2d_125",
-      "h_InvMass_smear_weighted_2d_125"};
+      "h_InvMass_smear_weighted_2d_0",
+      "h_truthmatched_mass_etameson_weighted_2d"};
   std::vector<std::string> SPMC_legend = {
       //"SPi0+0sm", "SEta+0sm", 
       //"SEta+12.5sm,70mev,lowcut",
       //"SEta+12.5sm,30mev,lowcut",
       //"SEta+12.5sm,30mev,lowcut",
-      "SEta+0sm,70mev,lowcut",
-      "SEta+0sm+match,70mev,lowcut",
-      "SPi0+12.5sm",
-      "SPi0_Weight_pythia+12.5",
-      "SPi0_tbtzs_Weight_pythia+12.5"};
+      //"SEta+0sm,70mev,lowcut",
+      "New SPi0+0%",
+      "New SPi0+0%+match",
+      "New SPi0+12.5%",
+      "New SPi0+12.5%+match",
+      "SEta+0sm+match,70mev",
+      "SPi0+12.5sm, more_cuts",
+      //"SPi0_Weight_pythia+12.5",
+      //"SPi0_tbtzs_Weight_pythia+12.5"
+      "New SEta+0%",
+      "New SEta+0%+match"};
 
   std::vector<int> SPMC_FileTypes = {
-      // 0, 1,
-      //1,
-      //1,
-      1,
-      1,
+      // 0, 
       0,
       0,
-      0}; // 0 for pion, 1 for eta
+      0,
+      0,
+      1,
+      0,
+      1,
+      1}; // 0 for pion, 1 for eta
 
   //-----------------------------------------
   std::vector<std::string> FastMC_fileNames =
@@ -1508,19 +1521,34 @@ void fit_comparison()
       {
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
           //"pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.170000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.158000_sqrte_0.027000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.131000_sqrte_0.032000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.032000_const.root",
+          //"pioncode/rootfiles/EtaFastMC_0.158000_sqrte_0.027000_const.root",
+          "pioncode/rootfiles/EtaFastMC_0.110000_sqrte_0.060000_const.root",
+          //"pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.032000_const.root",
           "pioncode/rootfiles/EtaFastMC_0.125000_sqrte_0.055000_const.root",
+          "pioncode/rootfiles/EtaFastMC_0.131000_sqrte_0.032000_const.root",
+          "pioncode/rootfiles/EtaFastMC_0.115000_sqrte_0.060000_const.root",
           "pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.065000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.075000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.085000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-      };
-  //*/
+      };//*/
+  std::vector<std::string> FastMC_legendNames =
+      {
+          ////"FastMC: 14%/#sqrt{E} #oplus 4%",
+          //"FastMC: 10.0%/#sqrt{E} #oplus 17.0%",
+          //"FastMC: 15.8%/#sqrt{E} #oplus 2.7%",
+          "FastMC: 11.0%/#sqrt{E} #oplus 6.0%",
+          //"FastMC: 14.9%/#sqrt{E} #oplus 3.2%",
+          "FastMC: 12.5%/#sqrt{E} #oplus 5.5%",
+          "FastMC: 13.1%/#sqrt{E} #oplus 3.2%",
+          "FastMC: 11.5%/#sqrt{E} #oplus 6.0%",
+          "FastMC: 10.0%/#sqrt{E} #oplus 6.5%",
+          ////"FastMC_symm_E: 14%/#sqrt{E} #oplus 4%",
+          ////"FastMC_asymm_E: 14%/#sqrt{E} #oplus 4%",
+          ////"FastMC_symm_R: 14%/#sqrt{E} #oplus 4%",
+          ////"FastMC_symm_T: 14%/#sqrt{E} #oplus 4%"
+      }; //"PionFastMC", "EtaFastMC"
   std::vector<std::string> FastMC_histNames =
       {
           //"h100_2",
@@ -1535,28 +1563,12 @@ void fit_comparison()
           //"h101_2_asymm_2",
           //"h101_2_symm_0", "h101_2_symm_1"
       };
-  std::vector<std::string> FastMC_legendNames =
-      {
-          ////"FastMC: 14%/#sqrt{E} #oplus 4%",
-          //"FastMC: 10.0%/#sqrt{E} #oplus 17.0%",
-          "FastMC: 15.8%/#sqrt{E} #oplus 2.7%",
-          "FastMC: 13.1%/#sqrt{E} #oplus 3.2%",
-          "FastMC: 14.9%/#sqrt{E} #oplus 3.2%",
-          "FastMC: 12.5%/#sqrt{E} #oplus 5.5%",
-          "FastMC: 10.0%/#sqrt{E} #oplus 6.5%",
-          "FastMC: 10.0%/#sqrt{E} #oplus 7.5%",
-          "FastMC: 10.0%/#sqrt{E} #oplus 8.5%",
-          ////"FastMC_symm_E: 14%/#sqrt{E} #oplus 4%",
-          ////"FastMC_asymm_E: 14%/#sqrt{E} #oplus 4%",
-          ////"FastMC_symm_R: 14%/#sqrt{E} #oplus 4%",
-          ////"FastMC_symm_T: 14%/#sqrt{E} #oplus 4%"
-      }; //"PionFastMC", "EtaFastMC"
   std::vector<int> FastMC_FileTypes =
       {
           // 0,
+          //1,
           1,
-          1,
-          1,
+          //1,
           1,
           1,
           1,

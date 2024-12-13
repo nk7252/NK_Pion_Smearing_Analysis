@@ -157,7 +157,7 @@ class SimulationGUI(QWidget):
         self.deltaRcutMaxInput = self.addFieldWithExplanation(
             "Delta R Cut Max:",
             QDoubleSpinBox(self),
-            max_value=10,
+            max_value=100,
             decimals=2,
             default_value=1.1,
             explanation="Enter the maximum delta R cut value.",

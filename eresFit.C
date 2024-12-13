@@ -104,7 +104,57 @@ void eresFit()
         // Set the fit range for gausFit dynamically based on the pT bin value
         
         Double_t fitMin, fitMax;
-
+        fitMin = 0.7;
+        fitMax = 1.10;
+        if (projectionBins == 1)
+        {
+            if (pTValue < 0.25)
+            {
+                fitMin = 0.5;
+                fitMax = 1.2;
+            }
+            else if (pTValue < 0.5)
+            {
+                fitMin = 0.50;
+                fitMax = 1.2;
+            }
+            else if (pTValue < 1)
+            {
+                fitMin = 0.6;
+                fitMax = 1.2;
+            }
+            else if (pTValue < 4)
+            {
+                fitMin = 0.8;
+                fitMax = 1.1;
+            }
+            else if (pTValue < 10)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 14)
+            {
+                fitMin = 0.89;
+                fitMax = 1.07;
+            }
+            else if (pTValue < 16.2)
+            {
+                fitMin = 0.89;
+                fitMax = 1.05;
+            }
+            else if (pTValue < 18)
+            {
+                fitMin = 0.86;
+                fitMax = 1.02;
+            }
+            else
+            {
+                continue;
+                // fitMin = 0.90; fitMax = 1.05;
+            }
+        }
+        /*
         if (projectionBins == 1)
         {
             if (pTValue < 0.25)
@@ -152,7 +202,6 @@ void eresFit()
                 continue;
                 // fitMin = 0.90; fitMax = 1.05;
             }
-            //*/
         }
         else if (projectionBins == 2)
         {
@@ -202,6 +251,7 @@ void eresFit()
                 // fitMin = 0.90; fitMax = 1.05;
             }
         }
+        
         else if (projectionBins == 4)
         {
             if (pTValue < 1)
@@ -250,6 +300,7 @@ void eresFit()
                 // fitMin = 0.90; fitMax = 1.05;
             }
         }
+        //*/
 
         // Define the Gaussian fit function with the dynamic range
         TF1 *gausFit = new TF1("gausFit", "gaus", fitMin, fitMax);
@@ -394,7 +445,7 @@ void eresFit()
     c_result->Print("pioncode/canvas_pdf/energy_resolution_fit_results.pdf["); // Open PDF
 
     // Define the fit function
-    TF1 *fitFunc = new TF1("fitFunc", "sqrt(([0]*[0])/sqrt(x*x + 0.1349768*0.1349768) + [1]*[1])", 0.6, 9);
+    TF1 *fitFunc = new TF1("fitFunc", "sqrt(([0]*[0])/sqrt(x*x + 0.1349768*0.1349768) + [1]*[1])", 0.6, 4);
     fitFunc->SetParNames("sqrt(E) term", "Constant term");
     // fitFunc->SetParameters(0.15, 0.06);
     fitFunc->SetParLimits(0, 0.1, 0.2);
