@@ -19,8 +19,8 @@
 #include "Pythia8/Pythia.h" // Include Pythia headers.
 using namespace Pythia8;    // Let Pythia8:: be implicit;
 
-//methods for cluster overlap scaling.
-enum ScalingMethod 
+// methods for cluster overlap scaling.
+enum ScalingMethod
 {
     EXPONENTIAL,
     RATIONAL,
@@ -38,10 +38,10 @@ bool EtaCut(const Pythia8::Vec4 &particle, float EtaCutValue, bool ApplyEtaCut, 
 bool AsymmCutcheck(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float AsymmCutoff, bool asymcutbool);
 void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &params, bool debug);
 double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bool debug);
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2,int method_int, bool debug);
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2,int method_int, bool debug);
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, int method_int, bool debug);
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, int method_int, bool debug);
 double EnergySharingScale(double distance, ScalingMethod method);
-
+Pythia8::Vec4 SampleLoss(Pythia8::Vec4 &originalPhoton, float pt);
 
 int main(int argc, char *argv[])
 {
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     float comb_ptcut = 0;
     float ptMaxCut = 100;
     float nclus_ptCut = 0.0;
-    
+
     int PT_Max_bin = 20; // normally this, but now we want to match fun4all PT_Max;
     int MassNBins = 600;
     int binres = 1;
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     bool saveToTree = false;
     // untracked general parameters
     bool Debug_Hists = false;
-    //int scaling_method_int=1;
+    // int scaling_method_int=1;
 
     // Parse command-line arguments
     std::map<std::string, std::string> params;
@@ -229,14 +229,39 @@ int main(int argc, char *argv[])
     std::cout << "smeared_upper_bin_limit: " << smeared_upper_bin_limit << std::endl;
     std::cout << "smear_factor_sqrtE: " << smear_factor_sqrtE << std::endl;
 
+    TH2F *h_original = nullptr;
+    TH2F *h_ClusterERatio = nullptr;
+    TFile* frw = TFile::Open("/pioncode/rootfiles/", "READ");
+    h_original = (TH2F *)frw->Get("h_clus_ERatio_2d");
+    std::cout << "Using eta spectrum" << std::endl;
+    if (h_original == nullptr)
+    {
+        std::cerr << "Error: Original histogram not found!" << std::endl;
+    }
+    else
+    {
+        h_ClusterERatio = (TH1F *)h_original->Clone("h_ClusterERatio_clone");
+        if (h_ClusterERatio == nullptr)
+        {
+            std::cerr << "Error: Cloning of histogram failed!" << std::endl;
+        }
+        else
+        {
+            h_ClusterERatio->SetDirectory(0);
+        }
+    }
+    // Close the file and clean up
+    frw->Close();
+    delete frw;
+
     TStopwatch timer;
     timer.Start();
 
     std::map<double, std::vector<double>> mass_pt_map;
     TF1 *myFunc = ChooseSpectrumFunction(weightMethod, PT_Min, PT_Max, particleType);
 
-    std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP", "HAGEDORN"};//weightMethodStr
-    std::vector<std::string> ClusterScalingNames = {"EXP", "RATIONAL", "H_TANH"};//different 
+    std::vector<std::string> WeightNames = {"EXP", "POWER", "WSHP", "HAGEDORN"};  // weightMethodStr
+    std::vector<std::string> ClusterScalingNames = {"EXP", "RATIONAL", "H_TANH"}; // different
 
     for (int smear_factor_itt = 0; smear_factor_itt < smear_factor_const_num_steps; smear_factor_itt++)
     {
@@ -261,7 +286,6 @@ int main(int argc, char *argv[])
         TH1 *h16 = new TH1F("h16", "Smeared Photon pT", n_bins, PT_Min, PT_Max_bin);
         TH1 *h17 = new TH1F("h17", "Photon pT", n_bins, PT_Min, PT_Max_bin);
         TH1 *hInvMass_Cutson = new TH1F("hInvMass_Cutson", "PT,nSmeared+no_weight+cuts+pr", MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-
 
         std::vector<TH1 *> hpionpt(WeightNames.size());
         std::vector<TH1 *> htruthphotondistance_1d(WeightNames.size());
@@ -296,13 +320,13 @@ int main(int argc, char *argv[])
         std::vector<TH2F *> h101_photon_dist(WeightNames.size());
         std::vector<std::vector<TH2F *>> h101_asymm(WeightNames.size(), std::vector<TH2F *>(ClusterScalingNames.size()));
         std::vector<std::vector<TH2F *>> h101_symm(WeightNames.size(), std::vector<TH2F *>(ClusterScalingNames.size()));
-        //std::vector<TH2F *> h101_asymm(WeightNames.size());
-        //std::vector<TH2F *> h101_symm(WeightNames.size());
+        // std::vector<TH2F *> h101_asymm(WeightNames.size());
+        // std::vector<TH2F *> h101_symm(WeightNames.size());
 
         for (int p = 0; p < WeightNames.size(); p++)
         {
             htruthphotondistance_1d[p] = new TH1F(Form("htruthphotondistance_1d_%i", p), Form("Photon distance distribution, weighted:%s", WeightNames[p].c_str()), 10000, 0, 2000);
-            htruthphotondistance[p] = new TH2F(Form("htruthphotondistance_%i", p), Form("pT vs Photon distance distribution, weighted:%s", WeightNames[p].c_str()),  n_bins, 0, PT_Max_bin, 10000, 0, 2000);
+            htruthphotondistance[p] = new TH2F(Form("htruthphotondistance_%i", p), Form("pT vs Photon distance distribution, weighted:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, 10000, 0, 2000);
             if (Debug_Hists)
             {
                 hpionpt[p] = new TH1D(Form("hpionpt_%i", p), Form("Pt no smear + no weight:%s", WeightNames[p].c_str()), n_bins, PT_Min, PT_Max_bin);
@@ -335,13 +359,12 @@ int main(int argc, char *argv[])
             h101_1d[p] = new TH1F(Form("h101_1d_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             h101_dr[p] = new TH1F(Form("h101_dr_%i", p), Form("dR distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 2);
             h101_photon_dist_1d[p] = new TH1F(Form("h101_photon_dist_1d_%i", p), Form("Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), 10000, 0, 2000);
-            h101_photon_dist[p] = new TH2F(Form("h101_photon_dist_%i", p), Form("pT vs Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()),  n_bins, 0, PT_Max_bin, 10000, 0, 2000);
+            h101_photon_dist[p] = new TH2F(Form("h101_photon_dist_%i", p), Form("pT vs Photon distance distribution, weighted. Everything+eT cuts:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, 10000, 0, 2000);
             for (int c = 0; c < ClusterScalingNames.size(); c++)
             {
-                h101_asymm[p][c] = new TH2F(Form("h101_%i_asymm_%i", p,c), Form("More asymm(%s):Pt vs Inv Mass, weighted, eT cuts:%s",ClusterScalingNames[c].c_str(), WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
-                h101_symm[p][c] = new TH2F(Form("h101_%i_symm_%i", p,c), Form("More symm(%s):Pt vs Inv Mass, weighted, eT cuts:%s",ClusterScalingNames[c].c_str(), WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h101_asymm[p][c] = new TH2F(Form("h101_%i_asymm_%i", p, c), Form("More asymm(%s):Pt vs Inv Mass, weighted, eT cuts:%s", ClusterScalingNames[c].c_str(), WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
+                h101_symm[p][c] = new TH2F(Form("h101_%i_symm_%i", p, c), Form("More symm(%s):Pt vs Inv Mass, weighted, eT cuts:%s", ClusterScalingNames[c].c_str(), WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             }
-            
         }
 
         std::random_device rd;
@@ -460,7 +483,7 @@ int main(int argc, char *argv[])
                     gamma_lorentz[1] = pythia.event[Gamma_daughters[1]].p();
                     gamma_lorentz[2] = gamma_lorentz[0] + gamma_lorentz[1];
                     double inv_mass = gamma_lorentz[2].mCalc();
-                    double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1],Debug);
+                    double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1], Debug);
 
                     double scale_factor1 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[0].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
                     double scale_factor2 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[1].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
@@ -589,27 +612,26 @@ int main(int argc, char *argv[])
                             h101_dr[p]->Fill(DeltaR(gamma_All_Cuts[0], gamma_All_Cuts[1]), inv_yield[p]);
                         }
                         // fill photon distance hist
-                        double photon_dist_All_Cuts = DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1],Debug);
+                        double photon_dist_All_Cuts = DetectorPhotonDistance(gamma_All_Cuts[0], gamma_All_Cuts[1], Debug);
                         h101_photon_dist_1d[p]->Fill(photon_dist_All_Cuts, inv_yield[p]);
                         h101_photon_dist[p]->Fill(gamma_All_Cuts[2].pT(), photon_dist_All_Cuts, inv_yield[p]);
                         // clustering algorithm check
                         for (int c = 0; c < ClusterScalingNames.size(); c++)
                         {
-                            auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1],c, Debug);
-                            auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1],c, Debug);
+                            auto [symmetricPhoton1, symmetricPhoton2] = adjustPhotonEnergiesSymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], c, Debug);
+                            auto [asymmetricPhoton1, asymmetricPhoton2] = adjustPhotonEnergiesAsymmetric(gamma_All_Cuts[0], gamma_All_Cuts[1], c, Debug);
                             auto asymmetricPion = asymmetricPhoton1 + asymmetricPhoton2;
                             auto symmetricPion = symmetricPhoton1 + symmetricPhoton2;
 
-                            if (DeltaRcut(asymmetricPhoton1, asymmetricPhoton2, DeltaRcut_MAX) == false &&AsymmCutcheck(asymmetricPhoton1, asymmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&eTCut(asymmetricPhoton1, etCut) == true &&eTCut(asymmetricPhoton2, etCut) == true &&nclus_ptCut < asymmetricPhoton1.pT() &&asymmetricPhoton1.pT() < ptMaxCut &&nclus_ptCut < asymmetricPhoton2.pT() &&asymmetricPhoton2.pT() < ptMaxCut &&asymmetricPhoton1.pT() > pt1cut &&asymmetricPhoton2.pT() > pt2cut &&asymmetricPhoton1.pT() + asymmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
+                            if (DeltaRcut(asymmetricPhoton1, asymmetricPhoton2, DeltaRcut_MAX) == false && AsymmCutcheck(asymmetricPhoton1, asymmetricPhoton2, asymmCutValue, applyAsymmCut) == true && eTCut(asymmetricPhoton1, etCut) == true && eTCut(asymmetricPhoton2, etCut) == true && nclus_ptCut < asymmetricPhoton1.pT() && asymmetricPhoton1.pT() < ptMaxCut && nclus_ptCut < asymmetricPhoton2.pT() && asymmetricPhoton2.pT() < ptMaxCut && asymmetricPhoton1.pT() > pt1cut && asymmetricPhoton2.pT() > pt2cut && asymmetricPhoton1.pT() + asymmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
                             {
                                 h101_asymm[p][c]->Fill(asymmetricPion.pT(), asymmetricPion.mCalc(), inv_yield[p]);
                             }
-                            if (DeltaRcut(symmetricPhoton1, symmetricPhoton2, DeltaRcut_MAX) == false &&AsymmCutcheck(symmetricPhoton1, symmetricPhoton2, asymmCutValue, applyAsymmCut) == true &&eTCut(symmetricPhoton1, etCut) == true &&eTCut(symmetricPhoton2, etCut) == true &&nclus_ptCut < symmetricPhoton1.pT() &&symmetricPhoton1.pT() < ptMaxCut &&nclus_ptCut < symmetricPhoton2.pT() &&symmetricPhoton2.pT() < ptMaxCut &&symmetricPhoton1.pT() > pt1cut &&symmetricPhoton2.pT() > pt2cut &&symmetricPhoton1.pT() + symmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
+                            if (DeltaRcut(symmetricPhoton1, symmetricPhoton2, DeltaRcut_MAX) == false && AsymmCutcheck(symmetricPhoton1, symmetricPhoton2, asymmCutValue, applyAsymmCut) == true && eTCut(symmetricPhoton1, etCut) == true && eTCut(symmetricPhoton2, etCut) == true && nclus_ptCut < symmetricPhoton1.pT() && symmetricPhoton1.pT() < ptMaxCut && nclus_ptCut < symmetricPhoton2.pT() && symmetricPhoton2.pT() < ptMaxCut && symmetricPhoton1.pT() > pt1cut && symmetricPhoton2.pT() > pt2cut && symmetricPhoton1.pT() + symmetricPhoton2.pT() > comb_ptcut * (pt1cut + pt2cut))
                             {
                                 h101_symm[p][c]->Fill(symmetricPion.pT(), symmetricPion.mCalc(), inv_yield[p]);
                             }
                         }
-                        
                     }
 
                     if (Debug_Hists)
@@ -721,7 +743,7 @@ TF1 *ChooseSpectrumFunction(int weightmethod, int PT_Min, int PT_Max, const std:
     }
     return myFunc;
 }
-
+// clustering and psotion smearing functions
 Pythia8::Vec4 clusterPhoton(Pythia8::Vec4 &originalPhoton, int method, double randomE)
 {
     Pythia8::Vec4 newPhoton;
@@ -782,6 +804,26 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx, dou
     return smearedPhoton;
 }
 
+// function to sample energy loss due to tower threshold for clusters
+Pythia8::Vec4 SampleLoss(Pythia8::Vec4 &originalPhoton, float pt)
+{
+    Pythia8::Vec4 newPhoton;
+    if (h_clus_ERatio_2d == nullptr)
+    {
+        std::cerr << "Error: h_clus_ERatio_2d is nullptr in SampleLoss!" << std::endl;
+        return 0.0f;
+    }
+
+    int bin = h_clus_ERatio_2d->FindBin(pt);
+    float val = h_clus_ERatio_2d->GetBinContent(bin);
+    if (debug)
+        std::cout << "Histogram value at pt=" << pt << " is " << val << std::endl;
+    newPhoton = originalPhoton * val;
+
+    return newPhoton;
+}
+
+// cut functions
 bool DeltaRcut(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float DeltaRcutMax)
 {
     double dEta = Photon1.eta() - Photon2.eta();
@@ -830,6 +872,7 @@ bool AsymmCutcheck(Pythia8::Vec4 &Photon1, Pythia8::Vec4 &Photon2, float AsymmCu
     return abs(Photon1.e() - Photon2.e()) / (Photon1.e() + Photon2.e()) < AsymmCutoff;
 }
 
+// Function to parse command-line arguments
 void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &params, bool debug)
 {
     for (int i = 1; i < argc; i++)
@@ -856,6 +899,7 @@ void parseArguments(int argc, char *argv[], std::map<std::string, std::string> &
     }
 }
 
+// Functions to calculate the scaling factor for the energy sharing between two photons
 // Function to calculate the Distance between two particles on the projected surface of the emcal
 double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bool debug)
 {
@@ -872,7 +916,7 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bo
     double posz2 = photon2.pz() / photon2.e();
     double dz = posz1 - posz2;
 
-    if(debug && dz<0.1)
+    if (debug && dz < 0.1)
     {
         std::cerr << "Warning: Photons are too close in z direction: " << dz << std::endl;
     }
@@ -887,24 +931,24 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
     double tolerance = 1e-6;
     double distance = DetectorPhotonDistance(photon1, photon2, debug);
 
-    //three choices, inverse exponential, hyberbolic tangent, or rational 
-    ScalingMethod method;// = EXPONENTIAL;
-    switch (method_int) 
+    // three choices, inverse exponential, hyberbolic tangent, or rational
+    ScalingMethod method; // = EXPONENTIAL;
+    switch (method_int)
     {
-        case 0:
-            method = EXPONENTIAL;
-            break;
-        case 1:
-            method = RATIONAL;
-            break;
-        case 2:
-            method = HYPERBOLIC_TANGENT;
-            break;
-        default:
-            std::cerr << "Error: Unknown scaling method." << std::endl;
-            break;
+    case 0:
+        method = EXPONENTIAL;
+        break;
+    case 1:
+        method = RATIONAL;
+        break;
+    case 2:
+        method = HYPERBOLIC_TANGENT;
+        break;
+    default:
+        std::cerr << "Error: Unknown scaling method." << std::endl;
+        break;
     }
-    
+
     double shiftFactor = EnergySharingScale(distance, method);
 
     double totalEnergy = photon1.e() + photon2.e();
@@ -944,30 +988,30 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::V
     return std::make_pair(photon1, photon2);
 }
 
-std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2,int method_int, bool debug)
+std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, int method_int, bool debug)
 {
     double tolerance = 1e-6;
     double distance = DetectorPhotonDistance(photon1, photon2, debug);
 
     double totalEnergy = photon1.e() + photon2.e();
-    //three choices, inverse exponential, hyberbolic tangent, or rational 
-    ScalingMethod method;// = EXPONENTIAL;
-    switch (method_int) 
+    // three choices, inverse exponential, hyberbolic tangent, or rational
+    ScalingMethod method; // = EXPONENTIAL;
+    switch (method_int)
     {
-        case 0:
-            method = EXPONENTIAL;
-            break;
-        case 1:
-            method = RATIONAL;
-            break;
-        case 2:
-            method = HYPERBOLIC_TANGENT;
-            break;
-        default:
-            std::cerr << "Error: Unknown scaling method." << std::endl;
-            break;
+    case 0:
+        method = EXPONENTIAL;
+        break;
+    case 1:
+        method = RATIONAL;
+        break;
+    case 2:
+        method = HYPERBOLIC_TANGENT;
+        break;
+    default:
+        std::cerr << "Error: Unknown scaling method." << std::endl;
+        break;
     }
-    
+
     double shiftFactor = EnergySharingScale(distance, method);
     double energyShift = (photon1.e() - photon2.e()) * shiftFactor;
 
@@ -1007,44 +1051,49 @@ std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::
     return std::make_pair(photon1, photon2);
 }
 
-double EnergySharingScale(double distance, ScalingMethod method) {
+double EnergySharingScale(double distance, ScalingMethod method)
+{
     double scale = 0.0;
 
-    switch (method) {
-        case EXPONENTIAL: {
-            //0.3*exp(-distance / 0.2); // exponential
-            //parameters for the Exponential method
-            double expParam1 = 0.7; //finite energy sharing at low distances
-            double expParam2 = 50.0; //distance at which scale = expParam*1/e~expParam*0.37
-            //higher=higher mass?
-            // Exponential scaling: scale = expParam1 * exp(-distance / expParam2)
-            scale = expParam1 * exp(-distance / expParam2);
-            break;
-        }
+    switch (method)
+    {
+    case EXPONENTIAL:
+    {
+        // 0.3*exp(-distance / 0.2); // exponential
+        // parameters for the Exponential method
+        double expParam1 = 0.7;  // finite energy sharing at low distances
+        double expParam2 = 50.0; // distance at which scale = expParam*1/e~expParam*0.37
+        // higher=higher mass?
+        //  Exponential scaling: scale = expParam1 * exp(-distance / expParam2)
+        scale = expParam1 * exp(-distance / expParam2);
+        break;
+    }
 
-        case RATIONAL: {
-            //double shiftFactor = A / (1.0 + pow(distance / d0, n)); // rational
-            //parameters for the Rational method
-            double rationalParam1 = 0.7; //finite energy sharing at low distances
-            double rationalParam2 = 50.0; // distance scaling factor. no idea what this should be
-            double rationalParam3 = 1.3; //A parameter that controls the steepness of the decline
-            // Rational scaling: scale = rationalParam1 / (distance + rationalParam2)
-            scale = rationalParam1 / (1 + pow(distance/rationalParam2,rationalParam3));
-            break;
-        }
+    case RATIONAL:
+    {
+        // double shiftFactor = A / (1.0 + pow(distance / d0, n)); // rational
+        // parameters for the Rational method
+        double rationalParam1 = 0.7;  // finite energy sharing at low distances
+        double rationalParam2 = 50.0; // distance scaling factor. no idea what this should be
+        double rationalParam3 = 1.3;  // A parameter that controls the steepness of the decline
+        // Rational scaling: scale = rationalParam1 / (distance + rationalParam2)
+        scale = rationalParam1 / (1 + pow(distance / rationalParam2, rationalParam3));
+        break;
+    }
 
-        case HYPERBOLIC_TANGENT: {
-            //double shiftFactor = A * tanh((distance - d0) / d1); // hyperbolic tangent
-            //parameters for the Hyperbolic Tangent method
-            double tanhParam1 = 0.7; //finite energy sharing at low distances
-            double tanhParam2 = 10.0; //sets the scale of the distance at which the energy sharing is = param1. lower = less sharing at high distances
-            scale = tanhParam1 * tanh(tanhParam2 / distance);
-            break;
-        }
+    case HYPERBOLIC_TANGENT:
+    {
+        // double shiftFactor = A * tanh((distance - d0) / d1); // hyperbolic tangent
+        // parameters for the Hyperbolic Tangent method
+        double tanhParam1 = 0.7;  // finite energy sharing at low distances
+        double tanhParam2 = 10.0; // sets the scale of the distance at which the energy sharing is = param1. lower = less sharing at high distances
+        scale = tanhParam1 * tanh(tanhParam2 / distance);
+        break;
+    }
 
-        default:
-            std::cerr << "Error: Unknown scaling method." << std::endl;
-            break;
+    default:
+        std::cerr << "Error: Unknown scaling method." << std::endl;
+        break;
     }
 
     return scale;
