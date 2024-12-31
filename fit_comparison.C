@@ -804,8 +804,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // Define a function for the eta energy resolution fit
       TF1 *EresolutionFit = new TF1("EresolutionFit", "sqrt(2)*sqrt([0]*[0]/x + [1]*[1])", 2, 15);
       EresolutionFit->SetParameters(0.154, 0.02); // Initial guesses for a, b
-      EresolutionFit->SetParLimits(0, 0.1, 0.18);
-      EresolutionFit->SetParLimits(1, 0.01, 0.2);
+      EresolutionFit->SetParLimits(0, 0.01, 0.3);
+      EresolutionFit->SetParLimits(1, 0.01, 0.3);
       EresolutionGraph[filecounter]->Fit(EresolutionFit, "RE");
       EresolutionFit->SetLineColor(MarkerColor);
       ///*
@@ -1469,6 +1469,8 @@ void fit_comparison()
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V6.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V6.root",
       //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V6.root",
       //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V7.root",
   };
@@ -1486,7 +1488,10 @@ void fit_comparison()
       "h_truthmatched_mass_etameson_weighted_2d",
       "h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_0",
-      "h_truthmatched_mass_etameson_weighted_2d"};
+      "h_truthmatched_mass_etameson_weighted_2d",
+      "h_InvMass_smear_weighted_2d_125",
+      "h_truthmatched_mass_etameson_weighted_2d",
+      };
   std::vector<std::string> SPMC_legend = {
       //"SPi0+0sm", "SEta+0sm", 
       //"SEta+12.5sm,70mev,lowcut",
@@ -1502,7 +1507,10 @@ void fit_comparison()
       //"SPi0_Weight_pythia+12.5",
       //"SPi0_tbtzs_Weight_pythia+12.5"
       "New SEta+0%",
-      "New SEta+0%+match"};
+      "New SEta+0%+match",
+      "New SEta+12.5%",
+      "New SEta+12.5%+match"
+      };
 
   std::vector<int> SPMC_FileTypes = {
       // 0, 
@@ -1513,6 +1521,8 @@ void fit_comparison()
       1,
       0,
       1,
+      1,
+      1,
       1}; // 0 for pion, 1 for eta
 
   //-----------------------------------------
@@ -1520,14 +1530,14 @@ void fit_comparison()
       //*
       {
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-          //"pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.170000_const.root",
+          ////"pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.170000_const.root",
           //"pioncode/rootfiles/EtaFastMC_0.158000_sqrte_0.027000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.110000_sqrte_0.060000_const.root",
-          //"pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.032000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.125000_sqrte_0.055000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.131000_sqrte_0.032000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.115000_sqrte_0.060000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.065000_const.root",
+          ////"pioncode/rootfiles/EtaFastMC_0.110000_sqrte_0.060000_const.root",
+          ////"pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.032000_const.root",
+          "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.020000_const.root",
+          "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.030000_const.root",
+          "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.050000_const.root",
+          "pioncode/rootfiles/EtaFastMC_0.130000_sqrte_0.080000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
@@ -1538,12 +1548,12 @@ void fit_comparison()
           ////"FastMC: 14%/#sqrt{E} #oplus 4%",
           //"FastMC: 10.0%/#sqrt{E} #oplus 17.0%",
           //"FastMC: 15.8%/#sqrt{E} #oplus 2.7%",
-          "FastMC: 11.0%/#sqrt{E} #oplus 6.0%",
+          //"FastMC: 11.0%/#sqrt{E} #oplus 6.0%",
           //"FastMC: 14.9%/#sqrt{E} #oplus 3.2%",
-          "FastMC: 12.5%/#sqrt{E} #oplus 5.5%",
-          "FastMC: 13.1%/#sqrt{E} #oplus 3.2%",
-          "FastMC: 11.5%/#sqrt{E} #oplus 6.0%",
-          "FastMC: 10.0%/#sqrt{E} #oplus 6.5%",
+          "FastMC: 14.9%/#sqrt{E} #oplus 2.0%",
+          "FastMC: 14.9%/#sqrt{E} #oplus 3.0%",
+          "FastMC: 14.9%/#sqrt{E} #oplus 5.0%",
+          "FastMC: 13.0%/#sqrt{E} #oplus 8.0%",
           ////"FastMC_symm_E: 14%/#sqrt{E} #oplus 4%",
           ////"FastMC_asymm_E: 14%/#sqrt{E} #oplus 4%",
           ////"FastMC_symm_R: 14%/#sqrt{E} #oplus 4%",

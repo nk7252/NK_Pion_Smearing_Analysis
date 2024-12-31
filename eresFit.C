@@ -28,7 +28,7 @@ void eresFit()
     SetsPhenixStyle();
 
     // Open the ROOT file containing your histogram
-    TFile *file = TFile::Open("pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V22.root");
+    TFile *file = TFile::Open("pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root");
     if (!file || file->IsZombie())
     {
         std::cout << "Error opening file!" << std::endl;
@@ -52,7 +52,7 @@ void eresFit()
     int startBin = 1;
     int endBin_global = -1; // -1=actual last bin
     int endBin = endBin_global;
-    int projectionBins = 1;
+    int projectionBins = 2;
     double scale_factor = 1.0;
     if (endBin_global == -1)
         endBin = nBinsX; // Default to the last bin if not specified
@@ -104,8 +104,8 @@ void eresFit()
         // Set the fit range for gausFit dynamically based on the pT bin value
         
         Double_t fitMin, fitMax;
-        fitMin = 0.7;
-        fitMax = 1.10;
+        fitMin = 0.65;
+        fitMax = 1.20;
         if (projectionBins == 1)
         {
             if (pTValue < 0.25)
