@@ -41,7 +41,7 @@ double DetectorPhotonDistance(Pythia8::Vec4 &photon1, Pythia8::Vec4 &photon2, bo
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesSymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, int method_int, bool debug);
 std::pair<Pythia8::Vec4, Pythia8::Vec4> adjustPhotonEnergiesAsymmetric(Pythia8::Vec4 photon1, Pythia8::Vec4 photon2, int method_int, bool debug);
 double EnergySharingScale(double distance, ScalingMethod method);
-Pythia8::Vec4 SampleLoss(Pythia8::Vec4 &originalPhoton, float pt);
+Pythia8::Vec4 ClusterLossSimple(Pythia8::Vec4 &originalPhoton, float randomRoll, float threshold);
 
 int main(int argc, char *argv[])
 {
@@ -314,6 +314,7 @@ int main(int argc, char *argv[])
         std::vector<TH2F *> h100(WeightNames.size());
         std::vector<TH1F *> h100_1d(WeightNames.size());
         std::vector<TH2F *> h101(WeightNames.size());
+        std::vector<TH2F *> h102(WeightNames.size());
         std::vector<TH1F *> h101_1d(WeightNames.size());
         std::vector<TH1F *> h101_dr(WeightNames.size());
         std::vector<TH1F *> h101_photon_dist_1d(WeightNames.size());
@@ -365,21 +366,25 @@ int main(int argc, char *argv[])
                 h101_asymm[p][c] = new TH2F(Form("h101_%i_asymm_%i", p, c), Form("More asymm(%s):Pt vs Inv Mass, weighted, eT cuts:%s", ClusterScalingNames[c].c_str(), WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
                 h101_symm[p][c] = new TH2F(Form("h101_%i_symm_%i", p, c), Form("More symm(%s):Pt vs Inv Mass, weighted, eT cuts:%s", ClusterScalingNames[c].c_str(), WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
             }
+            h102[p] = new TH2F(Form("h102_%i", p), Form("Smeared Pt vs Smeared Inv Mass, weighted. same as 100+towerloss:%s", WeightNames[p].c_str()), n_bins, 0, PT_Max_bin, MassNBins, smeared_lower_bin_limit, smeared_upper_bin_limit);
         }
 
         std::random_device rd;
         std::random_device rdgamma;
         std::random_device rdgammacluster;
         std::random_device rdgammapositsmr;
+        std::random_device rdclusterloss;
         std::mt19937_64 gen(rd());
         std::mt19937_64 gen_gamma(rdgamma());
         std::mt19937_64 gen_gammacluster(rdgammacluster());
         std::mt19937_64 gen_gammapositsmear(rdgammapositsmr());
+        std::mt19937_64 gen_clusterloss(rdclusterloss());
         std::normal_distribution<double> gammadis(0.0, 1.0); // mean 0 and std dev 1
         std::uniform_real_distribution<> gammacluster(0, 1.0);
         std::normal_distribution<double> gamma_positsmear(0.0, 1.0);
         std::uniform_real_distribution<> pdis(PT_ratio, 1.0);
         std::uniform_real_distribution<> adis(0.0, 2 * M_PI);
+        std::uniform_real_distribution<> clusterloss(0, 0.1);
 
         Pythia pythia;
         pythia.readString("PromptPhoton:all = on");
@@ -478,6 +483,7 @@ int main(int argc, char *argv[])
                     Pythia8::Vec4 gamma_All_Cuts[3];
                     Pythia8::Vec4 gamma_position_smear[3];
                     Pythia8::Vec4 gamma_Blair_position[3];
+                    Pythia8::Vec4 gamma_All_Towerthreshold[3];
 
                     gamma_lorentz[0] = pythia.event[Gamma_daughters[0]].p();
                     gamma_lorentz[1] = pythia.event[Gamma_daughters[1]].p();
@@ -511,6 +517,9 @@ int main(int argc, char *argv[])
                     gamma_All_Cuts[0] = PositionResSmear(gamma_cluster_asymm[0], posit_smearingFactor * gamma_positsmear(gen_gammapositsmear), posit_smearingFactor * gamma_positsmear(gen_gammapositsmear), posit_smearingFactor * gamma_positsmear(gen_gammapositsmear));
                     gamma_All_Cuts[1] = PositionResSmear(gamma_cluster_asymm[1], posit_smearingFactor * gamma_positsmear(gen_gammapositsmear), posit_smearingFactor * gamma_positsmear(gen_gammapositsmear), posit_smearingFactor * gamma_positsmear(gen_gammapositsmear));
                     gamma_All_Cuts[2] = gamma_All_Cuts[0] + gamma_All_Cuts[1];
+                    gamma_All_Towerthreshold[0] = ClusterLossSimple(gamma_All_Cuts[0], clusterloss(gen_clusterloss),tower_cluster_threshold);
+                    gamma_All_Towerthreshold[1] = ClusterLossSimple(gamma_All_Cuts[1], clusterloss(gen_clusterloss),tower_cluster_threshold);
+                    gamma_All_Towerthreshold[2] = gamma_All_Towerthreshold[0] + gamma_All_Towerthreshold[1];
 
                     gamma_Blair_position[0] = PositionResSmear(gamma_smeared[0], posit_smearingFactor * gamma_positsmear(gen_gammapositsmear), posit_smearingFactor * gamma_positsmear(gen_gammapositsmear), posit_smearingFactor * gamma_positsmear(gen_gammapositsmear));
                     gamma_Blair_position[1] = PositionResSmear(gamma_smeared[1], posit_smearingFactor * gamma_positsmear(gen_gammapositsmear), posit_smearingFactor * gamma_positsmear(gen_gammapositsmear), posit_smearingFactor * gamma_positsmear(gen_gammapositsmear));
@@ -603,6 +612,11 @@ int main(int argc, char *argv[])
                         {
                             h100[p]->Fill(gamma_All_Cuts[2].pT(), gamma_All_Cuts[2].mCalc(), inv_yield[p]);
                             h100_1d[p]->Fill(gamma_All_Cuts[2].mCalc(), inv_yield[p]);
+                        }
+
+                        if(DeltaRcut(gamma_All_Towerthreshold[0], gamma_All_Towerthreshold[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_All_Towerthreshold[0], gamma_All_Towerthreshold[1], asymmCutValue, applyAsymmCut) == true && pTCut(gamma_All_Towerthreshold[0], pt1cut) == true && pTCut(gamma_All_Towerthreshold[1], pt2cut) == true && nclus_ptCut < gamma_All_Towerthreshold[0].pT() && gamma_All_Towerthreshold[0].pT() < ptMaxCut && nclus_ptCut < gamma_All_Towerthreshold[1].pT() && gamma_All_Towerthreshold[1].pT() < ptMaxCut && gamma_All_Towerthreshold[2].pT() > comb_ptcut * (pt1cut + pt2cut))
+                        {
+                            h102[p]->Fill(gamma_All_Towerthreshold[2].pT(), gamma_All_Towerthreshold[2].mCalc(), inv_yield[p]);
                         }
 
                         if (DeltaRcut(gamma_All_Cuts[0], gamma_All_Cuts[1], DeltaRcut_MAX) == false && AsymmCutcheck(gamma_All_Cuts[0], gamma_All_Cuts[1], asymmCutValue, applyAsymmCut) == true && eTCut(gamma_All_Cuts[0], etCut) == true && eTCut(gamma_All_Cuts[1], etCut) == true && nclus_ptCut < gamma_All_Cuts[0].pT() && gamma_All_Cuts[0].pT() < ptMaxCut && nclus_ptCut < gamma_All_Cuts[1].pT() && gamma_All_Cuts[1].pT() < ptMaxCut && gamma_All_Cuts[2].pT() > comb_ptcut * (pt1cut + pt2cut))
@@ -802,25 +816,6 @@ Pythia8::Vec4 PositionResSmear(Pythia8::Vec4 photon, double smearingFactorx, dou
     double znew = energyscale * pz_smear;
     Pythia8::Vec4 smearedPhoton(xnew, ynew, znew, energy);
     return smearedPhoton;
-}
-
-// function to sample energy loss due to tower threshold for clusters
-Pythia8::Vec4 SampleLoss(Pythia8::Vec4 &originalPhoton, float pt)
-{
-    Pythia8::Vec4 newPhoton;
-    if (h_clus_ERatio_2d == nullptr)
-    {
-        std::cerr << "Error: h_clus_ERatio_2d is nullptr in SampleLoss!" << std::endl;
-        return 0.0f;
-    }
-
-    int bin = h_clus_ERatio_2d->FindBin(pt);
-    float val = h_clus_ERatio_2d->GetBinContent(bin);
-    if (debug)
-        std::cout << "Histogram value at pt=" << pt << " is " << val << std::endl;
-    newPhoton = originalPhoton * val;
-
-    return newPhoton;
 }
 
 // cut functions
@@ -1098,3 +1093,17 @@ double EnergySharingScale(double distance, ScalingMethod method)
 
     return scale;
 }
+
+//function to "lose" energy due to the clusterizer tower threshold
+//two versions, one simplified case where a random number is rolled and if that number times the photon energy is below the threshold, the energy is lost from the photon.
+Pythia8::Vec4 ClusterLossSimple(Pythia8::Vec4 &originalPhoton, float randomRoll, float threshold)
+{
+    Pythia8::Vec4 newPhoton = originalPhoton;
+    if (randomRoll * originalPhoton.e() < threshold)
+    {
+        float energyLoss = 1- randomRoll;
+        newPhoton = originalPhoton * energyLoss;
+    }
+    return newPhoton;
+}
+//second version is create a 3x3 grid. the photon lands randomly somewhere in the central cell, and the energy is shared between the central cell and the 8 surrounding cells. Any cell with energy below the threshold is lost. This is tricky because you have to model how much energy each cell gets based on the central position. 
