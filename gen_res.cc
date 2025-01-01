@@ -232,6 +232,7 @@ int main(int argc, char *argv[])
 
     TH2F *h_original = nullptr;
     TH2F *h_ClusterERatio = nullptr;
+    /*
     TFile* frw = TFile::Open("/pioncode/rootfiles/", "READ");
     h_original = (TH2F *)frw->Get("h_clus_ERatio_2d");
     std::cout << "Using eta spectrum" << std::endl;
@@ -254,7 +255,7 @@ int main(int argc, char *argv[])
     // Close the file and clean up
     frw->Close();
     delete frw;
-
+    //*/
     TStopwatch timer;
     timer.Start();
 
