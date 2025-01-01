@@ -97,6 +97,7 @@ int main(int argc, char *argv[])
     float smear_factor_const = 0.12;
     float smear_factor_const_step_size = 0.001;
     int smear_factor_const_num_steps = 1;
+    float tower_cluster_threshold = 0.07;
     // output params
     bool saveToTree = false;
     // untracked general parameters
@@ -240,7 +241,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        h_ClusterERatio = (TH1F *)h_original->Clone("h_ClusterERatio_clone");
+        h_ClusterERatio = (TH2F *)h_original->Clone("h_ClusterERatio_clone");
         if (h_ClusterERatio == nullptr)
         {
             std::cerr << "Error: Cloning of histogram failed!" << std::endl;
