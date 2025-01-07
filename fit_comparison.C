@@ -124,7 +124,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TLegend *legend1 = new TLegend(0.2, 0.7, 0.44, 0.9);  // pion mean
   TLegend *legend2 = new TLegend(0.2, 0.2, 0.44, 0.4);  // pion width
   TLegend *legend3 = new TLegend(0.66, 0.7, 0.90, 0.9); // eta mean
-  TLegend *legend4 = new TLegend(0.66, 0.7, 0.90, 0.9);  // eta width
+  TLegend *legend4 = new TLegend(0.66, 0.7, 0.90, 0.9); // eta width
   TLegend *legend5 = new TLegend(0.2, 0.7, 0.44, 0.9);  // mass ratio
   TLegend *legend6 = new TLegend(0.66, 0.7, 0.90, 0.9); // pion resolution
   TLegend *legend7 = new TLegend(0.66, 0.7, 0.90, 0.9); // eta resolution
@@ -297,6 +297,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         continue;
       }
 
+      polyPart = new TF1("polyPart", "pol5", limits[0], limits[1]);
+      for (int j = 0; j < 6; ++j)
+        polyPart->SetParameter(j, combinedFit->GetParameter(j + 6));
+
       TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
       histF->SetTitle(Form("Combined Fit; #it{m}_{#gamma#gamma} (GeV); dN/d#it{m}_{#gamma#gamma}; pT: %s", ptRange.Data()));
       histF->Draw("E");
@@ -310,22 +314,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gausFit->SetLineColor(kMagenta);
       gausFit->Draw("SAME");
       gausFit2->SetLineColor(kMagenta);
-      gausFit2->Draw("SAME");  
-      //tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
-      float xbleft = 0.42;
-      float ybleft = 0.7;
-      float xtright = 0.9;
-      float ytright = 0.9;
-      TPaveText *pt2 = new TPaveText(xbleft + .2, 0.5, xtright, 0.7, "NDC"); // Adjust coordinates as needed
-      pt2->SetFillColor(0);                                                  // Set the fill color to 0 for transparency
-      pt2->SetFillStyle(0);                                                  // Set fill style to 0 (solid) with color 0 for transparency
-      pt2->AddText(SPMC_legendNames[j].c_str());  
-      pt2->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, Eta_pt)); 
-      pt2->AddText(Form("#chi^{2}/NDF = %.2f", EtagausFit->GetChisquare() / EtagausFit->GetNDF()));
-      pt2->AddText(Form("Mean = %.4f", EtagausFit->GetParameter(1)));
-      pt2->AddText(Form("Sigma = %.4f", EtagausFit->GetParameter(2)));
-      pt2->AddText(Form("Relative Width: %.2f%%", EtagausFit->GetParameter(2) * 100.0f / EtagausFit->GetParameter(1)));
-      pt2->Draw("SAME");
+      gausFit2->Draw("SAME");
       TLegend *leg1 = new TLegend(0.5, 0.5, 0.95, 0.95);
       leg1->SetFillStyle(0);
       leg1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
@@ -336,6 +325,27 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       leg1->AddEntry(gausFit, "originalGauss");
       leg1->Draw();
       leg1->SetTextAlign(32);
+      tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
+      float xbleft = 0.42;
+      float ybleft = 0.7;
+      float xtright = 0.9;
+      float ytright = 0.9;
+
+      TPaveText *ParamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
+      ParamsText->AddText(unweighted_legendNames[j].c_str());
+
+      ParamsText->SetFillColor(0);                                                  // Set the fill color to 0 for transparency
+      ParamsText->SetFillStyle(0);                                                  // Set fill style to 0 (solid) with color 0 for transparency
+      ParamsText->AddText(unweighted_legendNames[j].c_str());
+      ParamsText->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, pion_pt));
+      ParamsText->AddText(Form("#chi^{2}/NDF = %.2f", combinedFit->GetChisquare() / combinedFit->GetNDF()));
+      ParamsText->AddText(Form("Pion Mean = %.4f", combinedFit->GetParameter(1)));
+      ParamsText->AddText(Form("Pion Sigma = %.4f", combinedFit->GetParameter(2)));
+      ParamsText->AddText(Form("Pion Relative Width: %.2f%%", combinedFit->GetParameter(2) * 100.0f / combinedFit->GetParameter(1)));
+      ParamsText->AddText(Form("Eta Mean = %.4f", combinedFit->GetParameter(3)));
+      ParamsText->AddText(Form("Eta Sigma = %.4f", combinedFit->GetParameter(4)));
+      ParamsText->AddText(Form("Eta Relative Width: %.2f%%", combinedFit->GetParameter(4) * 100.0f / combinedFit->GetParameter(3)));
+      ParamsText->Draw(); //"SAME"
       gPad->Modified(); // Apply the changes to the pad
       tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
 
@@ -723,8 +733,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
         double Eta_pt = (pt_min + pt_max) / 2.0;
         scale_histogram_errors(histF, scale_factor);
-        float lower_limit = 0.46;//0.45,0.51
-        float upper_limit = 0.61;//0.70,0.66
+        float lower_limit = 0.46; // 0.45,0.51
+        float upper_limit = 0.61; // 0.70,0.66
         /*
         if (Eta_pt >= 5.5 && Eta_pt <= 6.5){
           lower_limit = 0.45;
@@ -737,7 +747,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         */
 
         // Fit Eta Gaussian in the specified range
-        TF1 *EtagausFit = new TF1("EtagausFit", "gaus", lower_limit, upper_limit);//limits[6], limits[7]
+        TF1 *EtagausFit = new TF1("EtagausFit", "gaus", lower_limit, upper_limit); // limits[6], limits[7]
         EtagausFit->SetParLimits(1, 0.50, 0.65);
         EtagausFit->SetParLimits(2, 0.03, 0.20);
         EtagausFit->SetNpx(1000);
@@ -760,8 +770,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
           continue;
         }
         TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
-        histF->Draw();  
-        //tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
+        histF->Draw();
+        // tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
         float xbleft = 0.42;
         float ybleft = 0.7;
         float xtright = 0.9;
@@ -770,8 +780,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         pt2->SetFillColor(0);                                                  // Set the fill color to 0 for transparency
         pt2->SetFillStyle(0);                                                  // Set fill style to 0 (solid) with color 0 for transparency
         pt2->AddText("Eta Fitted Resolution Parameters:");
-        pt2->AddText(SPMC_legendNames[j].c_str());  
-        pt2->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, Eta_pt)); 
+        pt2->AddText(SPMC_legendNames[j].c_str());
+        pt2->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, Eta_pt));
         pt2->AddText(Form("#chi^{2}/NDF = %.2f", EtagausFit->GetChisquare() / EtagausFit->GetNDF()));
         pt2->AddText(Form("Mean = %.4f", EtagausFit->GetParameter(1)));
         pt2->AddText(Form("Sigma = %.4f", EtagausFit->GetParameter(2)));
@@ -1115,7 +1125,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
             }
           }
         }
-        //std::cout << "Leftmost limit: " << limits[0] << std::endl;
+        // std::cout << "Leftmost limit: " << limits[0] << std::endl;
         double pt_min = hist2D->GetXaxis()->GetBinLowEdge(i);
         double pt_max = hist2D->GetXaxis()->GetBinUpEdge(lastBin);
         TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
@@ -1123,12 +1133,11 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         scale_histogram_errors(histF, scale_factor);
         std::cout << "Pre fit Setup done" << std::endl;
         // Fit Eta Gaussian in the specified range
-        TF1 *EtagausFit = new TF1("EtagausFit", "gaus", 0.45,0.75);//limits[6], limits[7]
+        TF1 *EtagausFit = new TF1("EtagausFit", "gaus", 0.45, 0.75); // limits[6], limits[7]
         EtagausFit->SetParLimits(1, 0.50, 0.64);
         EtagausFit->SetParLimits(2, 0.03, 0.25);
         EtagausFit->SetNpx(1000);
         histF->Fit(EtagausFit, "REQ");
-        
 
         std::cout << "Fit done" << std::endl;
 
@@ -1157,8 +1166,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         double EWidth = Esigma / Emean;
         double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
 
-        //double MassRatio = Pion_Mean[j] / Emean;
-        //double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
+        // double MassRatio = Pion_Mean[j] / Emean;
+        // double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
         std::cout << "Fit parameters stored" << std::endl;
         // Eta_Mean.push_back(Emean);
         // Eta_Width.push_back(EWidth);
@@ -1171,10 +1180,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         etameanGraph[filecounter]->SetPointError(bincounter, 0, EmeanErr);
         etawidthGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
         etawidthGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
-        //massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
-        //massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
-        // EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
-        // EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
+        // massRatioGraph[filecounter]->SetPoint(bincounter, Eta_pt, MassRatio);
+        // massRatioGraph[filecounter]->SetPointError(bincounter, 0, MassRatioErr);
+        //  EresolutionGraph[filecounter]->SetPoint(bincounter, Eta_pt, EWidth);
+        //  EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
 
         bincounter++;
         // std::cout << "Eta_pt: " << Eta_pt << " Emean: " << Emean << " EWidth: " << EWidth << std::endl;
@@ -1212,8 +1221,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gEtaWidths->Add(etawidthGraph[filecounter], "PE");
       legend4->AddEntry(etawidthGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
-      //gMassRatios->Add(massRatioGraph[filecounter], "PE");
-      //legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
+      // gMassRatios->Add(massRatioGraph[filecounter], "PE");
+      // legend5->AddEntry(massRatioGraph[filecounter], FastMC_legendNames[j].c_str(), "P");
 
       //------------------------------------------------------------------------------------------------
       /*
@@ -1385,7 +1394,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c3 = new TCanvas("c3", "Canvas3", 800, 600);
   // gPad->SetFillColor(33);
   gEtaMeans->SetTitle("Eta: Smeared pT vs Inv. Mass;#it{pT}_{#gamma#gamma} (GeV); Eta Peak Position (GeV)");
-  gEtaMeans->GetXaxis()->SetLimits(0.01, 25);//20
+  gEtaMeans->GetXaxis()->SetLimits(0.01, 25); // 20
   gEtaMeans->SetMinimum(0.45);
   gEtaMeans->SetMaximum(0.7);
   gEtaMeans->Draw("APE");
@@ -1398,11 +1407,11 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *c4 = new TCanvas("c4", "Canvas4", 800, 600);
   // gPad->SetFillColor(33);
   gEtaWidths->SetTitle("Eta: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Eta Relative Width");
-  gEtaWidths->GetXaxis()->SetLimits(0.01, 25);//20
-  //gEtaWidths->SetMinimum(0.01);
-  //gEtaWidths->SetMaximum(0.3);
+  gEtaWidths->GetXaxis()->SetLimits(0.01, 25); // 20
+  // gEtaWidths->SetMinimum(0.01);
+  // gEtaWidths->SetMaximum(0.3);
   gEtaWidths->SetMinimum(0.05);
-  gEtaWidths->SetMaximum(0.11);//11, 25
+  gEtaWidths->SetMaximum(0.11); // 11, 25
   gEtaWidths->Draw("APE");
   legend4->SetFillStyle(0);
   legend4->SetTextAlign(32);
@@ -1490,7 +1499,7 @@ void fit_comparison()
       "h_InvMass_smear_2d_125",
       "h_InvMass_smear_2d_0",
       "h_InvMass_smear_2d_0",
-      }; //"h_InvMass_2d",
+  }; //"h_InvMass_2d",
   std::vector<std::string> unweighted_legendNames = {
       "run2024_12/21/24",
       "run2024_1/2/25_p5",
@@ -1501,8 +1510,7 @@ void fit_comparison()
       //"eT_prob","prob_eT",
       "70mev_Pythia_wvfm_vtx+11.5%smr",
       "Pythia_wvfm_vtx+0smr",
-      "70mev_Pythia_wvfm_vtx+0smr"
-      }; //"Pythia",
+      "70mev_Pythia_wvfm_vtx+0smr"}; //"Pythia",
 
   //-----------------------------------------
   std::vector<std::string> SPMC_FileNames = {
@@ -1540,9 +1548,9 @@ void fit_comparison()
       "h_truthmatched_mass_etameson_weighted_2d",
       "h_InvMass_smear_weighted_2d_125",
       "h_truthmatched_mass_etameson_weighted_2d",
-      };
+  };
   std::vector<std::string> SPMC_legend = {
-      //"SPi0+0sm", "SEta+0sm", 
+      //"SPi0+0sm", "SEta+0sm",
       //"SEta+12.5sm,70mev,lowcut",
       //"SEta+12.5sm,30mev,lowcut",
       //"SEta+12.5sm,30mev,lowcut",
@@ -1558,11 +1566,10 @@ void fit_comparison()
       "New SEta+0%",
       "New SEta+0%+match",
       "New SEta+12.5%",
-      "New SEta+12.5%+match"
-      };
+      "New SEta+12.5%+match"};
 
   std::vector<int> SPMC_FileTypes = {
-      // 0, 
+      // 0,
       0,
       0,
       0,
@@ -1592,7 +1599,7 @@ void fit_comparison()
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
           ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-      };//*/
+      }; //*/
   std::vector<std::string> FastMC_legendNames =
       {
           "FastMC: 15%/#sqrt{E} #oplus 12% no tct",
@@ -1628,9 +1635,9 @@ void fit_comparison()
       {
           0,
           0,
-          //1,
+          // 1,
           1,
-          //1,
+          // 1,
           1,
           1,
           1,
@@ -1641,10 +1648,10 @@ void fit_comparison()
       }; // 0 for pion, 1 for eta
   //
   //-----------------------------------------
-  std::vector<std::string> Run2024_fileNames = 
-  {
-    //"pioncode/rootfiles/meson_graphs.root"
-    };
+  std::vector<std::string> Run2024_fileNames =
+      {
+          //"pioncode/rootfiles/meson_graphs.root"
+      };
   std::vector<std::string> Run2024_legendNames = {"Run2024"};
 
   //-----------------------------------------
