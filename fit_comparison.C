@@ -94,9 +94,10 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   SetsPhenixStyle();
   //
   bool var_bins = true;
+  bool var_bins_unw = true;
   int rebinFactor = 10;
   bool dynamic_left = true;
-  int startBin = 5;
+  int startBin = 9;
   int endBin_global = -1;
   int projectionBins = 4;
   double scale_factor = 1.0;
@@ -115,6 +116,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf[");
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf[");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf[");
   // top right (0.66, 0.7, 0.90, 0.9)
   // top left (0.2, 0.7, 0.44, 0.9)
   // bottom left (0.2, 0.2, 0.44, 0.4)
@@ -208,7 +210,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       }
       TH1D *histF = (TH1D *)yProjection;
       // re binning
-      if (var_bins && !nuBins.empty())
+      if (var_bins_unw && !nuBins.empty())
       {
         std::cout << "Rebinning histogram with non-uniform edges" << std::endl;
         histF = rebinHistogram(histF, nuBins); // nuBins
@@ -294,6 +296,27 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
         continue;
       }
+
+      TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
+      histF->Draw();  
+      //tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
+      float xbleft = 0.42;
+      float ybleft = 0.7;
+      float xtright = 0.9;
+      float ytright = 0.9;
+      TPaveText *pt2 = new TPaveText(xbleft + .2, 0.5, xtright, 0.7, "NDC"); // Adjust coordinates as needed
+      pt2->SetFillColor(0);                                                  // Set the fill color to 0 for transparency
+      pt2->SetFillStyle(0);                                                  // Set fill style to 0 (solid) with color 0 for transparency
+      pt2->AddText("Eta Fitted Resolution Parameters:");
+      pt2->AddText(SPMC_legendNames[j].c_str());  
+      pt2->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, Eta_pt)); 
+      pt2->AddText(Form("#chi^{2}/NDF = %.2f", EtagausFit->GetChisquare() / EtagausFit->GetNDF()));
+      pt2->AddText(Form("Mean = %.4f", EtagausFit->GetParameter(1)));
+      pt2->AddText(Form("Sigma = %.4f", EtagausFit->GetParameter(2)));
+      pt2->AddText(Form("Relative Width: %.2f%%", EtagausFit->GetParameter(2) * 100.0f / EtagausFit->GetParameter(1)));
+      pt2->Draw("SAME");
+      gPad->Modified(); // Apply the changes to the pad
+      tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
 
       // Get the fit parameters
       double Pmean = combinedFit->GetParameter(1);
@@ -715,7 +738,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
           std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
           continue;
         }
-                TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
+        TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
         histF->Draw();  
         //tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
         float xbleft = 0.42;
@@ -1422,8 +1445,9 @@ void fit_comparison()
 {
   //-----------------------------------------
   std::vector<std::string> unweighted_fileNames = {
-      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V36.root","pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V37.root",
-      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_0000000015_merged_V64.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V2.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V4.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V4.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V65.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V66.root",
       ////"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V67.root",
@@ -1435,8 +1459,9 @@ void fit_comparison()
   }; //    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
   //
   std::vector<std::string> unweighted_histNames = {
-      //"h_InvMass_2d", "h_InvMass_smear_2d_100",
-      //"h_InvMass_smear_2d_100",
+      "h_diPhotonMasspT",
+      "h_diPhotonMasspT_photon5",
+      "h_diPhotonMasspT_photon4",
       //"h_InvMass_smear_2d_100", "h_InvMass_smear_2d_125",
       "h_InvMass_smear_2d_115",
       // "h_InvMass_smear_2d_125", "h_InvMass_smear_2d_125",
@@ -1445,9 +1470,11 @@ void fit_comparison()
       "h_InvMass_smear_2d_0",
       }; //"h_InvMass_2d",
   std::vector<std::string> unweighted_legendNames = {
-      //"Pythia_wvfm", "Pythia_wvfm+10%smr",
-      //"Pythia_vtx+10%smr",
-      //"Pythia_wvfm_vtx+10%smr", "Pythia_wvfm_vtx+12.5%smr",
+      "run2024_12/21/24",
+      "run2024_1/2/25_p5",
+      "run2024_1/2/25_p4",
+      //"run2024_1/2/25_p5",
+      // "Pythia_wvfm_vtx+12.5%smr",
       "Pythia_wvfm_vtx+11.5%smr",
       //"eT_prob","prob_eT",
       "70mev_Pythia_wvfm_vtx+11.5%smr",
@@ -1529,7 +1556,8 @@ void fit_comparison()
   std::vector<std::string> FastMC_fileNames =
       //*
       {
-          ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+          "pioncode/rootfiles/PionFastMC_0.150000_sqrte_0.120000_const.root",
+          "pioncode/rootfiles/PionFastMC_0.150000_sqrte_0.120000_const.root",
           ////"pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.170000_const.root",
           //"pioncode/rootfiles/EtaFastMC_0.158000_sqrte_0.027000_const.root",
           ////"pioncode/rootfiles/EtaFastMC_0.110000_sqrte_0.060000_const.root",
@@ -1545,8 +1573,8 @@ void fit_comparison()
       };//*/
   std::vector<std::string> FastMC_legendNames =
       {
-          ////"FastMC: 14%/#sqrt{E} #oplus 4%",
-          //"FastMC: 10.0%/#sqrt{E} #oplus 17.0%",
+          "FastMC: 15%/#sqrt{E} #oplus 12% no tct",
+          "FastMC: 15%/#sqrt{E} #oplus 12% + tct",
           //"FastMC: 15.8%/#sqrt{E} #oplus 2.7%",
           //"FastMC: 11.0%/#sqrt{E} #oplus 6.0%",
           //"FastMC: 14.9%/#sqrt{E} #oplus 3.2%",
@@ -1561,7 +1589,8 @@ void fit_comparison()
       }; //"PionFastMC", "EtaFastMC"
   std::vector<std::string> FastMC_histNames =
       {
-          //"h100_2",
+          "h100_2",
+          "h102_2",
           "h100_2",
           "h100_2",
           "h100_2",
@@ -1575,7 +1604,8 @@ void fit_comparison()
       };
   std::vector<int> FastMC_FileTypes =
       {
-          // 0,
+          0,
+          0,
           //1,
           1,
           //1,
