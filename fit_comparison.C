@@ -297,7 +297,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         continue;
       }
 
-      polyPart = new TF1("polyPart", "pol5", limits[0], limits[1]);
+      TF1 *polyPart = new TF1("poly5BG", "pol5", limits[0], limits[1]);
       for (int j = 0; j < 6; ++j)
         polyPart->SetParameter(j, combinedFit->GetParameter(j + 6));
 
