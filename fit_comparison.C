@@ -298,7 +298,19 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       }
 
       TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
-      histF->Draw();  
+      histF->SetTitle(Form("Combined Fit; #it{m}_{#gamma#gamma} (GeV); dN/d#it{m}_{#gamma#gamma}; pT: %s", ptRange.Data()));
+      histF->Draw("E");
+      histF->SetMinimum(0.0);
+      polyPart->SetLineColor(kRed);
+      polyPart->Draw("SAME");
+      combinedFit->SetLineColor(kBlack);
+      combinedFit->Draw("SAME");
+      leftRightFit->SetLineColor(kGreen);
+      leftRightFit->Draw("SAME");
+      gausFit->SetLineColor(kMagenta);
+      gausFit->Draw("SAME");
+      gausFit2->SetLineColor(kMagenta);
+      gausFit2->Draw("SAME");  
       //tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
       float xbleft = 0.42;
       float ybleft = 0.7;
@@ -307,7 +319,6 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       TPaveText *pt2 = new TPaveText(xbleft + .2, 0.5, xtright, 0.7, "NDC"); // Adjust coordinates as needed
       pt2->SetFillColor(0);                                                  // Set the fill color to 0 for transparency
       pt2->SetFillStyle(0);                                                  // Set fill style to 0 (solid) with color 0 for transparency
-      pt2->AddText("Eta Fitted Resolution Parameters:");
       pt2->AddText(SPMC_legendNames[j].c_str());  
       pt2->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, Eta_pt)); 
       pt2->AddText(Form("#chi^{2}/NDF = %.2f", EtagausFit->GetChisquare() / EtagausFit->GetNDF()));
@@ -315,8 +326,18 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       pt2->AddText(Form("Sigma = %.4f", EtagausFit->GetParameter(2)));
       pt2->AddText(Form("Relative Width: %.2f%%", EtagausFit->GetParameter(2) * 100.0f / EtagausFit->GetParameter(1)));
       pt2->Draw("SAME");
+      TLegend *leg1 = new TLegend(0.5, 0.5, 0.95, 0.95);
+      leg1->SetFillStyle(0);
+      leg1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
+      leg1->AddEntry("", "run2024: Golden p+p #sqrt{s_{NN}} = 200 GeV", "");
+      leg1->AddEntry(polyPart, "Background Fit");
+      leg1->AddEntry(combinedFit, "Combined Fit");
+      leg1->AddEntry(leftRightFit, "originalBG");
+      leg1->AddEntry(gausFit, "originalGauss");
+      leg1->Draw();
+      leg1->SetTextAlign(32);
       gPad->Modified(); // Apply the changes to the pad
-      tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
+      tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
 
       // Get the fit parameters
       double Pmean = combinedFit->GetParameter(1);
@@ -1431,6 +1452,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf]");
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf]");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf]");
 
   TFile outputFile("pioncode/rootfiles/ptdifferential_overlay.root", "RECREATE");
   gPionMeans->Write("gPionMean");
