@@ -101,6 +101,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   int endBin_global = -1;
   int projectionBins = 4;
   double scale_factor = 1.0;
+  double scale_factor_unw = 1.0;//error scale up factor
   double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
   /*
   std::vector<float> limits = {
@@ -309,20 +310,20 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       polyPart->Draw("SAME");
       combinedFit->SetLineColor(kBlack);
       combinedFit->Draw("SAME");
-      leftRightFit->SetLineColor(kGreen);
-      leftRightFit->Draw("SAME");
-      gausFit->SetLineColor(kMagenta);
-      gausFit->Draw("SAME");
-      gausFit2->SetLineColor(kMagenta);
-      gausFit2->Draw("SAME");
+      //leftRightFit->SetLineColor(kGreen);
+      //leftRightFit->Draw("SAME");
+      //gausFit->SetLineColor(kMagenta);
+      //gausFit->Draw("SAME");
+      //gausFit2->SetLineColor(kMagenta);
+      //gausFit2->Draw("SAME");
       TLegend *leg1 = new TLegend(0.5, 0.5, 0.95, 0.95);
       leg1->SetFillStyle(0);
       leg1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
       leg1->AddEntry("", "run2024: Golden p+p #sqrt{s_{NN}} = 200 GeV", "");
       leg1->AddEntry(polyPart, "Background Fit");
       leg1->AddEntry(combinedFit, "Combined Fit");
-      leg1->AddEntry(leftRightFit, "originalBG");
-      leg1->AddEntry(gausFit, "originalGauss");
+      //leg1->AddEntry(leftRightFit, "originalBG");
+      //leg1->AddEntry(gausFit, "originalGauss");
       leg1->Draw();
       leg1->SetTextAlign(32);
       tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
@@ -342,9 +343,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       ParamsText->AddText(Form("Pion Mean = %.4f", combinedFit->GetParameter(1)));
       ParamsText->AddText(Form("Pion Sigma = %.4f", combinedFit->GetParameter(2)));
       ParamsText->AddText(Form("Pion Relative Width: %.2f%%", combinedFit->GetParameter(2) * 100.0f / combinedFit->GetParameter(1)));
-      ParamsText->AddText(Form("Eta Mean = %.4f", combinedFit->GetParameter(3)));
-      ParamsText->AddText(Form("Eta Sigma = %.4f", combinedFit->GetParameter(4)));
-      ParamsText->AddText(Form("Eta Relative Width: %.2f%%", combinedFit->GetParameter(4) * 100.0f / combinedFit->GetParameter(3)));
+      ParamsText->AddText(Form("Eta Mean = %.4f", combinedFit->GetParameter(4)));
+      ParamsText->AddText(Form("Eta Sigma = %.4f", combinedFit->GetParameter(5)));
+      ParamsText->AddText(Form("Eta Relative Width: %.2f%%", combinedFit->GetParameter(5) * 100.0f / combinedFit->GetParameter(4)));
       ParamsText->Draw(); //"SAME"
       gPad->Modified(); // Apply the changes to the pad
       tempcanvas2->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
