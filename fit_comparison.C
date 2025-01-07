@@ -331,9 +331,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       float xtright = 0.9;
       float ytright = 0.9;
 
+      TCanvas *tempcanvas2 = new TCanvas("tempcanvas2", "tempcanvas2", 800, 600);
       TPaveText *ParamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
       ParamsText->AddText(unweighted_legendNames[j].c_str());
-
       ParamsText->SetFillColor(0);                                                  // Set the fill color to 0 for transparency
       ParamsText->SetFillStyle(0);                                                  // Set fill style to 0 (solid) with color 0 for transparency
       ParamsText->AddText(unweighted_legendNames[j].c_str());
@@ -347,7 +347,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       ParamsText->AddText(Form("Eta Relative Width: %.2f%%", combinedFit->GetParameter(4) * 100.0f / combinedFit->GetParameter(3)));
       ParamsText->Draw(); //"SAME"
       gPad->Modified(); // Apply the changes to the pad
-      tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
+      tempcanvas2->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
 
       // Get the fit parameters
       double Pmean = combinedFit->GetParameter(1);
