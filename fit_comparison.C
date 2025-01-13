@@ -310,14 +310,14 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       combinedFit->SetParLimits(4, 0.5, 0.64);
       combinedFit->SetParLimits(5, 0.03, 0.25);
       */
-      LeftCombinedFit = new TF1("LeftCombinedFit", "gaus(0)+pol2(3)", limits[0], limits[3], 6);
+      TF1 *LeftCombinedFit = new TF1("LeftCombinedFit", "gaus(0)+pol2(3)", limits[0], limits[3], 6);
       for (int j = 0; j < 3; ++j)
         LeftCombinedFit->SetParameter(j, gausFit->GetParameter(j));
       for (int j = 0; j < 3; ++j)
         LeftCombinedFit->SetParameter(j + 3, leftPeakBG->GetParameter(j));
       LeftCombinedFit->SetParLimits(1, 0.11, 0.19);
       histF->Fit(LeftCombinedFit, "REQ");
-      RightCombinedFit = new TF1("RightCombinedFit", "gaus(0)+pol3(3)", limits[4], limits[7], 7);
+      TF1 *RightCombinedFit = new TF1("RightCombinedFit", "gaus(0)+pol3(3)", limits[4], limits[7], 7);
       for (int j = 0; j < 3; ++j)
         RightCombinedFit->SetParameter(j, gausFit2->GetParameter(j));
       for (int j = 0; j < 4; ++j)
@@ -1549,8 +1549,10 @@ void fit_comparison()
   //-----------------------------------------
   std::vector<std::string> unweighted_fileNames = {
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V2.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V4.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V4.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V65.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V66.root",
       ////"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V67.root",
@@ -1565,6 +1567,8 @@ void fit_comparison()
       "h_diPhotonMasspT",
       "h_diPhotonMasspT_photon5",
       "h_diPhotonMasspT_photon4",
+      "h_diPhotonMasspT_photon5+mbd",
+      "h_diPhotonMasspT_photon4+mbd",
       //"h_InvMass_smear_2d_100", "h_InvMass_smear_2d_125",
       "h_InvMass_smear_2d_115",
       // "h_InvMass_smear_2d_125", "h_InvMass_smear_2d_125",
@@ -1576,6 +1580,8 @@ void fit_comparison()
       "run2024_12/21/24",
       "run2024_1/2/25_p5",
       "run2024_1/2/25_p4",
+      "run2024_1/2/25_p5+mbd",
+      "run2024_1/2/25_p4+mbd",
       //"run2024_1/2/25_p5",
       // "Pythia_wvfm_vtx+12.5%smr",
       "Pythia_wvfm_vtx+11.5%smr",
