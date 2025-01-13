@@ -57,6 +57,30 @@ double poly5BG(double *x, double *par)
   return par[0] + par[1] * x[0] + par[2] * x[0] * x[0] + par[3] * x[0] * x[0] * x[0] + par[4] * x[0] * x[0] * x[0] * x[0] + par[5] * x[0] * x[0] * x[0] * x[0] * x[0];
 }
 
+double poly2BG(double *x, double *par)
+{
+  // 2nd degree polynomial background
+  // Check if x is in the range of any Gaussian fit
+  if (x[0] >= 0.1 && x[0] <= 0.2)
+  {
+    TF1::RejectPoint();
+    return 0;
+  }
+  return par[0] + par[1] * x[0] + par[2] * x[0] * x[0];
+}
+
+double poly3BG(double *x, double *par)
+{
+  // 3rd degree polynomial background
+  // Check if x is in the range of any Gaussian fit
+  if (x[0] >= 0.52 && x[0] <= 0.68)
+  {
+    TF1::RejectPoint();
+    return 0;
+  }
+  return par[0] + par[1] * x[0] + par[2] * x[0] * x[0] + par[3] * x[0] * x[0] * x[0];
+}
+
 // scale the histogram's error bars
 void scale_histogram_errors(TH1D *hist_error_scale, double scale_factor)
 {
@@ -244,10 +268,17 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       double pion_pt = (pt_min + pt_max) / 2.0;
       scale_histogram_errors(histF, scale_factor);
       // fitting background only
+      /*
       TF1 *leftRightFit;
       leftRightFit = new TF1("leftRightFit", poly5BG, limits[0], limits[1], 6);
       histF->Fit(leftRightFit, "REQ");
-
+      */
+      TF1 *leftPeakBG;
+      leftPeakBG = new TF1("leftPeakBG", poly2BG, limits[0], limits[1], 3);
+      histF->Fit(leftPeakBG, "REQ");
+      TF1 *rightPeakBG;
+      rightPeakBG = new TF1("rightPeakBG", poly3BG, 0.42, 0.78, 4);
+      histF->Fit(rightPeakBG, "REQ");
       // Fit first Gaussian in the specified range
       TF1 *gausFit = new TF1("gausFit", "gaus", limits[2], limits[3]);
       gausFit->SetParLimits(1, 0.11, 0.19);
@@ -258,7 +289,9 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       gausFit2->SetParLimits(1, 0.50, 0.64);
       gausFit2->SetParLimits(2, 0.03, 0.25);
       histF->Fit(gausFit2, "REQ");
-
+      
+  //double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
+      /*
       // combined fit setup
       TF1 *combinedFit;
       combinedFit = new TF1("combinedFit", combinedFunctionDoubleGaussPoly5, limits[0], limits[1], 12);
@@ -276,12 +309,30 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       combinedFit->SetParLimits(3, 0, gausFit2->GetParameter(0) * 1.1); // gausFit2->GetParameter(0) *0.5
       combinedFit->SetParLimits(4, 0.5, 0.64);
       combinedFit->SetParLimits(5, 0.03, 0.25);
+      */
+      LeftCombinedFit = new TF1("LeftCombinedFit", "gaus(0)+pol2(3)", limits[0], limits[3], 6);
+      for (int j = 0; j < 3; ++j)
+        LeftCombinedFit->SetParameter(j, gausFit->GetParameter(j));
+      for (int j = 0; j < 3; ++j)
+        LeftCombinedFit->SetParameter(j + 3, leftPeakBG->GetParameter(j));
+      LeftCombinedFit->SetParLimits(1, 0.11, 0.19);
+      histF->Fit(LeftCombinedFit, "REQ");
+      RightCombinedFit = new TF1("RightCombinedFit", "gaus(0)+pol3(3)", limits[4], limits[7], 7);
+      for (int j = 0; j < 3; ++j)
+        RightCombinedFit->SetParameter(j, gausFit2->GetParameter(j));
+      for (int j = 0; j < 4; ++j)
+        RightCombinedFit->SetParameter(j + 3, rightPeakBG->GetParameter(j));
+      RightCombinedFit->SetParLimits(1, 0.50, 0.64);
+      histF->Fit(RightCombinedFit, "REQ");
+      LeftCombinedFit->SetNpx(1000);
+      RightCombinedFit->SetNpx(1000);
 
       // Fit the combined function
-      combinedFit->SetNpx(1000);
-      histF->Fit(combinedFit, "REQ");
+      //combinedFit->SetNpx(1000);
+      //histF->Fit(combinedFit, "REQ");
 
       // Check if the fit returns NaN or Inf
+      /*
       bool fitFailed = false;
       for (int i = 0; i < combinedFit->GetNpar(); i++)
       {
@@ -297,19 +348,39 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
         continue;
       }
-
+      */
+      
+      /*
+      // Create a polynomial function for the background
       TF1 *polyPart = new TF1("poly5BG", "pol5", limits[0], limits[1]);
       for (int j = 0; j < 6; ++j)
         polyPart->SetParameter(j, combinedFit->GetParameter(j + 6));
+      */
+      TF1 *LeftpolyPart = new TF1("LeftpolyPart", "pol2", limits[0], limits[1]);
+      for (int j = 0; j < 3; ++j)
+        LeftpolyPart->SetParameter(j, LeftCombinedFit->GetParameter(j+3));
+      TF1 *RightpolyPart = new TF1("RightpolyPart", "pol3", limits[4], limits[7]);
+      for (int j = 0; j < 4; ++j)
+        RightpolyPart->SetParameter(j, RightCombinedFit->GetParameter(j+3));
+      
+
 
       TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
       histF->SetTitle(Form("Combined Fit; #it{m}_{#gamma#gamma} (GeV); dN/d#it{m}_{#gamma#gamma}; pT: %s", ptRange.Data()));
       histF->Draw("E");
       histF->SetMinimum(0.0);
-      polyPart->SetLineColor(kRed);
-      polyPart->Draw("SAME");
-      combinedFit->SetLineColor(kBlack);
-      combinedFit->Draw("SAME");
+      LeftpolyPart->SetLineColor(kRed);
+      LeftpolyPart->Draw("SAME");
+      RightpolyPart->SetLineColor(kRed);
+      RightpolyPart->Draw("SAME");
+      LeftCombinedFit->SetLineColor(kBlack);
+      LeftCombinedFit->Draw("SAME");
+      RightCombinedFit->SetLineColor(kBlack);
+      RightCombinedFit->Draw("SAME");
+      //polyPart->SetLineColor(kRed);
+      //polyPart->Draw("SAME");
+      //combinedFit->SetLineColor(kBlack);
+      //combinedFit->Draw("SAME");
       //leftRightFit->SetLineColor(kGreen);
       //leftRightFit->Draw("SAME");
       //gausFit->SetLineColor(kMagenta);
@@ -320,8 +391,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       leg1->SetFillStyle(0);
       leg1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
       leg1->AddEntry("", "run2024: Golden p+p #sqrt{s_{NN}} = 200 GeV", "");
-      leg1->AddEntry(polyPart, "Background Fit");
-      leg1->AddEntry(combinedFit, "Combined Fit");
+      leg1->AddEntry(LeftpolyPart, "Background Fit");
+      leg1->AddEntry(LeftCombinedFit, "Combined Fit");
       //leg1->AddEntry(leftRightFit, "originalBG");
       //leg1->AddEntry(gausFit, "originalGauss");
       leg1->Draw();
@@ -339,29 +410,29 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       ParamsText->SetFillStyle(0);                                                  // Set fill style to 0 (solid) with color 0 for transparency
       ParamsText->AddText(unweighted_legendNames[j].c_str());
       ParamsText->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, pion_pt));
-      ParamsText->AddText(Form("#chi^{2}/NDF = %.2f", combinedFit->GetChisquare() / combinedFit->GetNDF()));
-      ParamsText->AddText(Form("Pion Mean = %.4f", combinedFit->GetParameter(1)));
-      ParamsText->AddText(Form("Pion Sigma = %.4f", combinedFit->GetParameter(2)));
-      ParamsText->AddText(Form("Pion Relative Width: %.2f%%", combinedFit->GetParameter(2) * 100.0f / combinedFit->GetParameter(1)));
-      ParamsText->AddText(Form("Eta Mean = %.4f", combinedFit->GetParameter(4)));
-      ParamsText->AddText(Form("Eta Sigma = %.4f", combinedFit->GetParameter(5)));
-      ParamsText->AddText(Form("Eta Relative Width: %.2f%%", combinedFit->GetParameter(5) * 100.0f / combinedFit->GetParameter(4)));
+      ParamsText->AddText(Form("#chi^{2}/NDF = %.2f", LeftCombinedFit->GetChisquare() / LeftCombinedFit->GetNDF()));
+      ParamsText->AddText(Form("Pion Mean = %.4f", LeftCombinedFit->GetParameter(1)));
+      ParamsText->AddText(Form("Pion Sigma = %.4f", LeftCombinedFit->GetParameter(2)));
+      ParamsText->AddText(Form("Pion Relative Width: %.2f%%", LeftCombinedFit->GetParameter(2) * 100.0f / LeftCombinedFit->GetParameter(1)));
+      ParamsText->AddText(Form("Eta Mean = %.4f", RightCombinedFit->GetParameter(1)));
+      ParamsText->AddText(Form("Eta Sigma = %.4f", RightCombinedFit->GetParameter(2)));
+      ParamsText->AddText(Form("Eta Relative Width: %.2f%%", RightCombinedFit->GetParameter(2) * 100.0f / RightCombinedFit->GetParameter(1)));
       ParamsText->Draw(); //"SAME"
       gPad->Modified(); // Apply the changes to the pad
       tempcanvas2->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
 
       // Get the fit parameters
-      double Pmean = combinedFit->GetParameter(1);
-      double Psigma = combinedFit->GetParameter(2);
-      double PmeanErr = combinedFit->GetParError(1);
-      double PsigmaErr = combinedFit->GetParError(2);
+      double Pmean = LeftCombinedFit->GetParameter(1);
+      double Psigma = LeftCombinedFit->GetParameter(2);
+      double PmeanErr = LeftCombinedFit->GetParError(1);
+      double PsigmaErr = LeftCombinedFit->GetParError(2);
       double PWidth = Psigma / Pmean;
       double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
 
-      double Emean = combinedFit->GetParameter(4);
-      double Esigma = combinedFit->GetParameter(5);
-      double EmeanErr = combinedFit->GetParError(4);
-      double EsigmaErr = combinedFit->GetParError(5);
+      double Emean = RightCombinedFit->GetParameter(1);
+      double Esigma = RightCombinedFit->GetParameter(2);
+      double EmeanErr = RightCombinedFit->GetParError(1);
+      double EsigmaErr = RightCombinedFit->GetParError(2);
       double EWidth = Esigma / Emean;
       double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
 
