@@ -1101,11 +1101,10 @@ double EnergySharingScale(double distance, ScalingMethod method)
 Pythia8::Vec4 ClusterLossSimple(Pythia8::Vec4 &originalPhoton, float randomRoll, float threshold)
 {
     Pythia8::Vec4 newPhoton = originalPhoton;
-    if (randomRoll * originalPhoton.e() < threshold)
-    {
-        float energyLoss = 1- randomRoll;
-        newPhoton = originalPhoton * energyLoss;
-    }
+
+    float energyLoss = randomRoll * 0.014;
+    newPhoton = originalPhoton - energyLoss;
+
     return newPhoton;
 }
 //second version is create a 3x3 grid. the photon lands randomly somewhere in the central cell, and the energy is shared between the central cell and the 8 surrounding cells. Any cell with energy below the threshold is lost. This is tricky because you have to model how much energy each cell gets based on the central position. 

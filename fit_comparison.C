@@ -52,7 +52,6 @@ Double_t myGausPol2(Double_t *x, Double_t *par)
   // par[1] = Gaussian mean
   // par[2] = Gaussian sigma
   // par[3], par[4], par[5] = pol2 coefficients
-
   double gausAmp = par[0];
   double gausMean = par[1];
   double gausSigma = par[2];
@@ -103,11 +102,12 @@ double poly2BG(double *x, double *par)
 {
   // 2nd degree polynomial background
   // Check if x is in the range of any Gaussian fit
+  /*
   if (x[0] >= 0.1 && x[0] <= 0.2)
   {
     TF1::RejectPoint();
     return 0;
-  }
+  }*/
   return par[0] + par[1] * x[0] + par[2] * x[0] * x[0];
 }
 
@@ -115,11 +115,13 @@ double poly3BG(double *x, double *par)
 {
   // 3rd degree polynomial background
   // Check if x is in the range of any Gaussian fit
+  /*
   if (x[0] >= 0.52 && x[0] <= 0.68)
   {
     TF1::RejectPoint();
     return 0;
   }
+  */
   return par[0] + par[1] * x[0] + par[2] * x[0] * x[0] + par[3] * x[0] * x[0] * x[0];
 }
 
@@ -150,7 +152,22 @@ TH1D *rebinHistogram(TH1D *h, const std::vector<double> &binEdges)
 
 void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, const std::vector<std::string> &unweightedhistNames, const std::vector<std::string> &unweighted_legendNames, const std::vector<std::string> &SPMC_FileNames, const std::vector<std::string> &SPMC_histNames, const std::vector<std::string> &SPMC_legendNames, std::vector<int> SPMC_FileTypes, const std::vector<std::string> &FastMC_FileNames, const std::vector<std::string> &FastMC_histNames, const std::vector<std::string> &FastMC_legendNames, std::vector<int> FastMC_FileTypes, const std::vector<std::string> &Run2024_FileNames, const std::vector<std::string> &Run2024_legendNames)
 {
-  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+  //be ready to try different minimizers...
+  // possible choices are:
+  //     minName                  algoName
+  // Minuit /Minuit2             Migrad, Simplex,Combined,Scan  (default is Migrad)
+  //  Minuit2                     Fumili2
+  //  Fumili
+  //  GSLMultiMin                ConjugateFR, ConjugatePR, BFGS,
+  //                              BFGS2, SteepestDescent
+  //  GSLMultiFit
+  //   GSLSimAn
+  //   Genetic
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2", "Combined");  //,"Simplex", "Migrad", "Fumili"
+  // ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin");//, "ConjugateFR"
+  //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiFit");//, "LevenbergMarquardt"
+  //ROOT::Math::MinimizerOptions::SetDefaultAlgorithm("Fumili2");
+  
   ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
   ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1000000);
   ROOT::Math::MinimizerOptions::SetDefaultMaxIterations(10000);
@@ -161,13 +178,13 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   //
   bool var_bins = true;
   bool var_bins_unw = true;
-  int rebinFactor = 10;
+  int rebinFactor = 2;
   bool dynamic_left = true;
-  int startBin = 9;
+  int startBin = 5;
   int endBin_global = -1;
   int projectionBins = 4;
   double scale_factor = 1.0;
-  double scale_factor_unw = 1.0; // error scale up factor
+  double scale_factor_unw = 2.0; // error scale up factor
   double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
   /*
   std::vector<float> limits = {
@@ -270,7 +287,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       int lastBin = std::min(i + projectionBins - 1, nBinsX);
       TH1D *yProjection = hist2D->ProjectionY(Form("proj_%d", i), i, lastBin);
       // Check if the projection has enough entries to perform a fit
-      if (yProjection->GetEntries() < 300)
+      if (yProjection->GetEntries() < 1000)
       { // Adjust the threshold as needed
         delete yProjection;
         continue;
@@ -309,28 +326,93 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       TString ptRange = Form("pt_%.2f-%.2f_GeV", pt_min, pt_max);
       double pion_pt = (pt_min + pt_max) / 2.0;
       scale_histogram_errors(histF, scale_factor);
+      // Scale bin contents by pT, avoiding division by zero
+      for (int i = 1; i <= histF->GetNbinsX(); i++)
+      {
+        if (pion_pt == 0)
+          continue; // Avoid division by zero
+        double binContent = histF->GetBinContent(i); // Get the bin content
+        double newContent = binContent / pion_pt;     // Scale the bin content
+        histF->SetBinContent(i, newContent);         // Set the new bin content
+        histF->SetBinError(i, histF->GetBinError(i) / pion_pt); // Scale the bin error
+      }
       // fitting background only
       /*
       TF1 *leftRightFit;
       leftRightFit = new TF1("leftRightFit", poly5BG, limits[0], limits[1], 6);
       histF->Fit(leftRightFit, "REQ");
       */
+
+      //estimate the peak 
+      double wideMin = 0.05; 
+      double wideMax = 0.45;
+
+      // Quick estimate: find maximum bin in [wideMin, wideMax]
+      int iMin = histF->FindBin(wideMin);
+      int iMax = histF->FindBin(wideMax);
+
+      int maxBin = iMin;
+      double maxVal = 0.0;
+      for(int b=iMin; b<=iMax; b++){
+        double c = histF->GetBinContent(b);
+        if(c > maxVal){
+          maxVal = c;
+          maxBin = b;
+        }
+      }
+      // Approx mean
+      double muPeak = histF->GetBinCenter(maxBin);
+
+      // Rough RMS in that region
+      double sum = 0, sumSq = 0, count = 0;
+      for(int b=iMin; b<=iMax; b++){
+        double bc = histF->GetBinCenter(b);
+        double val = histF->GetBinContent(b);
+        sum    += bc * val;
+        sumSq  += bc*bc * val;
+        count  += val;
+      }
+      double mean   = (count>0)? sum / count : 0.14; 
+      double meanSq = (count>0)? sumSq / count : (0.14*0.14);
+      double rms    = std::sqrt(std::max(0.0, meanSq - mean*mean));
+
+      // If the maxBin is close to your “peak,” 
+      // you might set muPeak = mean or average them.
+      //muPeak = 0.5*(muPeak + mean);  // mix the two for stability
+
+      // Let sigmaPeak ~ RMS for a first guess
+      double sigmaPeak = rms;
+      if(sigmaPeak < 0.005) sigmaPeak = 0.01; // avoid too-small estimates
+      double gausLeft  = muPeak - 1.0*sigmaPeak;
+      double gausRight = muPeak + 1.0*sigmaPeak;
+      double bgLeft  = muPeak - 2.0*sigmaPeak;
+      double bgRight = muPeak + 1.5*sigmaPeak;
+
+
+
+      // clamp if needed
+      if(gausLeft < 0.0) gausLeft = 0.0; // avoid negative
+      if(gausRight > 0.3) gausRight = 0.3; // an upper clamp for pion region
+      if(bgLeft < limits[0]) bgLeft = limits[0];
+      if(bgRight > 0.4) bgRight = 0.4;
+
       TF1 *leftPeakBG;
-      leftPeakBG = new TF1("leftPeakBG", poly2BG, limits[0], limits[1], 3);
-      histF->Fit(leftPeakBG, "REQ");
+      leftPeakBG = new TF1("leftPeakBG", poly2BG, bgLeft, bgRight, 4);
+      histF->Fit(leftPeakBG, "RQ");
       TF1 *rightPeakBG;
-      rightPeakBG = new TF1("rightPeakBG", poly3BG, 0.42, 0.78, 4);
-      histF->Fit(rightPeakBG, "REQ");
+      rightPeakBG = new TF1("rightPeakBG", poly2BG, limits[0], 0.78, 4);
+      histF->Fit(rightPeakBG, "RQ");
       // Fit first Gaussian in the specified range
-      TF1 *gausFit = new TF1("gausFit", "gaus", limits[2], limits[3]);
-      gausFit->SetParLimits(1, 0.11, 0.19);
+      TF1 *gausFit = new TF1("gausFit", "gaus", gausLeft, gausRight);
+      gausFit->SetParLimits(0, maxVal*0.99, maxVal*1.01);
+      gausFit->SetParLimits(1, muPeak*0.9, muPeak*1.1);
       gausFit->SetParLimits(2, 0.01, 0.25);
-      histF->Fit(gausFit, "REQ");
+      histF->Fit(gausFit, "RQ");
       // Fit second Gaussian in the specified range
-      TF1 *gausFit2 = new TF1("gausFit2", "gaus", limits[6], limits[7]);
+      TF1 *gausFit2 = new TF1("gausFit2", "gaus", 0.45, 0.65);
       gausFit2->SetParLimits(1, 0.50, 0.64);
       gausFit2->SetParLimits(2, 0.03, 0.25);
-      histF->Fit(gausFit2, "REQ");
+      histF->Fit(gausFit2, "RQ");
 
       // double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
       /*
@@ -352,20 +434,23 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       combinedFit->SetParLimits(4, 0.5, 0.64);
       combinedFit->SetParLimits(5, 0.03, 0.25);
       */
-      TF1 *LeftCombinedFit = new TF1("LeftCombinedFit", myGausPol2, limits[0], limits[3], 6);
+      TF1 *LeftCombinedFit = new TF1("LeftCombinedFit", myGausPol2, bgLeft, bgRight, 6);
       for (int j = 0; j < 3; ++j)
         LeftCombinedFit->SetParameter(j, gausFit->GetParameter(j));
-      for (int j = 0; j < 3; ++j)
+      for (int j = 0; j < 4; ++j)
         LeftCombinedFit->SetParameter(j + 3, leftPeakBG->GetParameter(j));
+      LeftCombinedFit->SetParLimits(0, maxVal*0.90, maxVal*1.01);
       LeftCombinedFit->SetParLimits(1, 0.11, 0.19);
-      histF->Fit(LeftCombinedFit, "REQ");
-      TF1 *RightCombinedFit = new TF1("RightCombinedFit", myGausPol3, limits[4], limits[7], 7);
+      LeftCombinedFit->SetParLimits(2, 0.01, 0.25);
+      histF->Fit(LeftCombinedFit, "RQ");
+      TF1 *RightCombinedFit = new TF1("RightCombinedFit", myGausPol2, 0.35, 0.78, 6);
       for (int j = 0; j < 3; ++j)
         RightCombinedFit->SetParameter(j, gausFit2->GetParameter(j));
       for (int j = 0; j < 4; ++j)
         RightCombinedFit->SetParameter(j + 3, rightPeakBG->GetParameter(j));
       RightCombinedFit->SetParLimits(1, 0.50, 0.64);
-      histF->Fit(RightCombinedFit, "REQ");
+      RightCombinedFit->SetParLimits(2, 0.03, 0.25);
+      histF->Fit(RightCombinedFit, "RQ");
       LeftCombinedFit->SetNpx(1000);
       RightCombinedFit->SetNpx(1000);
 
@@ -398,24 +483,26 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       for (int j = 0; j < 6; ++j)
         polyPart->SetParameter(j, combinedFit->GetParameter(j + 6));
       */
-      TF1 *LeftpolyPart = new TF1("LeftpolyPart", "pol2", limits[0], limits[1]);
-      for (int j = 0; j < 3; ++j)
+      TF1 *LeftpolyPart = new TF1("LeftpolyPart", "pol3",  0.05, 0.3);
+      for (int j = 0; j < 4; ++j)
         LeftpolyPart->SetParameter(j, LeftCombinedFit->GetParameter(j + 3));
-      TF1 *RightpolyPart = new TF1("RightpolyPart", "pol3", limits[4], limits[7]);
+      TF1 *RightpolyPart = new TF1("RightpolyPart", "pol3", 0.35, 0.78);
       for (int j = 0; j < 4; ++j)
         RightpolyPart->SetParameter(j, RightCombinedFit->GetParameter(j + 3));
 
       TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
-      histF->SetTitle(Form("Combined Fit; #it{m}_{#gamma#gamma} (GeV); dN/d#it{m}_{#gamma#gamma}; pT: %s", ptRange.Data()));
-      histF->Draw("E");
-      histF->SetMinimum(0.0);
+      histF->SetTitle(Form("Combined Fit; #it{m}_{#gamma#gamma} (GeV);#frac{1}{2 #it{p}_{T}}#frac{dN}{d#it{m}_{#gamma#gamma}}; pT: %s", ptRange.Data()));
+      //gPad->SetLogy();
+      //histF->SetMinimum(1e-6);  // or some small positive value so log works
+      //histF->SetMinimum(0.0);
+      histF->Draw("E");//dN/d#it{m}_{#gamma#gamma}
       LeftpolyPart->SetLineColor(kRed);
       LeftpolyPart->Draw("SAME");
-      RightpolyPart->SetLineColor(kRed);
+      RightpolyPart->SetLineColor(kMagenta);
       RightpolyPart->Draw("SAME");
       LeftCombinedFit->SetLineColor(kBlack);
       LeftCombinedFit->Draw("SAME");
-      RightCombinedFit->SetLineColor(kBlack);
+      RightCombinedFit->SetLineColor(kGray);
       RightCombinedFit->Draw("SAME");
       // polyPart->SetLineColor(kRed);
       // polyPart->Draw("SAME");
@@ -423,16 +510,16 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // combinedFit->Draw("SAME");
       // leftRightFit->SetLineColor(kGreen);
       // leftRightFit->Draw("SAME");
-      // gausFit->SetLineColor(kMagenta);
-      // gausFit->Draw("SAME");
-      // gausFit2->SetLineColor(kMagenta);
-      // gausFit2->Draw("SAME");
+      gausFit->SetLineColor(kBlue);
+      gausFit->Draw("SAME");
+      //gausFit2->SetLineColor(kGreen);
+      //gausFit2->Draw("SAME");
       TLegend *leg1 = new TLegend(0.5, 0.5, 0.95, 0.95);
       leg1->SetFillStyle(0);
       leg1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
       leg1->AddEntry("", "run2024: Golden p+p #sqrt{s_{NN}} = 200 GeV", "");
-      leg1->AddEntry(LeftpolyPart, "Background Fit");
-      leg1->AddEntry(LeftCombinedFit, "Combined Fit");
+      leg1->AddEntry(LeftpolyPart, "Left Background Fit");
+      leg1->AddEntry(LeftCombinedFit, "Left Combined Fit");
       // leg1->AddEntry(leftRightFit, "originalBG");
       // leg1->AddEntry(gausFit, "originalGauss");
       leg1->Draw();
@@ -507,6 +594,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       EresolutionGraph[filecounter]->SetPoint(bincounter, pion_pt, EWidth);
       EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
       bincounter++;
+      delete tempcanvas;
+      delete tempcanvas2;
     }
     MarkerStyle += 1;
     MarkerColor += 1;
@@ -1522,8 +1611,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gEtaWidths->GetXaxis()->SetLimits(0.01, 25); // 20
   // gEtaWidths->SetMinimum(0.01);
   // gEtaWidths->SetMaximum(0.3);
-  gEtaWidths->SetMinimum(0.05);
-  gEtaWidths->SetMaximum(0.11); // 11, 25
+  gEtaWidths->SetMinimum(0.01);
+  gEtaWidths->SetMaximum(0.25); // 11, 25
   gEtaWidths->Draw("APE");
   legend4->SetFillStyle(0);
   legend4->SetTextAlign(32);
@@ -1588,11 +1677,13 @@ void fit_comparison()
 {
   //-----------------------------------------
   std::vector<std::string> unweighted_fileNames = {
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V2.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V2.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V10.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V10.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V65.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V66.root",
       ////"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V67.root",
@@ -1604,11 +1695,13 @@ void fit_comparison()
   }; //    "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_pp_mb_3MHz_0000000011__merged_V1.root",
   //
   std::vector<std::string> unweighted_histNames = {
-      "h_diPhotonMasspT",
-      "h_diPhotonMasspT_photon5",
-      "h_diPhotonMasspT_photon4",
-      "h_diPhotonMasspT_photon5+mbd",
-      "h_diPhotonMasspT_photon4+mbd",
+      //"h_diPhotonMasspT",
+      //"h_diPhotonMasspT_photon5",
+      //"h_diPhotonMasspT_photon4",
+      "h_diPhotonMasspT_photon5_mbd",
+      "h_diPhotonMasspT_photon4_mbd",
+      "h_diPhotonMasspT_photon5_mbd",
+      "h_diPhotonMasspT_photon4_mbd",
       //"h_InvMass_smear_2d_100", "h_InvMass_smear_2d_125",
       "h_InvMass_smear_2d_115",
       // "h_InvMass_smear_2d_125", "h_InvMass_smear_2d_125",
@@ -1617,11 +1710,13 @@ void fit_comparison()
       "h_InvMass_smear_2d_0",
   }; //"h_InvMass_2d",
   std::vector<std::string> unweighted_legendNames = {
-      "run2024_12/21/24",
-      "run2024_1/2/25_p5",
-      "run2024_1/2/25_p4",
-      "run2024_1/2/25_p5+mbd",
-      "run2024_1/2/25_p4+mbd",
+      //"run2024_12/21/24",
+      //"run2024_1/9/25_p5",
+      //"run2024_1/9/25_p4",
+      "run2024_1/9/25_p5+mbd",
+      "run2024_1/9/25_p4+mbd",
+      "run2024_1/9/25_p5+mbd_eta/zvtx_cuts",
+      "run2024_1/9/25_p4+mbd_eta/zvtx_cuts",
       //"run2024_1/2/25_p5",
       // "Pythia_wvfm_vtx+12.5%smr",
       "Pythia_wvfm_vtx+11.5%smr",
@@ -1637,11 +1732,11 @@ void fit_comparison()
       ////"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V14.root",
       //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V15.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V3.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V3.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V3.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V4.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V4.root",
-      "pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V21.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V4.root",
+      //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V21.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
       "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V6.root",
@@ -1657,11 +1752,11 @@ void fit_comparison()
       //"h_InvMass_smear_weighted_2d_0",
       //"h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_0",
-      "h_truthmatched_mass_weighted_2d",
+      //"h_truthmatched_mass_weighted_2d",
       "h_InvMass_smear_weighted_2d_125",
-      "h_truthmatched_mass_weighted_2d",
-      "h_truthmatched_mass_etameson_weighted_2d",
-      "h_InvMass_smear_weighted_2d_125",
+      //"h_truthmatched_mass_weighted_2d",
+      //"h_truthmatched_mass_etameson_weighted_2d",
+      //"h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_0",
       "h_truthmatched_mass_etameson_weighted_2d",
       "h_InvMass_smear_weighted_2d_125",
@@ -1674,11 +1769,11 @@ void fit_comparison()
       //"SEta+12.5sm,30mev,lowcut",
       //"SEta+0sm,70mev,lowcut",
       "New SPi0+0%",
-      "New SPi0+0%+match",
+      //"New SPi0+0%+match",
       "New SPi0+12.5%",
-      "New SPi0+12.5%+match",
-      "SEta+0sm+match,70mev",
-      "SPi0+12.5sm, more_cuts",
+      //"New SPi0+12.5%+match",
+      //"SEta+0sm+match,70mev",
+      //"SPi0+12.5sm, more_cuts",
       //"SPi0_Weight_pythia+12.5",
       //"SPi0_tbtzs_Weight_pythia+12.5"
       "New SEta+0%",
@@ -1689,11 +1784,11 @@ void fit_comparison()
   std::vector<int> SPMC_FileTypes = {
       // 0,
       0,
+      //0,
       0,
-      0,
-      0,
+      //0,
       1,
-      0,
+      //0,
       1,
       1,
       1,
@@ -1768,13 +1863,12 @@ void fit_comparison()
   //-----------------------------------------
   std::vector<std::string> Run2024_fileNames =
       {
-          //"pioncode/rootfiles/meson_graphs.root"
+          "pioncode/rootfiles/meson_graphs.root"
       };
   std::vector<std::string> Run2024_legendNames = {"Run2024"};
 
   //-----------------------------------------
   AnalyzeHistograms(unweighted_fileNames, unweighted_histNames, unweighted_legendNames, SPMC_FileNames, SPMC_histNames, SPMC_legend, SPMC_FileTypes, FastMC_fileNames, FastMC_histNames, FastMC_legendNames, FastMC_FileTypes, Run2024_fileNames, Run2024_legendNames);
-
   gApplication->Terminate(0);
   // return 0;
 }
