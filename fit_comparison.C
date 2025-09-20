@@ -1,29 +1,230 @@
 #pragma once
 // c++ includes
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 // root includes
-#include <TFile.h>
-#include <TH2.h>
-#include <TF1.h>
-#include <TMultiGraph.h>
-#include <TGraphErrors.h>
-#include <TCanvas.h>
-#include <TLegend.h>
-#include <TPaveText.h>
-#include <TStyle.h>
-#include <TApplication.h>
-#include <TROOT.h>
-#include <Math/MinimizerOptions.h>
 #include <Math/Factory.h>
 #include <Math/Functor.h>
+#include <Math/MinimizerOptions.h>
+#include <TApplication.h>
+#include <TCanvas.h>
+#include <TF1.h>
+#include <TFile.h>
+#include <TGraphErrors.h>
+#include <TH2.h>
+#include <TLegend.h>
+#include <TMultiGraph.h>
+#include <TPaveText.h>
+#include <TROOT.h>
+#include <TStyle.h>
 // local includes
-#include "sPhenixStyle.h"
 #include "sPhenixStyle.C"
+#include "sPhenixStyle.h"
+// roofit includes
+#include "RooFit.h"
+#include "RooRealVar.h"
+#include "RooArgList.h"
+#include "RooArgSet.h"
+#include "RooDataHist.h"
+#include "RooGaussian.h"
+#include "RooAddPdf.h"
+#include "RooChebychev.h"
+#include "RooCrystalBall.h"
+#include "RooPlot.h"
+#include "RooAbsReal.h"
+
+// (optional) quiet RooFit a bit — top of function/main, once
+RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+RooMsgService::instance().setSilentMode(true);
 
 // global bin var
-std::vector<double> nuBins; // = {0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.24, 0.26, 0.28, 0.3, 0.32, 0.36, 0.40, 0.44, 0.48, 0.50, 0.52, 0.54, 0.56, 0.58, 0.60, 0.62, 0.64, 0.66, 0.68, 0.70, 0.72, 0.76, 0.8, 0.84, 0.88, 0.92, 0.96, 1.0}; //, 1.04, 1.08, 1.12, 1.16, 1.2
+std::vector<double> nuBins = {0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.24, 0.26, 0.28, 0.3, 0.32, 0.36, 0.40, 0.44, 0.48, 0.50, 0.52, 0.54, 0.56, 0.58, 0.60, 0.62, 0.64, 0.66, 0.68, 0.70, 0.72, 0.76, 0.8, 0.84, 0.88, 0.92, 0.96, 1.0}; //, 1.04, 1.08, 1.12, 1.16, 1.2
+// helepers for roofit fits, unweighted histograms
+// ===== helper to fit one projection with RooFit =====
+struct RooSliceResult
+{
+  double pMean = std::numeric_limits<double>::quiet_NaN();
+  double pSigma = std::numeric_limits<double>::quiet_NaN();
+  double pMeanErr = std::numeric_limits<double>::quiet_NaN();
+  double pSigmaErr = std::numeric_limits<double>::quiet_NaN();
+  double eMean = std::numeric_limits<double>::quiet_NaN();
+  double eSigma = std::numeric_limits<double>::quiet_NaN();
+  double eMeanErr = std::numeric_limits<double>::quiet_NaN();
+  double eSigmaErr = std::numeric_limits<double>::quiet_NaN();
+  double chi2ndf = std::numeric_limits<double>::quiet_NaN();
+};
+
+static RooSliceResult FitSliceWithRooFitAndPages(
+    TH1D *h,
+    double fitMin, double fitMax,
+    double muPionSeed,
+    double pionLow, double pionHigh,
+    double etaLow, double etaHigh,
+    int sliceId,
+    const char *pdfPath,
+    const char *runBanner,
+    const char *legendLine,
+    double pt_min, double pt_max, double pt_center,
+    bool makeSpectrumPage = true, bool makeParamsPage = true, bool makePullPage = false)
+{
+  using namespace RooFit;
+  RooSliceResult out;
+
+  // -------- observable & data
+  RooRealVar x(Form("x_%d", sliceId), "m_{#gamma#gamma}", fitMin, fitMax, "GeV");
+  RooDataHist data(Form("data_%d", sliceId), "data", RooArgList(x), Import(*h));
+
+  // -------- π0 CrystalBall (BLUE)
+  RooRealVar meanP(Form("meanP_%d", sliceId), "#pi^{0} mean", muPionSeed, pionLow, pionHigh);
+  RooRealVar sigmaP(Form("sigmaP_%d", sliceId), "#pi^{0} sigma", 0.02, 0.002, 0.09);
+  RooRealVar alphaP(Form("alphaP_%d", sliceId), "#pi^{0} alpha", 1.5, 0.2, 8.0);
+  RooRealVar nP(Form("nP_%d", sliceId), "#pi^{0} n", 3.0, 1.0, 25.0);
+  RooCrystalBall cbP(Form("cbP_%d", sliceId), "CB(#pi^{0})", x, meanP, sigmaP, alphaP, nP);
+
+  // -------- η Gaussian (GREEN)
+  RooRealVar meanE(Form("meanE_%d", sliceId), "#eta mean", 0.55, etaLow, etaHigh);
+  RooRealVar sigmaE(Form("sigmaE_%d", sliceId), "#eta sigma", 0.05, 0.01, 0.15);
+  RooGaussian gE(Form("gE_%d", sliceId), "G(#eta)", x, meanE, sigmaE);
+
+  // -------- background Cheby2 (RED dashed)
+  RooRealVar c0(Form("c0_%d", sliceId), "c0", 0.0, -2.0, 2.0);
+  RooRealVar c1(Form("c1_%d", sliceId), "c1", 0.0, -2.0, 2.0);
+  RooChebychev bkg(Form("bkg_%d", sliceId), "bkg", x, RooArgList(c0, c1));
+
+  // -------- extended yields
+  const double nTot = h->GetSumOfWeights();
+  RooRealVar Np(Form("Np_%d", sliceId), "N_{#pi^{0}}", 0.35 * nTot, 0.0, 2.0 * nTot);
+  RooRealVar Ne(Form("Ne_%d", sliceId), "N_{#eta}", 0.05 * nTot, 0.0, 2.0 * nTot);
+  RooRealVar Nb(Form("Nb_%d", sliceId), "N_{bkg}", 0.60 * nTot, 0.0, 2.0 * nTot);
+
+  RooAddPdf model(Form("model_%d", sliceId), "cbP + gE + bkg",
+                  RooArgList(cbP, gE, bkg), RooArgList(Np, Ne, Nb));
+
+  // -------- fit
+  model.fitTo(data, Extended(kTRUE), SumW2Error(kTRUE), PrintLevel(-1));
+
+  // -------- χ2/ndf (rough)
+  RooPlot *fchi = x.frame();
+  data.plotOn(fchi);
+  model.plotOn(fchi);
+  out.chi2ndf = fchi->chiSquare(model.getParameters(data)->getSize());
+  delete fchi;
+
+  // -------- export params
+  out.pMean = meanP.getVal();
+  out.pMeanErr = meanP.getError();
+  out.pSigma = sigmaP.getVal();
+  out.pSigmaErr = sigmaP.getError();
+  out.eMean = meanE.getVal();
+  out.eMeanErr = meanE.getError();
+  out.eSigma = sigmaE.getVal();
+  out.eSigmaErr = sigmaE.getError();
+
+  // -------- PAGE A: spectrum (colors preserved)
+  if (makeSpectrumPage)
+  {
+    RooPlot *fr = x.frame(Title("CB(#pi^{0}) + G(#eta) + Cheby2(bkg)"));
+    data.plotOn(fr);
+    // order: draw components first (so total draws last on top)
+    model.plotOn(fr, Components(bkg), LineColor(kRed), LineStyle(kDashed));
+    model.plotOn(fr, Components(cbP), LineColor(kBlue), LineStyle(kSolid));
+    model.plotOn(fr, Components(gE), LineColor(kGreen), LineStyle(kSolid));
+    model.plotOn(fr, LineColor(kBlack), LineStyle(kSolid));
+
+    TCanvas *c = new TCanvas(Form("cSpec_%d", sliceId), "", 800, 600);
+    fr->GetXaxis()->SetTitle("#it{m}_{#gamma#gamma} (GeV)");
+    fr->GetYaxis()->SetTitle("#frac{1}{2 #it{p}_{T}} #frac{dN}{d#it{m}_{#gamma#gamma}}");
+    fr->Draw();
+
+    TLatex lt;
+    lt.SetNDC(true);
+    lt.SetTextSize(0.035);
+    lt.DrawLatex(0.55, 0.92, "#bf{sPHENIX} Internal");
+    if (runBanner && *runBanner)
+      lt.DrawLatex(0.55, 0.88, runBanner);
+    lt.DrawLatex(0.55, 0.84, Form("p_{T}: %.2f - %.2f GeV  (center: %.2f)", pt_min, pt_max, pt_center));
+
+    // Legend with dummy lines (stable across RooFit versions)
+    TLegend *leg = new TLegend(0.55, 0.60, 0.90, 0.83);
+    leg->SetFillStyle(0);
+    if (legendLine && *legendLine)
+      leg->AddEntry((TObject *)0, legendLine, "");
+    auto lModel = new TLine();
+    lModel->SetLineColor(kBlack);
+    auto lPi = new TLine();
+    lPi->SetLineColor(kBlue);
+    auto lEta = new TLine();
+    lEta->SetLineColor(kGreen);
+    auto lBkg = new TLine();
+    lBkg->SetLineColor(kRed);
+    lBkg->SetLineStyle(kDashed);
+    leg->AddEntry(lModel, "Model", "l");
+    leg->AddEntry(lPi, "#pi^{0} CrystalBall", "l");
+    leg->AddEntry(lEta, "#eta Gaussian", "l");
+    leg->AddEntry(lBkg, "Background (Cheby2)", "l");
+    leg->Draw();
+
+    c->Print(pdfPath);
+    delete leg;
+    delete lModel;
+    delete lPi;
+    delete lEta;
+    delete lBkg;
+    delete c;
+    delete fr;
+  }
+
+  // -------- PAGE B: parameter summary
+  if (makeParamsPage)
+  {
+    const double PWidth = out.pSigma / out.pMean;
+    const double EWidth = out.eSigma / out.eMean;
+
+    TCanvas *c = new TCanvas(Form("cPar_%d", sliceId), "", 800, 600);
+    TPaveText *txt = new TPaveText(0.10, 0.70, 0.90, 0.90, "NDC");
+    txt->SetFillStyle(0);
+    if (legendLine && *legendLine)
+      txt->AddText(legendLine);
+    txt->AddText(Form("p_{T}: %.2f - %.2f GeV  (center: %.2f)", pt_min, pt_max, pt_center));
+    txt->AddText(Form("#chi^{2}/ndf: %.3f", out.chi2ndf));
+    txt->AddText(Form("#pi^{0} mean = %.5f #pm %.5f", out.pMean, out.pMeanErr));
+    txt->AddText(Form("#pi^{0} #sigma = %.5f #pm %.5f", out.pSigma, out.pSigmaErr));
+    txt->AddText(Form("#pi^{0} rel. width = %.3f%%", 100.0 * PWidth));
+    txt->AddText(Form("#eta mean = %.5f #pm %.5f", out.eMean, out.eMeanErr));
+    txt->AddText(Form("#eta #sigma = %.5f #pm %.5f", out.eSigma, out.eSigmaErr));
+    txt->AddText(Form("#eta rel. width = %.3f%%", 100.0 * EWidth));
+    txt->Draw();
+    c->Print(pdfPath);
+    delete txt;
+    delete c;
+  }
+
+  // -------- PAGE C: pull plot (optional)
+  if (makePullPage)
+  {
+    // Build pulls using same model/data
+    RooPlot *base = x.frame();
+    data.plotOn(base);
+    model.plotOn(base);
+    RooHist *hpull = base->pullHist();
+
+    RooPlot *fp = x.frame(Title("Pull distribution"));
+    fp->addPlotable(hpull, "P");
+
+    TCanvas *c = new TCanvas(Form("cPull_%d", sliceId), "", 800, 600);
+    fp->GetYaxis()->SetTitle("pull");
+    fp->Draw();
+    c->Print(pdfPath);
+
+    delete c;
+    delete fp;
+    delete hpull;
+    delete base;
+  }
+
+  return out;
+}
 
 // background subtraction for geant based MC
 double combinedFunctionDoubleGaussPoly5(double *x, double *par)
@@ -103,11 +304,25 @@ double poly2BG(double *x, double *par)
   // 2nd degree polynomial background
   // Check if x is in the range of any Gaussian fit
   /*
-  if (x[0] >= 0.1 && x[0] <= 0.2)
+  if (x[0] >= par[3] && x[0] <= par[4])
   {
     TF1::RejectPoint();
     return 0;
-  }*/
+  }
+  //*/
+  return par[0] + par[1] * x[0] + par[2] * x[0] * x[0];
+}
+double poly2BGCut(double *x, double *par)
+{
+  // 2nd degree polynomial background
+  // Check if x is in the range of any Gaussian fit
+  ///*
+  if (x[0] >= par[3] && x[0] <= par[4])
+  {
+    TF1::RejectPoint();
+    return 0;
+  }
+  //*/
   return par[0] + par[1] * x[0] + par[2] * x[0] * x[0];
 }
 
@@ -152,22 +367,22 @@ TH1D *rebinHistogram(TH1D *h, const std::vector<double> &binEdges)
 
 void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, const std::vector<std::string> &unweightedhistNames, const std::vector<std::string> &unweighted_legendNames, const std::vector<std::string> &SPMC_FileNames, const std::vector<std::string> &SPMC_histNames, const std::vector<std::string> &SPMC_legendNames, std::vector<int> SPMC_FileTypes, const std::vector<std::string> &FastMC_FileNames, const std::vector<std::string> &FastMC_histNames, const std::vector<std::string> &FastMC_legendNames, std::vector<int> FastMC_FileTypes, const std::vector<std::string> &Run2024_FileNames, const std::vector<std::string> &Run2024_legendNames)
 {
-  //be ready to try different minimizers...
-  // possible choices are:
-  //     minName                  algoName
-  // Minuit /Minuit2             Migrad, Simplex,Combined,Scan  (default is Migrad)
-  //  Minuit2                     Fumili2
-  //  Fumili
-  //  GSLMultiMin                ConjugateFR, ConjugatePR, BFGS,
-  //                              BFGS2, SteepestDescent
-  //  GSLMultiFit
-  //   GSLSimAn
-  //   Genetic
-  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2", "Combined");  //,"Simplex", "Migrad", "Fumili"
+  // be ready to try different minimizers...
+  //  possible choices are:
+  //      minName                  algoName
+  //  Minuit /Minuit2             Migrad, Simplex,Combined,Scan  (default is Migrad)
+  //   Minuit2                     Fumili2
+  //   Fumili
+  //   GSLMultiMin                ConjugateFR, ConjugatePR, BFGS,
+  //                               BFGS2, SteepestDescent
+  //   GSLMultiFit
+  //    GSLSimAn
+  //    Genetic
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2", "Combined"); //,"Simplex", "Migrad", "Fumili"
   // ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin");//, "ConjugateFR"
-  //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiFit");//, "LevenbergMarquardt"
-  //ROOT::Math::MinimizerOptions::SetDefaultAlgorithm("Fumili2");
-  
+  // ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiFit");//, "LevenbergMarquardt"
+  // ROOT::Math::MinimizerOptions::SetDefaultAlgorithm("Fumili2");
+
   ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
   ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1000000);
   ROOT::Math::MinimizerOptions::SetDefaultMaxIterations(10000);
@@ -177,14 +392,14 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   SetsPhenixStyle();
   //
   bool var_bins = true;
-  bool var_bins_unw = true;
+  bool var_bins_unw = false;
   int rebinFactor = 2;
   bool dynamic_left = true;
   int startBin = 5;
   int endBin_global = -1;
   int projectionBins = 4;
   double scale_factor = 1.0;
-  double scale_factor_unw = 2.0; // error scale up factor
+  double scale_factor_unw = 1.0; // error scale up factor
   double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
   /*
   std::vector<float> limits = {
@@ -199,14 +414,15 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   TCanvas *dummyCanvas = new TCanvas(); // to create pdf
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf[");
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf[");
-  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf[");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_PionFit_results.pdf[");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_EtaFit_results.pdf[");
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf[");
   // top right (0.66, 0.7, 0.90, 0.9)
   // top left (0.2, 0.7, 0.44, 0.9)
   // bottom left (0.2, 0.2, 0.44, 0.4)
   // bottom right (0.66, 0.2, 0.90, 0.4)
   TLegend *legend1 = new TLegend(0.2, 0.7, 0.44, 0.9);  // pion mean
-  TLegend *legend2 = new TLegend(0.2, 0.2, 0.44, 0.4);  // pion width
+  TLegend *legend2 = new TLegend(0.66, 0.7, 0.90, 0.9); // pion width
   TLegend *legend3 = new TLegend(0.66, 0.7, 0.90, 0.9); // eta mean
   TLegend *legend4 = new TLegend(0.66, 0.7, 0.90, 0.9); // eta width
   TLegend *legend5 = new TLegend(0.2, 0.7, 0.44, 0.9);  // mass ratio
@@ -258,6 +474,30 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   int filecounter = 0;
 
   std::cout << "Unweighted files: " << unweightedFileNames.size() << std::endl;
+  // Each entry corresponds to:
+  //{pt_min, pt_max, pionFitLow, pionFitHigh, bgLeft, bgRight}
+  std::vector<std::tuple<double, double, double, double, double, double>> pionFitRanges = {
+      {1.0, 2.0, 0.11, 0.16, 0.07, 0.25}, // pT: 2.0 - 2.5 GeV
+      {2.0, 3.0, 0.12, 0.16, 0.05, 0.22},
+      {3.0, 4.0, 0.12, 0.16, 0.05, 0.22},
+      {4.0, 5.0, 0.11, 0.16, 0.05, 0.25},
+      {5.0, 6.0, 0.11, 0.16, 0.07, 0.25},
+      {6.0, 7.0, 0.11, 0.16, 0.09, 0.21},
+      {7.0, 8.0, 0.12, 0.16, 0.09, 0.20},
+      {8.0, 9.0, 0.12, 0.16, 0.1, 0.19},
+      {9.0, 10.0, 0.12, 0.17, 0.1, 0.19},
+      {10.0, 11.0, 0.21, 0.3, 0.18, 0.33},
+      {11.0, 12.0, 0.21, 0.33, 0.2, 0.35},
+      {12.0, 13.0, 0.21, 0.35, 0.2, 0.35},
+      {13.0, 14.0, 0.21, 0.36, 0.2, 0.35},
+      {14.0, 15.0, 0.3, 0.4, 0.25, 0.45},
+      {15.0, 16.0, 0.3, 0.4, 0.25, 0.45},
+      {16.0, 17.0, 0.3, 0.4, 0.25, 0.45},
+      {17.0, 18.0, 0.3, 0.4, 0.25, 0.45},
+      {18.0, 19.0, 0.11, 0.19, 0.05, 0.17},
+      {19.0, 20.0, 0.11, 0.19, 0.05, 0.17},
+  };
+
   // Loop through unweighted files(pythia,data)
   for (size_t j = 0; j < unweightedFileNames.size(); ++j)
   {
@@ -330,21 +570,15 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       for (int i = 1; i <= histF->GetNbinsX(); i++)
       {
         if (pion_pt == 0)
-          continue; // Avoid division by zero
-        double binContent = histF->GetBinContent(i); // Get the bin content
-        double newContent = binContent / pion_pt;     // Scale the bin content
-        histF->SetBinContent(i, newContent);         // Set the new bin content
+          continue;                                             // Avoid division by zero
+        double binContent = histF->GetBinContent(i);            // Get the bin content
+        double newContent = binContent / pion_pt;               // Scale the bin content
+        histF->SetBinContent(i, newContent);                    // Set the new bin content
         histF->SetBinError(i, histF->GetBinError(i) / pion_pt); // Scale the bin error
       }
-      // fitting background only
-      /*
-      TF1 *leftRightFit;
-      leftRightFit = new TF1("leftRightFit", poly5BG, limits[0], limits[1], 6);
-      histF->Fit(leftRightFit, "REQ");
-      */
 
-      //estimate the peak 
-      double wideMin = 0.05; 
+      // estimate the peak
+      double wideMin = 0.05;
       double wideMax = 0.45;
 
       // Quick estimate: find maximum bin in [wideMin, wideMax]
@@ -353,9 +587,11 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
 
       int maxBin = iMin;
       double maxVal = 0.0;
-      for(int b=iMin; b<=iMax; b++){
+      for (int b = iMin; b <= iMax; b++)
+      {
         double c = histF->GetBinContent(b);
-        if(c > maxVal){
+        if (c > maxVal)
+        {
           maxVal = c;
           maxBin = b;
         }
@@ -363,221 +599,75 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // Approx mean
       double muPeak = histF->GetBinCenter(maxBin);
 
-      // Rough RMS in that region
-      double sum = 0, sumSq = 0, count = 0;
-      for(int b=iMin; b<=iMax; b++){
-        double bc = histF->GetBinCenter(b);
-        double val = histF->GetBinContent(b);
-        sum    += bc * val;
-        sumSq  += bc*bc * val;
-        count  += val;
-      }
-      double mean   = (count>0)? sum / count : 0.14; 
-      double meanSq = (count>0)? sumSq / count : (0.14*0.14);
-      double rms    = std::sqrt(std::max(0.0, meanSq - mean*mean));
+      double pionFitLow = 0.10, pionFitHigh = 0.16; // Default pion peak fit range
+      double bgLeft = 0.05, bgRight = 0.25;         // Default background fit range
 
-      // If the maxBin is close to your “peak,” 
-      // you might set muPeak = mean or average them.
-      //muPeak = 0.5*(muPeak + mean);  // mix the two for stability
-
-      // Let sigmaPeak ~ RMS for a first guess
-      double sigmaPeak = rms;
-      if(sigmaPeak < 0.005) sigmaPeak = 0.01; // avoid too-small estimates
-      double gausLeft  = muPeak - 1.0*sigmaPeak;
-      double gausRight = muPeak + 1.0*sigmaPeak;
-      double bgLeft  = muPeak - 2.0*sigmaPeak;
-      double bgRight = muPeak + 1.5*sigmaPeak;
-
-
-
-      // clamp if needed
-      if(gausLeft < 0.0) gausLeft = 0.0; // avoid negative
-      if(gausRight > 0.3) gausRight = 0.3; // an upper clamp for pion region
-      if(bgLeft < limits[0]) bgLeft = limits[0];
-      if(bgRight > 0.4) bgRight = 0.4;
-
-      TF1 *leftPeakBG;
-      leftPeakBG = new TF1("leftPeakBG", poly2BG, bgLeft, bgRight, 4);
-      histF->Fit(leftPeakBG, "RQ");
-      TF1 *rightPeakBG;
-      rightPeakBG = new TF1("rightPeakBG", poly2BG, limits[0], 0.78, 4);
-      histF->Fit(rightPeakBG, "RQ");
-      // Fit first Gaussian in the specified range
-      TF1 *gausFit = new TF1("gausFit", "gaus", gausLeft, gausRight);
-      gausFit->SetParLimits(0, maxVal*0.99, maxVal*1.01);
-      gausFit->SetParLimits(1, muPeak*0.9, muPeak*1.1);
-      gausFit->SetParLimits(2, 0.01, 0.25);
-      histF->Fit(gausFit, "RQ");
-      // Fit second Gaussian in the specified range
-      TF1 *gausFit2 = new TF1("gausFit2", "gaus", 0.45, 0.65);
-      gausFit2->SetParLimits(1, 0.50, 0.64);
-      gausFit2->SetParLimits(2, 0.03, 0.25);
-      histF->Fit(gausFit2, "RQ");
-
-      // double limits[10] = {0.05, 1.0, 0.09, 0.25, 0.05, 0.35, 0.52, 0.68, 0.35, 1.0};
-      /*
-      // combined fit setup
-      TF1 *combinedFit;
-      combinedFit = new TF1("combinedFit", combinedFunctionDoubleGaussPoly5, limits[0], limits[1], 12);
-      for (int j = 0; j < 3; ++j)
+      for (const auto &range : pionFitRanges)
       {
-        combinedFit->SetParameter(j, gausFit->GetParameter(j));
-      }
-      combinedFit->SetParLimits(0, 0, gausFit->GetParameter(0) * 1.25); // gausFit->GetParameter(0) *0.5
-      combinedFit->SetParLimits(1, 0.11, 0.19);
-      combinedFit->SetParLimits(2, 0.01, 0.25);
-      for (int j = 0; j < 6; ++j)
-        combinedFit->SetParameter(j + 6, leftRightFit->GetParameter(j));
-      for (int j = 0; j < 3; ++j)
-        combinedFit->SetParameter(j + 3, gausFit2->GetParameter(j));
-      combinedFit->SetParLimits(3, 0, gausFit2->GetParameter(0) * 1.1); // gausFit2->GetParameter(0) *0.5
-      combinedFit->SetParLimits(4, 0.5, 0.64);
-      combinedFit->SetParLimits(5, 0.03, 0.25);
-      */
-      TF1 *LeftCombinedFit = new TF1("LeftCombinedFit", myGausPol2, bgLeft, bgRight, 6);
-      for (int j = 0; j < 3; ++j)
-        LeftCombinedFit->SetParameter(j, gausFit->GetParameter(j));
-      for (int j = 0; j < 4; ++j)
-        LeftCombinedFit->SetParameter(j + 3, leftPeakBG->GetParameter(j));
-      LeftCombinedFit->SetParLimits(0, maxVal*0.90, maxVal*1.01);
-      LeftCombinedFit->SetParLimits(1, 0.11, 0.19);
-      LeftCombinedFit->SetParLimits(2, 0.01, 0.25);
-      histF->Fit(LeftCombinedFit, "RQ");
-      TF1 *RightCombinedFit = new TF1("RightCombinedFit", myGausPol2, 0.35, 0.78, 6);
-      for (int j = 0; j < 3; ++j)
-        RightCombinedFit->SetParameter(j, gausFit2->GetParameter(j));
-      for (int j = 0; j < 4; ++j)
-        RightCombinedFit->SetParameter(j + 3, rightPeakBG->GetParameter(j));
-      RightCombinedFit->SetParLimits(1, 0.50, 0.64);
-      RightCombinedFit->SetParLimits(2, 0.03, 0.25);
-      histF->Fit(RightCombinedFit, "RQ");
-      LeftCombinedFit->SetNpx(1000);
-      RightCombinedFit->SetNpx(1000);
-
-      // Fit the combined function
-      // combinedFit->SetNpx(1000);
-      // histF->Fit(combinedFit, "REQ");
-
-      // Check if the fit returns NaN or Inf
-      /*
-      bool fitFailed = false;
-      for (int i = 0; i < combinedFit->GetNpar(); i++)
-      {
-        double param = combinedFit->GetParameter(i);
-        if (std::isnan(param) || std::isinf(param))
+        if (pion_pt >= std::get<0>(range) && pion_pt < std::get<1>(range))
         {
-          fitFailed = true;
+          pionFitLow = std::get<2>(range);
+          pionFitHigh = std::get<3>(range);
+          bgLeft = std::get<4>(range);
+          bgRight = std::get<5>(range);
           break;
         }
       }
-      if (fitFailed)
+      // ---- choose a global fit window; you were using pieces, this is simpler:
+      double fitMin = std::max(0.05, bgLeft); // left boundary you already compute
+      double fitMax = 0.78;                   // as before (or limits[1])
+
+      // Right-peak seed if you want to be fancy: quick scan in [0.45, 0.65]
+      int iEtaMin = histF->FindBin(0.45);
+      int iEtaMax = histF->FindBin(0.65);
+      int maxBinEta = iEtaMin;
+      double maxEta = 0;
+      for (int b = iEtaMin; b <= iEtaMax; ++b)
       {
-        std::cout << "Fit returned NaN or Inf for slice: " << i << std::endl;
-        continue;
+        double v = histF->GetBinContent(b);
+        if (v > maxEta)
+        {
+          maxEta = v;
+          maxBinEta = b;
+        }
       }
-      */
+      double muEtaSeed = histF->GetBinCenter(maxBinEta);
 
-      /*
-      // Create a polynomial function for the background
-      TF1 *polyPart = new TF1("poly5BG", "pol5", limits[0], limits[1]);
-      for (int j = 0; j < 6; ++j)
-        polyPart->SetParameter(j, combinedFit->GetParameter(j + 6));
-      */
-      TF1 *LeftpolyPart = new TF1("LeftpolyPart", "pol3",  0.05, 0.3);
-      for (int j = 0; j < 4; ++j)
-        LeftpolyPart->SetParameter(j, LeftCombinedFit->GetParameter(j + 3));
-      TF1 *RightpolyPart = new TF1("RightpolyPart", "pol3", 0.35, 0.78);
-      for (int j = 0; j < 4; ++j)
-        RightpolyPart->SetParameter(j, RightCombinedFit->GetParameter(j + 3));
+      // Call RooFit (sliceId = unique integer; use e.g. (filecounter*10000 + bincounter))
 
-      TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
-      histF->SetTitle(Form("Combined Fit; #it{m}_{#gamma#gamma} (GeV);#frac{1}{2 #it{p}_{T}}#frac{dN}{d#it{m}_{#gamma#gamma}}; pT: %s", ptRange.Data()));
-      //gPad->SetLogy();
-      //histF->SetMinimum(1e-6);  // or some small positive value so log works
-      //histF->SetMinimum(0.0);
-      histF->Draw("E");//dN/d#it{m}_{#gamma#gamma}
-      LeftpolyPart->SetLineColor(kRed);
-      LeftpolyPart->Draw("SAME");
-      RightpolyPart->SetLineColor(kMagenta);
-      RightpolyPart->Draw("SAME");
-      LeftCombinedFit->SetLineColor(kBlack);
-      LeftCombinedFit->Draw("SAME");
-      RightCombinedFit->SetLineColor(kGray);
-      RightCombinedFit->Draw("SAME");
-      // polyPart->SetLineColor(kRed);
-      // polyPart->Draw("SAME");
-      // combinedFit->SetLineColor(kBlack);
-      // combinedFit->Draw("SAME");
-      // leftRightFit->SetLineColor(kGreen);
-      // leftRightFit->Draw("SAME");
-      gausFit->SetLineColor(kBlue);
-      gausFit->Draw("SAME");
-      //gausFit2->SetLineColor(kGreen);
-      //gausFit2->Draw("SAME");
-      TLegend *leg1 = new TLegend(0.5, 0.5, 0.95, 0.95);
-      leg1->SetFillStyle(0);
-      leg1->AddEntry("", "#it{#bf{sPHENIX}} Internal", "");
-      leg1->AddEntry("", "run2024: Golden p+p #sqrt{s_{NN}} = 200 GeV", "");
-      leg1->AddEntry(LeftpolyPart, "Left Background Fit");
-      leg1->AddEntry(LeftCombinedFit, "Left Combined Fit");
-      // leg1->AddEntry(leftRightFit, "originalBG");
-      // leg1->AddEntry(gausFit, "originalGauss");
-      leg1->Draw();
-      leg1->SetTextAlign(32);
-      tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
-      float xbleft = 0.42;
-      float ybleft = 0.7;
-      float xtright = 0.9;
-      float ytright = 0.9;
+      int sliceId = filecounter * 10000 + bincounter;
+      RooSliceResult R = FitSliceWithRooFitAndPages(
+          histF, fitMin, fitMax,
+          muPeak, pionFitLow, pionFitHigh,
+          0.5, 0.65,
+          sliceId,
+          "pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf",
+          "run2024:p+p  #sqrt{s_{NN}} = 200 GeV",
+          unweighted_legendNames[j].c_str(),
+          pt_min, pt_max, pion_pt,
+          /*makeSpectrumPage=*/true,
+          /*makeParamsPage=*/true,
+          /*makePullPage=*/false // toggle on if desired
+      );
 
-      TCanvas *tempcanvas2 = new TCanvas("tempcanvas2", "tempcanvas2", 800, 600);
-      TPaveText *ParamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-      ParamsText->AddText(unweighted_legendNames[j].c_str());
-      ParamsText->SetFillColor(0); // Set the fill color to 0 for transparency
-      ParamsText->SetFillStyle(0); // Set fill style to 0 (solid) with color 0 for transparency
-      ParamsText->AddText(unweighted_legendNames[j].c_str());
-      ParamsText->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, pion_pt));
-      ParamsText->AddText(Form("#chi^{2}/NDF = %.2f", LeftCombinedFit->GetChisquare() / LeftCombinedFit->GetNDF()));
-      ParamsText->AddText(Form("Pion Mean = %.4f", LeftCombinedFit->GetParameter(1)));
-      ParamsText->AddText(Form("Pion Sigma = %.4f", LeftCombinedFit->GetParameter(2)));
-      ParamsText->AddText(Form("Pion Relative Width: %.2f%%", LeftCombinedFit->GetParameter(2) * 100.0f / LeftCombinedFit->GetParameter(1)));
-      ParamsText->AddText(Form("Eta Mean = %.4f", RightCombinedFit->GetParameter(1)));
-      ParamsText->AddText(Form("Eta Sigma = %.4f", RightCombinedFit->GetParameter(2)));
-      ParamsText->AddText(Form("Eta Relative Width: %.2f%%", RightCombinedFit->GetParameter(2) * 100.0f / RightCombinedFit->GetParameter(1)));
-      ParamsText->Draw(); //"SAME"
-      gPad->Modified();   // Apply the changes to the pad
-      tempcanvas2->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf");
+      // Pull results (just like you did with TF1s)
+      double Pmean = R.pMean;
+      double Psigma = R.pSigma;
+      double PmeanErr = R.pMeanErr;
+      double PsigmaErr = R.pSigmaErr;
 
-      // Get the fit parameters
-      double Pmean = LeftCombinedFit->GetParameter(1);
-      double Psigma = LeftCombinedFit->GetParameter(2);
-      double PmeanErr = LeftCombinedFit->GetParError(1);
-      double PsigmaErr = LeftCombinedFit->GetParError(2);
+      double Emean = R.eMean;
+      double Esigma = R.eSigma;
+      double EmeanErr = R.eMeanErr;
+      double EsigmaErr = R.eSigmaErr;
+
+      // Derived quantities (unchanged)
       double PWidth = Psigma / Pmean;
-      double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
-
-      double Emean = RightCombinedFit->GetParameter(1);
-      double Esigma = RightCombinedFit->GetParameter(2);
-      double EmeanErr = RightCombinedFit->GetParError(1);
-      double EsigmaErr = RightCombinedFit->GetParError(2);
+      double PWidthErr = PsigmaErr / Pmean + Psigma * PmeanErr / (Pmean * Pmean);
       double EWidth = Esigma / Emean;
-      double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
-
+      double EWidthErr = EsigmaErr / Emean + Esigma * EmeanErr / (Emean * Emean);
       double MassRatio = Pmean / Emean;
-      double MassRatioErr = MassRatio * sqrt(pow(PmeanErr / Pmean, 2) + pow(EmeanErr / Emean, 2));
-
-      // Pion_Mean.push_back(Pmean);
-      // Pion_Width.push_back(PWidth);
-      // Pion_Mean_errors.push_back(PmeanErr);
-      // Pion_Width_errors.push_back(PWidthErr);
-
-      // Eta_Mean.push_back(Emean);
-      // Eta_Width.push_back(EWidth);
-      // Eta_Mean_errors.push_back(EmeanErr);
-      // Eta_Width_errors.push_back(EWidthErr);
-
-      // pT_Bins.push_back(pion_pt);
-      // pT_Bins_Errors.push_back(0);
+      double MassRatioErr = MassRatio * std::sqrt(std::pow(PmeanErr / Pmean, 2) + std::pow(EmeanErr / Emean, 2));
 
       pionmeanGraph[filecounter]->SetPoint(bincounter, pion_pt, Pmean);
       pionmeanGraph[filecounter]->SetPointError(bincounter, 0, PmeanErr);
@@ -594,8 +684,6 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       EresolutionGraph[filecounter]->SetPoint(bincounter, pion_pt, EWidth);
       EresolutionGraph[filecounter]->SetPointError(bincounter, 0, EWidthErr);
       bincounter++;
-      delete tempcanvas;
-      delete tempcanvas2;
     }
     MarkerStyle += 1;
     MarkerColor += 1;
@@ -793,10 +881,25 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         double pion_pt = (pt_min + pt_max) / 2.0;
         scale_histogram_errors(histF, scale_factor);
 
+        double pionFitLow = 0.10, pionFitHigh = 0.16; // Default pion peak fit range
+        double bgLeft = 0.05, bgRight = 0.25;         // Default background fit range
+
+        for (const auto &range : pionFitRanges)
+        {
+          if (pion_pt >= std::get<0>(range) && pion_pt < std::get<1>(range))
+          {
+            pionFitLow = std::get<2>(range);
+            pionFitHigh = std::get<3>(range);
+            bgLeft = std::get<4>(range);
+            bgRight = std::get<5>(range);
+            break;
+          }
+        }
+
         // Fit Pion Gaussian in the specified range
-        TF1 *gausFit = new TF1("gausFit", "gaus", limits[2], limits[3]);
-        gausFit->SetParLimits(1, 0.11, 0.19);
-        gausFit->SetParLimits(2, 0.01, 0.25);
+        TF1 *gausFit = new TF1("gausFit", "gaus", pionFitLow, pionFitHigh); // limits[2], limits[3]
+        // gausFit->SetParLimits(1, 0.11, 0.19);
+        // gausFit->SetParLimits(2, 0.01, 0.25);
         gausFit->SetNpx(1000);
         histF->Fit(gausFit, "REQ");
 
@@ -806,7 +909,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         double PmeanErr = gausFit->GetParError(1);
         double PsigmaErr = gausFit->GetParError(2);
         double PWidth = Psigma / Pmean;
-        double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
+        double PWidthErr = PsigmaErr / Pmean + Psigma * PmeanErr / pow(Pmean, 2);
+        // double PWidthErr = PWidth * sqrt(pow(PmeanErr / Pmean, 2) + pow(PsigmaErr / Psigma, 2));
 
         // Pion_Mean.push_back(Pmean);
         // Pion_Width.push_back(PWidth);
@@ -814,6 +918,27 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         // Pion_Width_errors.push_back(PWidthErr);
         // pT_Bins.push_back(pion_pt);
         // pT_Bins_Errors.push_back(0);
+
+        TCanvas *tempcanvas = new TCanvas("tempcanvas", "tempcanvas", 800, 600);
+        histF->Draw();
+        // tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
+        float xbleft = 0.42;
+        float ybleft = 0.7;
+        float xtright = 0.9;
+        float ytright = 0.9;
+        TPaveText *pt2 = new TPaveText(xbleft + .2, 0.5, xtright, 0.7, "NDC"); // Adjust coordinates as needed
+        pt2->SetFillColor(0);                                                  // Set the fill color to 0 for transparency
+        pt2->SetFillStyle(0);                                                  // Set fill style to 0 (solid) with color 0 for transparency
+        pt2->AddText("Pion Fitted Resolution Parameters:");
+        pt2->AddText(SPMC_legendNames[j].c_str());
+        pt2->AddText(Form("pt region (bin center): %.2f-%.2f GeV (%.2f)", pt_min, pt_max, pion_pt));
+        pt2->AddText(Form("#chi^{2}/NDF = %.2f", gausFit->GetChisquare() / gausFit->GetNDF()));
+        pt2->AddText(Form("Mean = %.4f", gausFit->GetParameter(1)));
+        pt2->AddText(Form("Sigma = %.4f", gausFit->GetParameter(2)));
+        pt2->AddText(Form("Relative Width: %.2f%%", gausFit->GetParameter(2) * 100.0f / gausFit->GetParameter(1)));
+        pt2->Draw("SAME");
+        gPad->Modified(); // Apply the changes to the pad
+        tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_PionFit_results.pdf");
 
         pionmeanGraph[filecounter]->SetPoint(bincounter, pion_pt, Pmean);
         pionmeanGraph[filecounter]->SetPointError(bincounter, 0, PmeanErr);
@@ -860,24 +985,24 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       // PresolutionFit->SetParLimits(1, 0.01, 0.2);
       PresolutionFit->SetLineColor(MarkerColor);
       PresolutionGraph[filecounter]->Fit(PresolutionFit, "RE"); // Fit and constrain to the range of pT
-                                                                /*
-                                                                      // Create a canvas to plot the resolution graph and fit
-                                                                      TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
-                                                                      PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); Pion #sigma / #mu");
-                                                                      PresolutionGraph[filecounter]->Draw("APE");
-                                                                      PresolutionFit->Draw("same");
-                                                                      // Print the fit parameters on a new canvas
-                                                                      TCanvas *PfitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
-                                                                      TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
-                                                                      PparamsText->AddText("Pion Fitted Resolution Parameters:");
-                                                                      PparamsText->AddText(unweighted_legendNames[j].c_str());
-                                                                      PparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", PresolutionFit->GetParameter(0)));
-                                                                      // paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
-                                                                      PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
-                                                                      // add goodness of fit
-                                                                      PparamsText->AddText(Form("Chi2/ndf: %.4f", PresolutionFit->GetChisquare() / PresolutionFit->GetNDF()));
-                                                                      PparamsText->Draw();
-                                                                //*/
+      /*
+      // Create a canvas to plot the resolution graph and fit
+      TCanvas *PresCanvas = new TCanvas("resCanvas", "Resolution Fit", 800, 600);
+      PresolutionGraph[filecounter]->SetTitle("Energy Resolution; p_{T} (GeV/c); Pion #sigma / #mu");
+      PresolutionGraph[filecounter]->Draw("APE");
+      PresolutionFit->Draw("same");
+      // Print the fit parameters on a new canvas
+      TCanvas *PfitParamsCanvas = new TCanvas("fitParamsCanvas", "Fit Parameters", 800, 600);
+      TPaveText *PparamsText = new TPaveText(0.1, 0.7, 0.9, 0.9, "NDC");
+      PparamsText->AddText("Pion Fitted Resolution Parameters:");
+      PparamsText->AddText(unweighted_legendNames[j].c_str());
+      PparamsText->AddText(Form("A/#sqrt{E} term (a): %.4f", PresolutionFit->GetParameter(0)));
+      // paramsText->AddText(Form("Noise term (b): %.4f", PresolutionFit->GetParameter(2)));
+      PparamsText->AddText(Form("Constant term (c): %.4f", PresolutionFit->GetParameter(1)));
+      // add goodness of fit
+      PparamsText->AddText(Form("Chi2/ndf: %.4f", PresolutionFit->GetChisquare() / PresolutionFit->GetNDF()));
+      PparamsText->Draw();
+      //*/
       gPResolutions->Add(PresolutionGraph[filecounter], "PE");
       legend6->AddEntry(PresolutionGraph[filecounter], SPMC_legendNames[j].c_str(), "P");
 
@@ -989,13 +1114,14 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
         pt2->AddText(Form("Relative Width: %.2f%%", EtagausFit->GetParameter(2) * 100.0f / EtagausFit->GetParameter(1)));
         pt2->Draw("SAME");
         gPad->Modified(); // Apply the changes to the pad
-        tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf");
+        tempcanvas->Print("pioncode/canvas_pdf/ptdifferential_EtaFit_results.pdf");
         double Emean = EtagausFit->GetParameter(1);
         double Esigma = EtagausFit->GetParameter(2);
         double EmeanErr = EtagausFit->GetParError(1);
         double EsigmaErr = EtagausFit->GetParError(2);
         double EWidth = Esigma / Emean;
-        double EWidthErr = EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
+        double EWidthErr = EsigmaErr / Emean + Esigma * EmeanErr / pow(Emean, 2);
+        // EWidth * sqrt(pow(EmeanErr / Emean, 2) + pow(EsigmaErr / Esigma, 2));
 
         // double MassRatio = Pion_Mean[j] / Emean;
         // double MassRatioErr = MassRatio * sqrt(pow(Pion_Mean_errors[j] / Pion_Mean[j], 2) + pow(EmeanErr / Emean, 2));
@@ -1584,7 +1710,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   gPionWidths->SetTitle("Pion: Smeared pT vs Relative Width;#it{pT}_{#gamma#gamma} (GeV); Pion Relative Width");
   gPionWidths->GetXaxis()->SetLimits(0.01, 10);
   gPionWidths->SetMinimum(0.05);
-  gPionWidths->SetMaximum(0.2);
+  gPionWidths->SetMaximum(0.25);
   gPionWidths->Draw("APE");
   legend2->SetFillStyle(0);
   legend2->SetTextAlign(32);
@@ -1661,7 +1787,8 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
   // Close the PDF file
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferentialcomparison.pdf]");
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Energyres_results.pdf]");
-  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_Fit_results.pdf]");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_PionFit_results.pdf]");
+  dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_EtaFit_results.pdf]");
   dummyCanvas->Print("pioncode/canvas_pdf/ptdifferential_unw_Fit_results.pdf]");
 
   TFile outputFile("pioncode/rootfiles/ptdifferential_overlay.root", "RECREATE");
@@ -1678,10 +1805,19 @@ void fit_comparison()
   //-----------------------------------------
   std::vector<std::string> unweighted_fileNames = {
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V2.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V10.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V10.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V5.root",//without extra cuts
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V5.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V10.root",//with extra cuts
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V10.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALOFITTING_run2pp_ana509_2024p022_v001_0004merged_V14.root ",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALOFITTING_run2pp_ana509_2024p022_v001_0004merged_V14.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALOFITTING_run2pp_ana509_2024p022_v001_0004merged_V14.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALOFITTING_run2pp_ana509_2024p022_v001_0004merged_V14.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALOFITTING_run2pp_ana509_2024p022_v001_0004merged_V14.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_Detroit_0000000021_0merged_V85.root",// calib
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALOFITTING_run2pp_ana509_2024p022_v001_0004merged_V14.root",// wfm
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_Jet30_0000000021_00merged_V78.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_pythia8_70mev_0000000021_00merged_V79.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_run2pp_ana450_2024p009_000merged_V6.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_pythia8_pp_mb_0000000015_merged_V65.root",
@@ -1698,32 +1834,36 @@ void fit_comparison()
       //"h_diPhotonMasspT",
       //"h_diPhotonMasspT_photon5",
       //"h_diPhotonMasspT_photon4",
-      "h_diPhotonMasspT_photon5_mbd",
-      "h_diPhotonMasspT_photon4_mbd",
-      "h_diPhotonMasspT_photon5_mbd",
-      "h_diPhotonMasspT_photon4_mbd",
-      //"h_InvMass_smear_2d_100", "h_InvMass_smear_2d_125",
-      "h_InvMass_smear_2d_115",
-      // "h_InvMass_smear_2d_125", "h_InvMass_smear_2d_125",
-      "h_InvMass_smear_2d_125",
-      "h_InvMass_smear_2d_0",
-      "h_InvMass_smear_2d_0",
+      //"h_diPhotonMasspT_photon5_mbd",
+      //"h_diPhotonMasspT_photon5",
+      "h_diPhotonMasspT_photon4",
+      "h_diPhotonMasspT_photon5",
+      "h_diPhotonMasspT_jet12",
+      "h_diPhotonMasspT_jet10",
+      "h_diPhotonMasspT_jet8",
   }; //"h_InvMass_2d",
   std::vector<std::string> unweighted_legendNames = {
       //"run2024_12/21/24",
       //"run2024_1/9/25_p5",
       //"run2024_1/9/25_p4",
-      "run2024_1/9/25_p5+mbd",
-      "run2024_1/9/25_p4+mbd",
-      "run2024_1/9/25_p5+mbd_eta/zvtx_cuts",
-      "run2024_1/9/25_p4+mbd_eta/zvtx_cuts",
-      //"run2024_1/2/25_p5",
-      // "Pythia_wvfm_vtx+12.5%smr",
-      "Pythia_wvfm_vtx+11.5%smr",
+      //"ana450_1/9/25_p5+mbd",
+      //"ana450_1/9/25_p5",
+      "ana509_9/19/25_p4",
+      "ana509_9/19/25_p5",
+      "ana509_9/19/25_j12",
+      "ana509_9/19/25_j10",
+      "ana509_9/19/25_j8",
+      //"run2024_1/9/25_p5+mbd_eta/zvtx_cuts",
+      //"run2024_1/9/25_p4+mbd_eta/zvtx_cuts",
+      //"Detroit_MB_calib+0%",
+      //"Detroit_MB_wfm+0%",
+      //"Pythia_10GeVJets",
+      //"Pythia_30GeVJets",
       //"eT_prob","prob_eT",
-      "70mev_Pythia_wvfm_vtx+11.5%smr",
-      "Pythia_wvfm_vtx+0smr",
-      "70mev_Pythia_wvfm_vtx+0smr"}; //"Pythia",
+      //"70mev_Pythia_wvfm_vtx+11.5%smr",
+      //"Pythia_wvfm_vtx+0smr",
+      //"70mev_Pythia_wvfm_vtx+0smr"
+  }; //"Pythia",
 
   //-----------------------------------------
   std::vector<std::string> SPMC_FileNames = {
@@ -1731,18 +1871,19 @@ void fit_comparison()
       ////"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_eta_p_600_20000MeV_0000000017_00merged_V44.root",
       ////"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V14.root",
       //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V15.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V3.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V84.root",// new calib sample 2/26/25
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V7.root", // new wfm sample
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V3.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V4.root",
+      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V4.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_pi0_pt_200_40000MeV_0000000024_0merged_V4.root",
       //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_eta_p_600_20000MeV_0000000017_00merged_V21.root",
       //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V42.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
-      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
-      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V6.root",
-      //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V6.root",
-      //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V6.root",
-      //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V7.root",
+      "pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_0merged_V8.root", // new wfm sample
+                                                                                                                //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V2.root",
+                                                                                                                //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V6.root",
+                                                                                                                //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_CLUSTER_single_eta_pt_200_50000MeV_0000000024_00merged_V6.root",
+                                                                                                                //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V6.root",
+                                                                                                                //"pioncode/rootfiles/OUTHIST_iter_G4Hits_single_pi0_p_200_20000MeV_0000000017_00merged_V7.root",
   };
   //
   //"pioncode/rootfiles/OUTHIST_iter_DST_CALO_WAVEFORM_single_pi0_p_200_20000MeV_0000000017_00merged_V38
@@ -1753,7 +1894,7 @@ void fit_comparison()
       //"h_InvMass_smear_weighted_2d_125",
       "h_InvMass_smear_weighted_2d_0",
       //"h_truthmatched_mass_weighted_2d",
-      "h_InvMass_smear_weighted_2d_125",
+      //"h_InvMass_smear_weighted_2d_125",
       //"h_truthmatched_mass_weighted_2d",
       //"h_truthmatched_mass_etameson_weighted_2d",
       //"h_InvMass_smear_weighted_2d_125",
@@ -1768,15 +1909,15 @@ void fit_comparison()
       //"SEta+12.5sm,30mev,lowcut",
       //"SEta+12.5sm,30mev,lowcut",
       //"SEta+0sm,70mev,lowcut",
-      "New SPi0+0%",
-      //"New SPi0+0%+match",
-      "New SPi0+12.5%",
+      //"calib, SPi0+0%",
+      "wfm, SPi0+0%",
+      //"New SPi0+12.5%",
       //"New SPi0+12.5%+match",
       //"SEta+0sm+match,70mev",
       //"SPi0+12.5sm, more_cuts",
       //"SPi0_Weight_pythia+12.5",
       //"SPi0_tbtzs_Weight_pythia+12.5"
-      "New SEta+0%",
+      "wfm, SEta+0%%",
       "New SEta+0%+match",
       "New SEta+12.5%",
       "New SEta+12.5%+match"};
@@ -1784,11 +1925,11 @@ void fit_comparison()
   std::vector<int> SPMC_FileTypes = {
       // 0,
       0,
-      //0,
-      0,
-      //0,
+      // 0,
+      // 0,
+      // 0,
       1,
-      //0,
+      // 0,
       1,
       1,
       1,
@@ -1798,20 +1939,22 @@ void fit_comparison()
   std::vector<std::string> FastMC_fileNames =
       //*
       {
-          "pioncode/rootfiles/PionFastMC_0.150000_sqrte_0.120000_const.root",
-          "pioncode/rootfiles/PionFastMC_0.150000_sqrte_0.120000_const.root",
-          ////"pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.170000_const.root",
-          //"pioncode/rootfiles/EtaFastMC_0.158000_sqrte_0.027000_const.root",
-          ////"pioncode/rootfiles/EtaFastMC_0.110000_sqrte_0.060000_const.root",
-          ////"pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.032000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.020000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.030000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.050000_const.root",
-          "pioncode/rootfiles/EtaFastMC_0.130000_sqrte_0.080000_const.root",
-          ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-          ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-          ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
-          ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+          /*
+            "pioncode/rootfiles/PionFastMC_0.150000_sqrte_0.120000_const.root",
+            "pioncode/rootfiles/PionFastMC_0.150000_sqrte_0.120000_const.root",
+            ////"pioncode/rootfiles/EtaFastMC_0.100000_sqrte_0.170000_const.root",
+            //"pioncode/rootfiles/EtaFastMC_0.158000_sqrte_0.027000_const.root",
+            ////"pioncode/rootfiles/EtaFastMC_0.110000_sqrte_0.060000_const.root",
+            ////"pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.032000_const.root",
+            "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.020000_const.root",
+            "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.030000_const.root",
+            "pioncode/rootfiles/EtaFastMC_0.149000_sqrte_0.050000_const.root",
+            "pioncode/rootfiles/EtaFastMC_0.130000_sqrte_0.080000_const.root",
+            ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+            ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+            ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+            ////"pioncode/rootfiles/PionFastMC_0.140000_sqrte_0.004000_const.root",
+            */
       }; //*/
   std::vector<std::string> FastMC_legendNames =
       {
@@ -1863,7 +2006,7 @@ void fit_comparison()
   //-----------------------------------------
   std::vector<std::string> Run2024_fileNames =
       {
-          "pioncode/rootfiles/meson_graphs.root"
+          //"pioncode/rootfiles/meson_graphs.root"
       };
   std::vector<std::string> Run2024_legendNames = {"Run2024"};
 
