@@ -615,7 +615,7 @@ void AnalyzeHistograms(const std::vector<std::string> &unweightedFileNames, cons
       }
       // ---- choose a global fit window; you were using pieces, this is simpler:
       double fitMin = std::max(0.05, bgLeft); // left boundary you already compute
-      double fitMax = 0.78;                   // as before (or limits[1])
+      double fitMax = 1;//0.78;                   // as before (or limits[1])
 
       // Right-peak seed if you want to be fancy: quick scan in [0.45, 0.65]
       int iEtaMin = histF->FindBin(0.45);
