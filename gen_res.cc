@@ -90,7 +90,8 @@ int main(int argc, char *argv[])
     // add first three to gui
     float smeared_lower_bin_limit = 0.0; // mass limits
     float smeared_upper_bin_limit = 1.2;
-    float smear_factor_sqrtE = 0.154; // 0.154;
+    float smear_factor_sqrtE = 0.18; // 0.154;
+    float smear_factor_E = 0.02;
     float smear_factor_a = 0;
     float smear_factor_d = 0.0;
     float posit_smearingFactor = 2.8;
@@ -267,8 +268,9 @@ int main(int argc, char *argv[])
 
     for (int smear_factor_itt = 0; smear_factor_itt < smear_factor_const_num_steps; smear_factor_itt++)
     {
-        float smear_factor_c = smear_factor_const + smear_factor_const_step_size * smear_factor_itt;
-        float smear_factor_b = smear_factor_sqrtE;
+        float smear_factor_c = smear_factor_const + smear_factor_const_step_size * smear_factor_itt;//constant
+        float smear_factor_b = smear_factor_sqrtE;//stochastic
+        float smear_factor_a = smear_factor_E;//Noise
 
         TFile *output = new TFile(Form("pioncode/rootfiles/%sFastMC_%f_sqrte_%f_const.root", particleType.c_str(), smear_factor_b, smear_factor_c), "recreate");
 
@@ -493,8 +495,8 @@ int main(int argc, char *argv[])
                     double inv_mass = gamma_lorentz[2].mCalc();
                     double truthphotondistance = DetectorPhotonDistance(gamma_lorentz[0], gamma_lorentz[1], Debug);
 
-                    double scale_factor1 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[0].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
-                    double scale_factor2 = sqrt(pow(smear_factor_b, 2) / gamma_lorentz[1].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
+                    double scale_factor1 = sqrt(pow(smear_factor_a/ gamma_lorentz[0].e(), 2)  + pow(smear_factor_b, 2) / gamma_lorentz[0].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
+                    double scale_factor2 = sqrt(pow(smear_factor_a/ gamma_lorentz[1].e(), 2)  + pow(smear_factor_b, 2) / gamma_lorentz[1].e() + pow(smear_factor_c, 2) + pow(smear_factor_d, 2));
 
                     double smear_factor1 = scale_factor1 * gammadis(gen_gamma) + 1;
                     double smear_factor2 = scale_factor2 * gammadis(gen_gamma) + 1;
